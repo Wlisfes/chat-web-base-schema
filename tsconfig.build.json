@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "dist",
+    "node_modules",
+    "chat-web-account-mysql/data-source.ts",
+    "chat-web-account-mysql/migrations/**/*.ts"
+  ]
+}

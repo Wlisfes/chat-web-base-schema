@@ -76,6 +76,11 @@
   dependencies:
     undici-types "~7.18.0"
 
+"@types/validator@^13.15.3":
+  version "13.15.10"
+  resolved "https://registry.npmmirror.com/@types/validator/-/validator-13.15.10.tgz#742b77ec34d58554b94a76a14cef30d59e3c16b9"
+  integrity sha512-T8L6i7wCuyoK8A/ZeLYt1+q0ty3Zb9+qbSSvrIVitzT3YjZqkTZ40IbRsPanlB4h1QB3JVL1SYCdR6ngtFYcuA==
+
 acorn-walk@^8.1.1:
   version "8.3.5"
   resolved "https://registry.npmmirror.com/acorn-walk/-/acorn-walk-8.3.5.tgz#8a6b8ca8fc5b34685af15dabb44118663c296496"
@@ -187,6 +192,15 @@ call-bound@^1.0.3, call-bound@^1.0.4:
   dependencies:
     call-bind-apply-helpers "^1.0.2"
     get-intrinsic "^1.3.0"
+
+class-validator@^0.15.1:
+  version "0.15.1"
+  resolved "https://registry.npmmirror.com/class-validator/-/class-validator-0.15.1.tgz#002600c101bcebb16e7240870cb50535340c9600"
+  integrity sha512-LqoS80HBBSCVhz/3KloUly0ovokxpdOLR++Al3J3+dHXWt9sTKlKd4eYtoxhxyUjoe5+UcIM+5k9MIxyBWnRTw==
+  dependencies:
+    "@types/validator" "^13.15.3"
+    libphonenumber-js "^1.11.1"
+    validator "^13.15.22"
 
 cliui@^8.0.1:
   version "8.0.1"
@@ -466,6 +480,11 @@ jackspeak@^3.1.2:
     "@isaacs/cliui" "^8.0.2"
   optionalDependencies:
     "@pkgjs/parseargs" "^0.11.0"
+
+libphonenumber-js@^1.11.1:
+  version "1.13.11"
+  resolved "https://registry.npmmirror.com/libphonenumber-js/-/libphonenumber-js-1.13.11.tgz#72d066a69bc6149b36288c54115a926a8d2d3ce1"
+  integrity sha512-ETER2kMaIFTI/Nh1a8Gk03dUF/SL0VZqtI+CcVHZxp5WIHYwNS7S+uiYZDYCvLy3lOR4/DAD5jf0h5WkePPpqg==
 
 long@^5.3.2:
   version "5.3.2"
@@ -750,6 +769,11 @@ v8-compile-cache-lib@^3.0.1:
   version "3.0.1"
   resolved "https://registry.npmmirror.com/v8-compile-cache-lib/-/v8-compile-cache-lib-3.0.1.tgz#6336e8d71965cb3d35a1bbb7868445a7c05264bf"
   integrity sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==
+
+validator@^13.15.22:
+  version "13.15.35"
+  resolved "https://registry.npmmirror.com/validator/-/validator-13.15.35.tgz#81cf455c51f15b69d8d340be5914f3fab00dbf7f"
+  integrity sha512-TQ5pAGhd5whStmqWvYF4OjQROlmv9SMFVt37qoCBdqRffuuklWYQlCNnEs2ZaIBD1kZRNnikiZOS1eqgkar0iw==
 
 which-typed-array@^1.1.16:
   version "1.1.22"

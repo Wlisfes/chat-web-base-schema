@@ -17,7 +17,7 @@
   },
   "include": [
     "index.ts",
-    "chat-web-account-mysql/**/*.ts"
+    "src/schem/chat-web-account-mysql/**/*.ts"
   ],
   "exclude": [
     "dist",

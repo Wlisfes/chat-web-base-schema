@@ -1,23 +1,17 @@
 # chat-web-base-schema
 
-Shared TypeORM entities and MySQL migrations for chat-web microservices.
+Shared TypeORM MySQL table definitions for chat-web microservices.
+
+This package only describes existing tables. Databases and tables are created by
+external SQL deployment scripts. It does not contain a DataSource or migrations.
 
 ## Account MySQL
 
-The first schema module exports `AccountUserEntity` and `accountMysqlEntities`:
+Import the account table definitions from the account schema subpath:
 
 ```ts
-import {
-  AccountUserEntity,
-  accountMysqlEntities,
-} from '@wlisfes/chat-web-base-schema/chat-web-account-mysql';
+import { WindowsAccount } from '@wlisfes/chat-web-base-schema/chat-web-account-mysql';
 ```
 
-Copy `.env.example` to `.env`, create the configured database, and run:
-
-```bash
-yarn migration:show:account
-yarn migration:run:account
-```
-
-Production services must keep TypeORM `synchronize` and `migrationsRun` disabled.
+Applications consuming this package must keep TypeORM `synchronize` and
+`migrationsRun` disabled.

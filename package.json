@@ -1,7 +1,7 @@
 {
   "name": "@wlisfes/chat-web-base-schema",
   "version": "0.1.0",
-  "description": "Shared MySQL schemas, TypeORM entities and migrations for chat-web services",
+  "description": "Shared TypeORM MySQL table definitions for chat-web services",
   "license": "UNLICENSED",
   "repository": {
     "type": "git",
@@ -23,19 +23,20 @@
       "default": "./dist/index.js"
     },
     "./chat-web-account-mysql": {
-      "types": "./dist/chat-web-account-mysql/index.d.ts",
-      "require": "./dist/chat-web-account-mysql/index.js",
-      "default": "./dist/chat-web-account-mysql/index.js"
+      "types": "./dist/src/schem/chat-web-account-mysql/index.d.ts",
+      "require": "./dist/src/schem/chat-web-account-mysql/index.js",
+      "default": "./dist/src/schem/chat-web-account-mysql/index.js"
+    },
+    "./utils": {
+      "types": "./dist/src/utils/index.d.ts",
+      "require": "./dist/src/utils/index.js",
+      "default": "./dist/src/utils/index.js"
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "clean": "rimraf dist",
+    "build": "yarn clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "migration:generate:account": "typeorm-ts-node-commonjs migration:generate ./chat-web-account-mysql/migrations/SchemaChange -d ./chat-web-account-mysql/data-source.ts",
-    "migration:create:account": "typeorm migration:create ./chat-web-account-mysql/migrations/SchemaChange",
-    "migration:run:account": "typeorm-ts-node-commonjs migration:run -- -d ./chat-web-account-mysql/data-source.ts",
-    "migration:show:account": "typeorm-ts-node-commonjs migration:show -- -d ./chat-web-account-mysql/data-source.ts",
-    "migration:revert:account": "typeorm-ts-node-commonjs migration:revert -- -d ./chat-web-account-mysql/data-source.ts",
     "prepublishOnly": "yarn typecheck && yarn build"
   },
   "peerDependencies": {
@@ -44,10 +45,9 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "dotenv": "^17.2.1",
-    "mysql2": "^3.23.3",
     "reflect-metadata": "^0.2.2",
-    "ts-node": "^10.9.2",
+    "rimraf": "^6.0.1",
+    "tsc-alias": "^1.8.16",
     "typeorm": "0.3.31",
     "typescript": "^5.7.3"
   },

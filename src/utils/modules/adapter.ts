@@ -3,7 +3,10 @@ import { isEmpty } from 'class-validator'
 import dayjs from 'dayjs'
 
 /**时间格式装饰器**/
-export function DateWithColumn(Decorator: Function, data: Omix<ColumnOptions & { format?: string }>) {
+export function DateWithColumn(
+    Decorator: (options: ColumnOptions) => PropertyDecorator,
+    data: ColumnOptions & { format?: string }
+): PropertyDecorator {
     return Decorator({
         ...data,
         transformer: {
@@ -14,13 +17,13 @@ export function DateWithColumn(Decorator: Function, data: Omix<ColumnOptions & {
 }
 
 /**json自定自定义装饰器**/
-export function WithJsonColumn(data: Omix<ColumnOptions>) {
+export function WithJsonColumn(data: ColumnOptions): PropertyDecorator {
     return Column({
         ...data,
         type: 'text',
         transformer: {
             from: (s: string) => JSON.parse(s ?? '{}'),
-            to: (s: Omix) => (s ? JSON.stringify(s) : null)
+            to: (s: Record<string, unknown> | null) => (s ? JSON.stringify(s) : null)
         }
     })
 }

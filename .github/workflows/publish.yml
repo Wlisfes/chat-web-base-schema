@@ -1,54 +1,60 @@
 name: Publish package
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+    push:
+        tags:
+            - 'v*.*.*'
 
 permissions:
-  contents: read
-  packages: write
+    contents: read
+    packages: write
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+    publish:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: yarn
-          registry-url: https://npm.pkg.github.com
-          scope: '@wlisfes'
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: yarn
+                  registry-url: https://npm.pkg.github.com
+                  scope: '@wlisfes'
 
-      - name: Verify tag matches package version
-        shell: bash
-        run: |
-          package_version="$(node -p "require('./package.json').version")"
-          tag_version="${GITHUB_REF_NAME#v}"
+            - name: Verify tag matches package version
+              shell: bash
+              run: |
+                  package_version="$(node -p "require('./package.json').version")"
+                  tag_version="${GITHUB_REF_NAME#v}"
 
-          if [ "$package_version" != "$tag_version" ]; then
-            echo "package.json version $package_version does not match tag $tag_version"
-            exit 1
-          fi
+                  if [ "$package_version" != "$tag_version" ]; then
+                    echo "package.json version $package_version does not match tag $tag_version"
+                    exit 1
+                  fi
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
 
-      - name: Type check
-        run: yarn typecheck
+            - name: Type check
+              run: yarn typecheck
 
-      - name: Build package
-        run: yarn build
+            - name: Check formatting
+              run: yarn format:check
 
-      - name: Inspect package contents
-        run: npm pack --dry-run
+            - name: Build package
+              run: yarn build
 
-      - name: Publish to GitHub Packages
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Validate schema consistency
+              run: yarn validate:schema
+
+            - name: Inspect package contents
+              run: npm pack --dry-run
+
+            - name: Publish to GitHub Packages
+              run: npm publish
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

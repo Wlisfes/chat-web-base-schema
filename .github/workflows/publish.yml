@@ -2,20 +2,28 @@ name: Publish package
 
 on:
     push:
-        tags:
-            - 'v*.*.*'
+        branches:
+            - main
+    workflow_dispatch:
+
+concurrency:
+    group: publish-main
+    cancel-in-progress: false
 
 permissions:
-    contents: read
+    contents: write
     packages: write
 
 jobs:
     publish:
+        if: ${{ !contains(github.event.head_commit.message || '', '[skip ci]') }}
         runs-on: ubuntu-latest
 
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -25,25 +33,54 @@ jobs:
                   registry-url: https://npm.pkg.github.com
                   scope: '@wlisfes'
 
-            - name: Verify tag matches package version
-              shell: bash
-              run: |
-                  package_version="$(node -p "require('./package.json').version")"
-                  tag_version="${GITHUB_REF_NAME#v}"
-
-                  if [ "$package_version" != "$tag_version" ]; then
-                    echo "package.json version $package_version does not match tag $tag_version"
-                    exit 1
-                  fi
-
             - name: Install dependencies
               run: yarn install --frozen-lockfile
 
-            - name: Type check
-              run: yarn typecheck
+            - name: Determine release version
+              id: version
+              shell: bash
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  package_name="$(node -p "require('./package.json').name")"
+                  current_version="$(node -p "require('./package.json').version")"
+                  published_versions="$(npm view "$package_name" versions --json --registry=https://npm.pkg.github.com 2>/dev/null || echo '[]')"
+
+                  next_version="$(CURRENT_VERSION="$current_version" PUBLISHED_VERSIONS="$published_versions" node <<'NODE'
+                  const current = process.env.CURRENT_VERSION
+                  const parsed = JSON.parse(process.env.PUBLISHED_VERSIONS || '[]')
+                  const versions = (Array.isArray(parsed) ? parsed : [parsed])
+                      .filter(version => /^\d+\.\d+\.\d+$/.test(version))
+                      .map(version => version.split('.').map(Number))
+                  const currentParts = current.split('.').map(Number)
+                  const compare = (left, right) => left[0] - right[0] || left[1] - right[1] || left[2] - right[2]
+                  const publishedAtOrAfterCurrent = versions.filter(version => compare(version, currentParts) >= 0).sort(compare)
+
+                  if (!publishedAtOrAfterCurrent.length) {
+                      process.stdout.write(current)
+                      process.exit(0)
+                  }
+
+                  let [major, minor, patch] = publishedAtOrAfterCurrent.at(-1)
+                  if (patch >= 99) {
+                      minor += 1
+                      patch = 0
+                  } else {
+                      patch += 1
+                  }
+                  process.stdout.write(`${major}.${minor}.${patch}`)
+                  NODE
+                  )"
+
+                  npm version "$next_version" --no-git-tag-version --allow-same-version
+                  echo "version=$next_version" >> "$GITHUB_OUTPUT"
+                  echo "Release version: $next_version"
 
             - name: Check formatting
               run: yarn format:check
+
+            - name: Type check
+              run: yarn typecheck
 
             - name: Build package
               run: yarn build
@@ -58,3 +95,22 @@ jobs:
               run: npm publish
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Commit version and tag
+              env:
+                  RELEASE_VERSION: ${{ steps.version.outputs.version }}
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git add package.json
+
+                  if ! git diff --cached --quiet; then
+                    git commit -m "chore(release): v${RELEASE_VERSION} [skip ci]"
+                  fi
+
+                  if ! git rev-parse "v${RELEASE_VERSION}" >/dev/null 2>&1; then
+                    git tag -a "v${RELEASE_VERSION}" -m "Release v${RELEASE_VERSION}"
+                  fi
+
+                  git push origin HEAD:main
+                  git push origin "v${RELEASE_VERSION}"

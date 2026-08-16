@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Shared TypeORM MySQL table definitions for chat-web services",
     "license": "UNLICENSED",
     "repository": {

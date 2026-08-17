@@ -1,13 +1,13 @@
 import { Entity, Column, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsNotEmpty, IsString, Length } from 'class-validator'
+import { IsBoolean, IsInt, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto } from '@/utils'
 
 /** tb_account_role_data_scope_organization 的数据库字段名。 */
 export enum TbAccountRoleDataScopeOrganizationColumn {
     KEY_ID = 'key_id',
-    DATA_SCOPE_UID = 'data_scope_uid',
-    ORGANIZATION_UID = 'organization_uid',
+    DATA_SCOPE_KEY_ID = 'data_scope_key_id',
+    ORGANIZATION_KEY_ID = 'organization_key_id',
     INCLUDE_CHILDREN = 'include_children',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
@@ -15,44 +15,40 @@ export enum TbAccountRoleDataScopeOrganizationColumn {
 
 /** 自定义数据范围中的组织授权完整字段 DTO。 */
 export class TbAccountRoleDataScopeOrganizationDto extends DataBaseDto {
-    @ApiProperty({ description: '数据范围规则UID', example: '2149446185344106496' })
-    @IsString({ message: '数据范围规则UID必须是字符串' })
-    @IsNotEmpty({ message: '数据范围规则UID必填' })
-    @Length(1, 19, { message: '数据范围规则UID长度不能超过19位' })
-    dataScopeUid: string
+    @ApiProperty({ description: '数据范围规则主键', example: 1 })
+    @IsInt({ message: '数据范围规则主键必须是整数' })
+    @Min(1, { message: '数据范围规则主键必须大于0' })
+    dataScopeKeyId: number
 
-    @ApiProperty({ description: '授权组织UID', example: '2149446185344106495' })
-    @IsString({ message: '授权组织UID必须是字符串' })
-    @IsNotEmpty({ message: '授权组织UID必填' })
-    @Length(1, 19, { message: '授权组织UID长度不能超过19位' })
-    organizationUid: string
+    @ApiProperty({ description: '授权组织主键', example: 1 })
+    @IsInt({ message: '授权组织主键必须是整数' })
+    @Min(1, { message: '授权组织主键必须大于0' })
+    organizationKeyId: number
 
     @ApiProperty({ description: '是否同时授权该组织的全部下级组织', example: true })
     @IsBoolean({ message: '包含下级标记必须是布尔值' })
     includeChildren: boolean
 }
 
-@Index('uk_tb_account_role_data_scope_organization_grant', ['dataScopeUid', 'organizationUid'], { unique: true })
-@Index('idx_tb_account_role_data_scope_organization_org', ['organizationUid'])
+@Index('uk_tb_account_role_data_scope_organization_grant', ['dataScopeKeyId', 'organizationKeyId'], { unique: true })
+@Index('idx_tb_account_role_data_scope_organization_org', ['organizationKeyId'])
 @Entity({ name: 'tb_account_role_data_scope_organization', comment: '角色自定义数据范围组织表' })
 export class TbAccountRoleDataScopeOrganization extends DataBaseAdapter {
     @Column({
-        name: TbAccountRoleDataScopeOrganizationColumn.DATA_SCOPE_UID,
-        type: 'varchar',
-        length: 19,
+        name: TbAccountRoleDataScopeOrganizationColumn.DATA_SCOPE_KEY_ID,
+        type: 'int',
         nullable: false,
-        comment: '数据范围规则UID'
+        comment: '数据范围规则主键'
     })
-    dataScopeUid: string
+    dataScopeKeyId: number
 
     @Column({
-        name: TbAccountRoleDataScopeOrganizationColumn.ORGANIZATION_UID,
-        type: 'varchar',
-        length: 19,
+        name: TbAccountRoleDataScopeOrganizationColumn.ORGANIZATION_KEY_ID,
+        type: 'int',
         nullable: false,
-        comment: '授权组织UID'
+        comment: '授权组织主键'
     })
-    organizationUid: string
+    organizationKeyId: number
 
     @Column({
         name: TbAccountRoleDataScopeOrganizationColumn.INCLUDE_CHILDREN,

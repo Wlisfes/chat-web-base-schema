@@ -1,13 +1,12 @@
 import { Entity, Column, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator'
+import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
 
 /** tb_account_menu 的数据库字段名。 */
 export enum TbAccountMenuColumn {
     KEY_ID = 'key_id',
-    UID = 'uid',
-    PARENT_UID = 'parent_uid',
+    PARENT_KEY_ID = 'parent_key_id',
     TYPE = 'type',
     NAME = 'name',
     ROUTE_NAME = 'route_name',
@@ -64,17 +63,11 @@ export const {
 
 /** 系统菜单、页面和按钮的完整字段 DTO。 */
 export class TbAccountMenuDto extends DataBaseDto {
-    @ApiProperty({ description: '菜单UID', example: '2149446185344106496' })
-    @IsString({ message: '菜单UID必须是字符串' })
-    @IsNotEmpty({ message: '菜单UID必填' })
-    @Length(1, 19, { message: '菜单UID长度不能超过19位' })
-    uid: string
-
-    @ApiProperty({ description: '父菜单UID；根节点为空', example: '2149446185344106495', required: false })
+    @ApiProperty({ description: '父菜单主键；根节点为空', example: 1, required: false })
     @IsOptional()
-    @IsString({ message: '父菜单UID必须是字符串' })
-    @Length(1, 19, { message: '父菜单UID长度不能超过19位' })
-    parentUid: string
+    @IsInt({ message: '父菜单主键必须是整数' })
+    @Min(1, { message: '父菜单主键必须大于0' })
+    parentKeyId: number
 
     @ApiProperty({
         description: TbAccountMenuTypeComment,
@@ -150,16 +143,12 @@ export class TbAccountMenuDto extends DataBaseDto {
     status: TbAccountMenuStatus
 }
 
-@Index('uk_tb_account_menu_uid', ['uid'], { unique: true })
 @Index('uk_tb_account_menu_permission_code', ['permissionCode'], { unique: true })
-@Index('idx_tb_account_menu_parent_sort', ['parentUid', 'sort'])
+@Index('idx_tb_account_menu_parent_sort', ['parentKeyId', 'sort'])
 @Entity({ name: 'tb_account_menu', comment: '系统菜单与操作权限表' })
 export class TbAccountMenu extends DataBaseAdapter {
-    @Column({ name: TbAccountMenuColumn.UID, type: 'varchar', length: 19, nullable: false, update: false, comment: '菜单UID' })
-    uid: string
-
-    @Column({ name: TbAccountMenuColumn.PARENT_UID, type: 'varchar', length: 19, nullable: true, comment: '父菜单UID' })
-    parentUid: string
+    @Column({ name: TbAccountMenuColumn.PARENT_KEY_ID, type: 'int', nullable: true, comment: '父菜单主键' })
+    parentKeyId: number
 
     @Column({ name: TbAccountMenuColumn.TYPE, type: 'varchar', length: 32, nullable: false, comment: TbAccountMenuTypeComment })
     type: TbAccountMenuType

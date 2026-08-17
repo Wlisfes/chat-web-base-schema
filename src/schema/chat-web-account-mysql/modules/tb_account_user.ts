@@ -159,6 +159,7 @@ export class TbAccountUserDto extends DataBaseDto {
 @Index('uk_tb_account_user_uid', ['uid'], { unique: true })
 @Index('uk_tb_account_user_number', ['number'], { unique: true })
 @Index('uk_tb_account_user_phone', ['phone'], { unique: true })
+@Index('uk_tb_account_user_email', ['email'], { unique: true })
 @Entity({ name: 'tb_account_user', comment: '员工账号表' })
 export class TbAccountUser extends DataBaseAdapter {
     @Column({

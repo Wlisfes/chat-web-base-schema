@@ -1,13 +1,12 @@
 import { Entity, Column, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsNotEmpty, IsString, Length, MaxLength } from 'class-validator'
+import { IsEnum, IsInt, IsNotEmpty, IsString, MaxLength, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
 
 /** tb_account_role_data_scope 的数据库字段名。 */
 export enum TbAccountRoleDataScopeColumn {
     KEY_ID = 'key_id',
-    UID = 'uid',
-    ROLE_UID = 'role_uid',
+    ROLE_KEY_ID = 'role_key_id',
     RESOURCE_CODE = 'resource_code',
     SCOPE_TYPE = 'scope_type',
     STATUS = 'status',
@@ -59,17 +58,10 @@ export const {
 
 /** 角色针对业务资源的数据范围规则完整字段 DTO。 */
 export class TbAccountRoleDataScopeDto extends DataBaseDto {
-    @ApiProperty({ description: '数据范围规则UID', example: '2149446185344106496' })
-    @IsString({ message: '数据范围规则UID必须是字符串' })
-    @IsNotEmpty({ message: '数据范围规则UID必填' })
-    @Length(1, 19, { message: '数据范围规则UID长度不能超过19位' })
-    uid: string
-
-    @ApiProperty({ description: '角色UID', example: '2149446185344106495' })
-    @IsString({ message: '角色UID必须是字符串' })
-    @IsNotEmpty({ message: '角色UID必填' })
-    @Length(1, 19, { message: '角色UID长度不能超过19位' })
-    roleUid: string
+    @ApiProperty({ description: '角色主键', example: 1 })
+    @IsInt({ message: '角色主键必须是整数' })
+    @Min(1, { message: '角色主键必须大于0' })
+    roleKeyId: number
 
     @ApiProperty({ description: '业务资源编码；星号表示默认规则', example: 'account:user' })
     @IsString({ message: '业务资源编码必须是字符串' })
@@ -96,23 +88,12 @@ export class TbAccountRoleDataScopeDto extends DataBaseDto {
     status: TbAccountRoleDataScopeStatus
 }
 
-@Index('uk_tb_account_role_data_scope_uid', ['uid'], { unique: true })
-@Index('uk_tb_account_role_data_scope_resource', ['roleUid', 'resourceCode'], { unique: true })
+@Index('uk_tb_account_role_data_scope_resource', ['roleKeyId', 'resourceCode'], { unique: true })
 @Index('idx_tb_account_role_data_scope_resource_status', ['resourceCode', 'status'])
 @Entity({ name: 'tb_account_role_data_scope', comment: '角色数据范围规则表' })
 export class TbAccountRoleDataScope extends DataBaseAdapter {
-    @Column({
-        name: TbAccountRoleDataScopeColumn.UID,
-        type: 'varchar',
-        length: 19,
-        nullable: false,
-        update: false,
-        comment: '数据范围规则UID'
-    })
-    uid: string
-
-    @Column({ name: TbAccountRoleDataScopeColumn.ROLE_UID, type: 'varchar', length: 19, nullable: false, comment: '角色UID' })
-    roleUid: string
+    @Column({ name: TbAccountRoleDataScopeColumn.ROLE_KEY_ID, type: 'int', nullable: false, comment: '角色主键' })
+    roleKeyId: number
 
     @Column({
         name: TbAccountRoleDataScopeColumn.RESOURCE_CODE,

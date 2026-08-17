@@ -1,12 +1,11 @@
 import { Entity, Column, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator'
+import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
 
 /** tb_account_role 的数据库字段名。 */
 export enum TbAccountRoleColumn {
     KEY_ID = 'key_id',
-    UID = 'uid',
     CODE = 'code',
     NAME = 'name',
     DESCRIPTION = 'description',
@@ -37,12 +36,6 @@ export const {
 
 /** 系统角色的完整字段 DTO。 */
 export class TbAccountRoleDto extends DataBaseDto {
-    @ApiProperty({ description: '角色UID', example: '2149446185344106496' })
-    @IsString({ message: '角色UID必须是字符串' })
-    @IsNotEmpty({ message: '角色UID必填' })
-    @Length(1, 19, { message: '角色UID长度不能超过19位' })
-    uid: string
-
     @ApiProperty({ description: '角色编码', example: 'department_manager' })
     @IsString({ message: '角色编码必须是字符串' })
     @IsNotEmpty({ message: '角色编码必填' })
@@ -80,14 +73,10 @@ export class TbAccountRoleDto extends DataBaseDto {
     status: TbAccountRoleStatus
 }
 
-@Index('uk_tb_account_role_uid', ['uid'], { unique: true })
 @Index('uk_tb_account_role_code', ['code'], { unique: true })
 @Index('idx_tb_account_role_status_sort', ['status', 'sort'])
 @Entity({ name: 'tb_account_role', comment: '系统角色表' })
 export class TbAccountRole extends DataBaseAdapter {
-    @Column({ name: TbAccountRoleColumn.UID, type: 'varchar', length: 19, nullable: false, update: false, comment: '角色UID' })
-    uid: string
-
     @Column({ name: TbAccountRoleColumn.CODE, type: 'varchar', length: 64, nullable: false, comment: '角色编码' })
     code: string
 

@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS `tb_account_menu` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
-    `uid` varchar(19) NOT NULL COMMENT '菜单UID',
-    `parent_uid` varchar(19) NULL COMMENT '父菜单UID',
+    `parent_key_id` int NULL COMMENT '父菜单主键',
     `type` varchar(32) NOT NULL COMMENT '菜单类型：directory=目录（只用于组织下级菜单的目录节点）；menu=菜单（可导航到页面的菜单节点）；button=按钮（不参与导航、用于绑定后端权限码的操作节点）',
     `name` varchar(64) NOT NULL COMMENT '菜单名称',
     `route_name` varchar(128) NULL COMMENT '前端路由名称',
@@ -17,9 +16,8 @@ CREATE TABLE IF NOT EXISTS `tb_account_menu` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
-    UNIQUE KEY `uk_tb_account_menu_uid` (`uid`),
     UNIQUE KEY `uk_tb_account_menu_permission_code` (`permission_code`),
-    KEY `idx_tb_account_menu_parent_sort` (`parent_uid`, `sort`)
+    KEY `idx_tb_account_menu_parent_sort` (`parent_key_id`, `sort`)
 ) ENGINE = InnoDB
   DEFAULT CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_unicode_ci

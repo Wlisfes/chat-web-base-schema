@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS `tb_account_role` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
-    `uid` varchar(19) NOT NULL COMMENT '角色UID',
     `code` varchar(64) NOT NULL COMMENT '角色编码',
     `name` varchar(64) NOT NULL COMMENT '角色名称',
     `description` varchar(255) NULL COMMENT '角色说明',
@@ -10,7 +9,6 @@ CREATE TABLE IF NOT EXISTS `tb_account_role` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
-    UNIQUE KEY `uk_tb_account_role_uid` (`uid`),
     UNIQUE KEY `uk_tb_account_role_code` (`code`),
     KEY `idx_tb_account_role_status_sort` (`status`, `sort`)
 ) ENGINE = InnoDB
@@ -18,8 +16,8 @@ CREATE TABLE IF NOT EXISTS `tb_account_role` (
   COLLATE = utf8mb4_unicode_ci
   COMMENT = '系统角色表';
 
-INSERT INTO `tb_account_role` (`uid`, `code`, `name`, `description`, `sort`, `builtin`, `status`)
-SELECT '9000000000000000001', 'super_admin', '超级管理员', '系统内置超级管理员角色', 0, 1, 'enabled'
+INSERT INTO `tb_account_role` (`code`, `name`, `description`, `sort`, `builtin`, `status`)
+SELECT 'super_admin', '超级管理员', '系统内置超级管理员角色', 0, 1, 'enabled'
 WHERE NOT EXISTS (
     SELECT 1 FROM `tb_account_role` WHERE `code` = 'super_admin'
 );

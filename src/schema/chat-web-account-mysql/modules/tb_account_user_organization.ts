@@ -1,13 +1,13 @@
 import { Entity, Column, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, Length, MaxLength } from 'class-validator'
+import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
 
 /** tb_account_user_organization 的数据库字段名。 */
 export enum TbAccountUserOrganizationColumn {
     KEY_ID = 'key_id',
     USER_UID = 'user_uid',
-    ORGANIZATION_UID = 'organization_uid',
+    ORGANIZATION_KEY_ID = 'organization_key_id',
     IS_PRIMARY = 'is_primary',
     POSITION_NAME = 'position_name',
     STATUS = 'status',
@@ -41,11 +41,10 @@ export class TbAccountUserOrganizationDto extends DataBaseDto {
     @Length(1, 19, { message: '账号UID长度不能超过19位' })
     userUid: string
 
-    @ApiProperty({ description: '组织UID', example: '2149446185344106495' })
-    @IsString({ message: '组织UID必须是字符串' })
-    @IsNotEmpty({ message: '组织UID必填' })
-    @Length(1, 19, { message: '组织UID长度不能超过19位' })
-    organizationUid: string
+    @ApiProperty({ description: '组织主键', example: 1 })
+    @IsInt({ message: '组织主键必须是整数' })
+    @Min(1, { message: '组织主键必须大于0' })
+    organizationKeyId: number
 
     @ApiProperty({ description: '是否为用户主组织', example: true })
     @IsBoolean({ message: '主组织标记必须是布尔值' })
@@ -67,15 +66,15 @@ export class TbAccountUserOrganizationDto extends DataBaseDto {
     status: TbAccountUserOrganizationStatus
 }
 
-@Index('uk_tb_account_user_organization_member', ['userUid', 'organizationUid'], { unique: true })
-@Index('idx_tb_account_user_organization_org_status', ['organizationUid', 'status'])
+@Index('uk_tb_account_user_organization_member', ['userUid', 'organizationKeyId'], { unique: true })
+@Index('idx_tb_account_user_organization_org_status', ['organizationKeyId', 'status'])
 @Entity({ name: 'tb_account_user_organization', comment: '用户组织成员关系表' })
 export class TbAccountUserOrganization extends DataBaseAdapter {
     @Column({ name: TbAccountUserOrganizationColumn.USER_UID, type: 'varchar', length: 19, nullable: false, comment: '账号UID' })
     userUid: string
 
-    @Column({ name: TbAccountUserOrganizationColumn.ORGANIZATION_UID, type: 'varchar', length: 19, nullable: false, comment: '组织UID' })
-    organizationUid: string
+    @Column({ name: TbAccountUserOrganizationColumn.ORGANIZATION_KEY_ID, type: 'int', nullable: false, comment: '组织主键' })
+    organizationKeyId: number
 
     @Column({
         name: TbAccountUserOrganizationColumn.IS_PRIMARY,

@@ -6,8 +6,7 @@ import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
 /** tb_account_organization 的数据库字段名。 */
 export enum TbAccountOrganizationColumn {
     KEY_ID = 'key_id',
-    UID = 'uid',
-    PARENT_UID = 'parent_uid',
+    PARENT_KEY_ID = 'parent_key_id',
     CODE = 'code',
     NAME = 'name',
     TYPE = 'type',
@@ -58,17 +57,11 @@ export const {
 
 /** 组织架构节点的完整字段 DTO。 */
 export class TbAccountOrganizationDto extends DataBaseDto {
-    @ApiProperty({ description: '组织UID', example: '2149446185344106496' })
-    @IsString({ message: '组织UID必须是字符串' })
-    @IsNotEmpty({ message: '组织UID必填' })
-    @Length(1, 19, { message: '组织UID长度不能超过19位' })
-    uid: string
-
-    @ApiProperty({ description: '父组织UID；根节点为空', example: '2149446185344106495', required: false })
+    @ApiProperty({ description: '父组织主键；根节点为空', example: 1, required: false })
     @IsOptional()
-    @IsString({ message: '父组织UID必须是字符串' })
-    @Length(1, 19, { message: '父组织UID长度不能超过19位' })
-    parentUid: string
+    @IsInt({ message: '父组织主键必须是整数' })
+    @Min(1, { message: '父组织主键必须大于0' })
+    parentKeyId: number
 
     @ApiProperty({ description: '组织编码', example: 'RD' })
     @IsString({ message: '组织编码必须是字符串' })
@@ -112,16 +105,12 @@ export class TbAccountOrganizationDto extends DataBaseDto {
     status: TbAccountOrganizationStatus
 }
 
-@Index('uk_tb_account_organization_uid', ['uid'], { unique: true })
 @Index('uk_tb_account_organization_code', ['code'], { unique: true })
-@Index('idx_tb_account_organization_parent_sort', ['parentUid', 'sort'])
+@Index('idx_tb_account_organization_parent_sort', ['parentKeyId', 'sort'])
 @Entity({ name: 'tb_account_organization', comment: '组织架构表' })
 export class TbAccountOrganization extends DataBaseAdapter {
-    @Column({ name: TbAccountOrganizationColumn.UID, type: 'varchar', length: 19, nullable: false, update: false, comment: '组织UID' })
-    uid: string
-
-    @Column({ name: TbAccountOrganizationColumn.PARENT_UID, type: 'varchar', length: 19, nullable: true, comment: '父组织UID' })
-    parentUid: string
+    @Column({ name: TbAccountOrganizationColumn.PARENT_KEY_ID, type: 'int', nullable: true, comment: '父组织主键' })
+    parentKeyId: number
 
     @Column({ name: TbAccountOrganizationColumn.CODE, type: 'varchar', length: 64, nullable: false, comment: '组织编码' })
     code: string

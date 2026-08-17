@@ -80,4 +80,72 @@ validateTable({
     enumComments: [accountSchema.TbAccountUserStatusComment, accountSchema.TbAccountUserEmploymentStatusComment]
 })
 
+validateTable({
+    entity: accountSchema.TbAccountOrganization,
+    dto: accountSchema.TbAccountOrganizationDto,
+    columns: accountSchema.TbAccountOrganizationColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_organization.sql'),
+    enumComments: [accountSchema.TbAccountOrganizationTypeComment, accountSchema.TbAccountOrganizationStatusComment]
+})
+
+validateTable({
+    entity: accountSchema.TbAccountOrganizationClosure,
+    dto: accountSchema.TbAccountOrganizationClosureDto,
+    columns: accountSchema.TbAccountOrganizationClosureColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_organization_closure.sql')
+})
+
+validateTable({
+    entity: accountSchema.TbAccountUserOrganization,
+    dto: accountSchema.TbAccountUserOrganizationDto,
+    columns: accountSchema.TbAccountUserOrganizationColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user_organization.sql'),
+    enumComments: [accountSchema.TbAccountUserOrganizationStatusComment]
+})
+
+validateTable({
+    entity: accountSchema.TbAccountMenu,
+    dto: accountSchema.TbAccountMenuDto,
+    columns: accountSchema.TbAccountMenuColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_menu.sql'),
+    enumComments: [accountSchema.TbAccountMenuTypeComment, accountSchema.TbAccountMenuStatusComment]
+})
+
+validateTable({
+    entity: accountSchema.TbAccountRole,
+    dto: accountSchema.TbAccountRoleDto,
+    columns: accountSchema.TbAccountRoleColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role.sql'),
+    enumComments: [accountSchema.TbAccountRoleStatusComment]
+})
+
+validateTable({
+    entity: accountSchema.TbAccountUserRole,
+    dto: accountSchema.TbAccountUserRoleDto,
+    columns: accountSchema.TbAccountUserRoleColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user_role.sql')
+})
+
+validateTable({
+    entity: accountSchema.TbAccountRoleMenu,
+    dto: accountSchema.TbAccountRoleMenuDto,
+    columns: accountSchema.TbAccountRoleMenuColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_menu.sql')
+})
+
+validateTable({
+    entity: accountSchema.TbAccountRoleDataScope,
+    dto: accountSchema.TbAccountRoleDataScopeDto,
+    columns: accountSchema.TbAccountRoleDataScopeColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_data_scope.sql'),
+    enumComments: [accountSchema.TbAccountRoleDataScopeTypeComment, accountSchema.TbAccountRoleDataScopeStatusComment]
+})
+
+validateTable({
+    entity: accountSchema.TbAccountRoleDataScopeOrganization,
+    dto: accountSchema.TbAccountRoleDataScopeOrganizationDto,
+    columns: accountSchema.TbAccountRoleDataScopeOrganizationColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_data_scope_organization.sql')
+})
+
 console.log('Schema consistency validation passed.')

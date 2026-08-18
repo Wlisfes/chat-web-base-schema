@@ -5,7 +5,7 @@ const { firstValueFrom, of } = require('rxjs')
 const { createApiResponse, isApiResponse } = require('../dist/src/utils/modules/response')
 const { TransformInterceptor } = require('../dist/src/interceptor/modules/transform.interceptor')
 const { HttpExceptionFilter } = require('../dist/src/filters/modules/http-exception.filter')
-const { PreserveHttpStatus } = require('../dist/src/filters/modules/preserve-http-status.decorator')
+const { PreserveHttpStatus, PreserveHttpStatusInterceptor } = require('../dist/src/filters/modules/preserve-http-status.decorator')
 const publicApi = require('../dist')
 const responseApi = require('@wlisfes/chat-web-base-schema/response')
 
@@ -136,4 +136,29 @@ test('HttpExceptionFilter preserves transport status for explicitly marked proto
 
     assert.equal(response.statusCode, 400)
     assert.equal(response.body.code, 400)
+})
+
+test('PreserveHttpStatus works with the real ArgumentsHost shape', () => {
+    const filter = new HttpExceptionFilter()
+    const request = { method: 'GET', originalUrl: '/health', headers: {} }
+    const response = {
+        headersSent: false,
+        statusCode: undefined,
+        status(code) {
+            this.statusCode = code
+            return this
+        },
+        json() {}
+    }
+    const host = {
+        switchToHttp: () => ({ getRequest: () => request, getResponse: () => response })
+    }
+    const executionContext = {
+        switchToHttp: () => ({ getRequest: () => request })
+    }
+
+    new PreserveHttpStatusInterceptor().intercept(executionContext, { handle: () => of(undefined) })
+    filter.catch(new BadRequestException('健康检查失败'), host)
+
+    assert.equal(response.statusCode, 400)
 })

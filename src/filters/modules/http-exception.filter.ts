@@ -2,9 +2,10 @@ import { ArgumentsHost, Catch, ExceptionFilter, ExecutionContext, HttpStatus, Lo
 import type { ApiResponse } from '@/types'
 import { createApiResponse } from '@/utils/modules/response'
 import { resolveExceptionData, resolveExceptionMessage, resolveExceptionStatus } from '@/filters/modules/exception-response'
-import { PRESERVE_HTTP_STATUS_METADATA } from '@/filters/modules/preserve-http-status.decorator'
+import { PRESERVE_HTTP_STATUS_METADATA, PRESERVE_HTTP_STATUS_REQUEST } from '@/filters/modules/preserve-http-status.decorator'
 
 interface HttpRequestLike {
+    [PRESERVE_HTTP_STATUS_REQUEST]?: boolean
     method?: string
     originalUrl?: string
     url?: string
@@ -42,11 +43,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
         if (!response.headersSent) {
             /** 前端统一读取响应体 code，避免 Axios 将业务异常当作传输层错误。 */
-            response.status(this.shouldPreserveHttpStatus(host) ? status : HttpStatus.OK).json(body)
+            response.status(this.shouldPreserveHttpStatus(host, request) ? status : HttpStatus.OK).json(body)
         }
     }
 
-    private shouldPreserveHttpStatus(host: ArgumentsHost): boolean {
+    private shouldPreserveHttpStatus(host: ArgumentsHost, request: HttpRequestLike): boolean {
+        if (request[PRESERVE_HTTP_STATUS_REQUEST] === true) return true
         const context = host as ExecutionContext
         const targets = [context.getHandler?.(), context.getClass?.()].filter((target): target is Function => typeof target === 'function')
         return targets.some(target => Reflect.getMetadata(PRESERVE_HTTP_STATUS_METADATA, target) === true)

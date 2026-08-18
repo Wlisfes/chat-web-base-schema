@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "Shared TypeORM MySQL table definitions for chat-web services",
     "license": "UNLICENSED",
     "repository": {
@@ -28,6 +28,11 @@
             "types": "./dist/src/schema/chat-web-account-mysql/index.d.ts",
             "require": "./dist/src/schema/chat-web-account-mysql/index.js",
             "default": "./dist/src/schema/chat-web-account-mysql/index.js"
+        },
+        "./chat-web-finance-mysql": {
+            "types": "./dist/src/schema/chat-web-finance-mysql/index.d.ts",
+            "require": "./dist/src/schema/chat-web-finance-mysql/index.js",
+            "default": "./dist/src/schema/chat-web-finance-mysql/index.js"
         },
         "./utils": {
             "types": "./dist/src/utils/index.d.ts",

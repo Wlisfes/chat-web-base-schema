@@ -4,7 +4,8 @@ const { readFileSync, readdirSync } = require('node:fs')
 const { basename, extname, resolve } = require('node:path')
 const { getMetadataArgsStorage } = require('typeorm')
 const accountSchema = require('../dist/src/schema/chat-web-account-mysql')
-const { DataBaseAdapter } = require('../dist/src/utils')
+const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
+const { DataBaseAdapter, DataBaseByAdapter } = require('../dist/src/utils')
 
 function sorted(values) {
     return [...values].sort()
@@ -40,7 +41,9 @@ function validateServiceFiles(serviceRoot) {
 
 function validateTable({ entity, dto, columns, sqlPath, enumComments = [] }) {
     const metadata = getMetadataArgsStorage()
-    const entityColumns = metadata.columns.filter(column => column.target === entity || column.target === DataBaseAdapter)
+    const inheritedTargets = [DataBaseAdapter]
+    if (DataBaseByAdapter.prototype.isPrototypeOf(entity.prototype)) inheritedTargets.push(DataBaseByAdapter)
+    const entityColumns = metadata.columns.filter(column => column.target === entity || inheritedTargets.includes(column.target))
     const databaseColumns = entityColumns.map(column => column.options.name || column.propertyName)
     const entityProperties = entityColumns.map(column => column.propertyName)
     const entityTable = metadata.tables.find(table => table.target === entity)
@@ -72,12 +75,89 @@ function validateTable({ entity, dto, columns, sqlPath, enumComments = [] }) {
 const accountServiceRoot = resolve(__dirname, '../src/schema/chat-web-account-mysql')
 validateServiceFiles(accountServiceRoot)
 
+const financeServiceRoot = resolve(__dirname, '../src/schema/chat-web-finance-mysql')
+validateServiceFiles(financeServiceRoot)
+
 validateTable({
     entity: accountSchema.TbAccountUser,
     dto: accountSchema.TbAccountUserDto,
     columns: accountSchema.TbAccountUserColumn,
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user.sql'),
     enumComments: [accountSchema.TbAccountUserStatusComment, accountSchema.TbAccountUserEmploymentStatusComment]
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceBrand,
+    dto: financeSchema.TbFinanceBrandDto,
+    columns: financeSchema.TbFinanceBrandColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_brand.sql'),
+    enumComments: [financeSchema.TbFinanceBrandStatusComment]
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceCurrency,
+    dto: financeSchema.TbFinanceCurrencyDto,
+    columns: financeSchema.TbFinanceCurrencyColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_currency.sql'),
+    enumComments: [financeSchema.TbFinanceCurrencyStatusComment]
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceCurrencyExchange,
+    dto: financeSchema.TbFinanceCurrencyExchangeDto,
+    columns: financeSchema.TbFinanceCurrencyExchangeColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_currency_exchange.sql')
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceCountry,
+    dto: financeSchema.TbFinanceCountryDto,
+    columns: financeSchema.TbFinanceCountryColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_country.sql'),
+    enumComments: [financeSchema.TbFinanceCountryStatusComment]
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceClient,
+    dto: financeSchema.TbFinanceClientDto,
+    columns: financeSchema.TbFinanceClientColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_client.sql'),
+    enumComments: [
+        financeSchema.TbFinanceClientStatusComment,
+        financeSchema.TbFinanceClientPayModeComment,
+        financeSchema.TbFinanceClientClassTypeComment,
+        financeSchema.TbFinanceClientStageComment,
+        financeSchema.TbFinanceClientAuthStatusComment,
+        financeSchema.TbFinanceClientSourceComment
+    ]
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceClientTag,
+    dto: financeSchema.TbFinanceClientTagDto,
+    columns: financeSchema.TbFinanceClientTagColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_client_tag.sql')
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceClientShare,
+    dto: financeSchema.TbFinanceClientShareDto,
+    columns: financeSchema.TbFinanceClientShareColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_client_share.sql')
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceClientSettings,
+    dto: financeSchema.TbFinanceClientSettingsDto,
+    columns: financeSchema.TbFinanceClientSettingsColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_client_settings.sql')
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceBasicSmsRate,
+    dto: financeSchema.TbFinanceBasicSmsRateDto,
+    columns: financeSchema.TbFinanceBasicSmsRateColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_basic_sms_rate.sql')
 })
 
 validateTable({

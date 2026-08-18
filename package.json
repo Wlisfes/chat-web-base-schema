@@ -33,6 +33,16 @@
             "types": "./dist/src/utils/index.d.ts",
             "require": "./dist/src/utils/index.js",
             "default": "./dist/src/utils/index.js"
+        },
+        "./interceptor": {
+            "types": "./dist/src/interceptor/index.d.ts",
+            "require": "./dist/src/interceptor/index.js",
+            "default": "./dist/src/interceptor/index.js"
+        },
+        "./filters": {
+            "types": "./dist/src/filters/index.d.ts",
+            "require": "./dist/src/filters/index.js",
+            "default": "./dist/src/filters/index.js"
         }
     },
     "scripts": {
@@ -42,7 +52,8 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "validate:schema": "node scripts/validate-schema.cjs",
-        "verify": "yarn format:check && yarn typecheck && yarn build && yarn validate:schema",
+        "test": "node --test test/*.test.cjs",
+        "verify": "yarn format:check && yarn typecheck && yarn build && yarn validate:schema && yarn test",
         "prepublishOnly": "yarn verify"
     },
     "peerDependencies": {

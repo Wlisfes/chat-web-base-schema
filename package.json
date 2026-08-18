@@ -43,6 +43,11 @@
             "types": "./dist/src/filters/index.d.ts",
             "require": "./dist/src/filters/index.js",
             "default": "./dist/src/filters/index.js"
+        },
+        "./response": {
+            "types": "./dist/src/utils/modules/response.d.ts",
+            "require": "./dist/src/utils/modules/response.js",
+            "default": "./dist/src/utils/modules/response.js"
         }
     },
     "scripts": {

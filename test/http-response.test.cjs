@@ -7,6 +7,7 @@ const { TransformInterceptor } = require('../dist/src/interceptor/modules/transf
 const { HttpExceptionFilter } = require('../dist/src/filters/modules/http-exception.filter')
 const { PreserveHttpStatus } = require('../dist/src/filters/modules/preserve-http-status.decorator')
 const publicApi = require('../dist')
+const responseApi = require('@wlisfes/chat-web-base-schema/response')
 
 const timestampPattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
 
@@ -37,6 +38,7 @@ test('public package entry exports shared HTTP infrastructure', () => {
     assert.equal(typeof publicApi.TransformInterceptor, 'function')
     assert.equal(typeof publicApi.HttpExceptionFilter, 'function')
     assert.equal(typeof publicApi.RpcExceptionFilter, 'function')
+    assert.equal(typeof responseApi.createApiResponse, 'function')
 })
 
 test('createApiResponse uses a string business message', () => {

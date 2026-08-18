@@ -2,6 +2,9 @@
 
 `TransformInterceptor`、`HttpExceptionFilter` 和 `RpcExceptionFilter` 供所有 Chat Web NestJS 服务复用。
 
+不需要数据库 Schema 的网关等轻量服务应从 `@wlisfes/chat-web-base-schema/response` 导入 `createApiResponse`，避免通过聚合
+`/utils` 入口加载 TypeORM 适配器。
+
 ## 响应契约
 
 HTTP 成功和异常响应都使用相同的四个字段：

@@ -83,6 +83,24 @@ test('shared Redis URL parser merges explicit credentials', () => {
     assert.equal(url.pathname, '/2')
 })
 
+test('shared Redis readiness keeps the service boolean contract', async () => {
+    const service = new RedisService(config({ REDIS_URL: 'redis://redis.example:6379/0' }))
+    service.client = {
+        isReady: true,
+        async ping() {
+            return 'PONG'
+        }
+    }
+    assert.equal(await service.ping(), true)
+    service.client = {
+        isReady: false,
+        async ping() {
+            throw new Error('should not ping a disconnected client')
+        }
+    }
+    assert.equal(await service.ping(), false)
+})
+
 test('shared Nacos configuration preserves explicit environment values', () => {
     const key = 'SHARED_RUNTIME_ENV_OVERRIDE'
     const previous = process.env[key]

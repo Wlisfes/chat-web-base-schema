@@ -37,8 +37,8 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
         }
     }
 
-    async ping(): Promise<string> {
-        return this.client.ping()
+    async ping(): Promise<boolean> {
+        return this.client.isReady && (await this.client.ping()) === 'PONG'
     }
 
     async get(key: string): Promise<string | null> {

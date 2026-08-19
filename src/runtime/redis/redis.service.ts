@@ -80,9 +80,12 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
                     url.username = username
                 }
                 url.password = password
-                return url.toString()
             }
-            return configuredUrl
+            const database = this.getOptionalInteger('REDIS_DATABASE', 0, 15)
+            if (database !== undefined) {
+                url.pathname = `/${database}`
+            }
+            return url.toString()
         }
 
         const host = this.configService.get<string>('REDIS_HOST')?.trim() || 'chat-web-redis'
@@ -106,6 +109,18 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
     private getInteger(key: string, fallback: number, minimum: number, maximum: number): number {
         const configured = this.configService.get<string | number>(key)
         const value = configured === undefined || configured === null || configured === '' ? fallback : Number(configured)
+        if (!Number.isInteger(value) || value < minimum || value > maximum) {
+            throw new Error(`${key} 必须是 ${minimum}-${maximum} 之间的整数`)
+        }
+        return value
+    }
+
+    private getOptionalInteger(key: string, minimum: number, maximum: number): number | undefined {
+        const configured = this.configService.get<string | number>(key)
+        if (configured === undefined || configured === null || configured === '') {
+            return undefined
+        }
+        const value = Number(configured)
         if (!Number.isInteger(value) || value < minimum || value > maximum) {
             throw new Error(`${key} 必须是 ${minimum}-${maximum} 之间的整数`)
         }

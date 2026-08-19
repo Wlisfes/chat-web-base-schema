@@ -1,7 +1,7 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.0.8",
-    "description": "Shared TypeORM MySQL table definitions for chat-web services",
+    "version": "1.1.0",
+    "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {
         "type": "git",
@@ -53,6 +53,26 @@
             "types": "./dist/src/utils/modules/response.d.ts",
             "require": "./dist/src/utils/modules/response.js",
             "default": "./dist/src/utils/modules/response.js"
+        },
+        "./redis": {
+            "types": "./dist/src/runtime/redis/index.d.ts",
+            "require": "./dist/src/runtime/redis/index.js",
+            "default": "./dist/src/runtime/redis/index.js"
+        },
+        "./nacos": {
+            "types": "./dist/src/runtime/nacos/index.d.ts",
+            "require": "./dist/src/runtime/nacos/index.js",
+            "default": "./dist/src/runtime/nacos/index.js"
+        },
+        "./auth": {
+            "types": "./dist/src/runtime/auth/index.d.ts",
+            "require": "./dist/src/runtime/auth/index.js",
+            "default": "./dist/src/runtime/auth/index.js"
+        },
+        "./database": {
+            "types": "./dist/src/runtime/database/index.d.ts",
+            "require": "./dist/src/runtime/database/index.js",
+            "default": "./dist/src/runtime/database/index.js"
         }
     },
     "scripts": {
@@ -68,26 +88,53 @@
     },
     "peerDependencies": {
         "@nestjs/common": ">=11 <12",
+        "@nestjs/config": ">=4 <5",
         "@nestjs/core": ">=11 <12",
         "@nestjs/platform-express": ">=11 <12",
         "@nestjs/swagger": ">=11 <12",
+        "@nestjs/typeorm": ">=11 <12",
         "class-transformer": ">=0.5 <1",
         "express": ">=5 <6",
+        "js-yaml": ">=4 <5",
+        "nacos": ">=2.6 <3",
+        "redis": ">=6 <7",
         "reflect-metadata": "^0.2.2",
         "rxjs": ">=7.8 <8",
         "typeorm": ">=0.3.31 <1"
     },
+    "peerDependenciesMeta": {
+        "@nestjs/config": {
+            "optional": true
+        },
+        "@nestjs/typeorm": {
+            "optional": true
+        },
+        "js-yaml": {
+            "optional": true
+        },
+        "nacos": {
+            "optional": true
+        },
+        "redis": {
+            "optional": true
+        }
+    },
     "devDependencies": {
         "@nestjs/common": "^11.2.1",
+        "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.2.1",
         "@nestjs/platform-express": "^11.2.1",
         "@nestjs/swagger": "^11.4.6",
+        "@nestjs/typeorm": "11.0.3",
         "@types/cookie-parser": "^1.4.10",
         "@types/express": "^5.0.6",
         "@types/node": "^24.0.0",
         "class-transformer": "^0.5.1",
         "express": "^5.2.1",
+        "js-yaml": "^4.1.0",
+        "nacos": "^2.6.0",
         "prettier": "^3.6.2",
+        "redis": "6.2.1",
         "reflect-metadata": "^0.2.2",
         "rimraf": "^6.0.1",
         "rxjs": "^7.8.2",

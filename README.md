@@ -1,7 +1,7 @@
 # chat-web-base-schema
 
-Shared TypeORM MySQL table definitions, DTO validation metadata and Swagger
-descriptions for chat-web microservices.
+Shared TypeORM MySQL table definitions, DTO validation metadata, Swagger
+descriptions and opt-in NestJS runtime modules for chat-web microservices.
 
 This package only describes existing tables. Databases and tables are created by
 external SQL deployment scripts. It does not contain a DataSource or migrations.
@@ -28,6 +28,20 @@ yarn verify
 ```
 
 See [Schema conventions](docs/schema-conventions.md) before adding another table.
+
+## Shared runtime modules
+
+Infrastructure code is exposed through isolated package subpaths so consumers
+only load the dependencies they use:
+
+- `@wlisfes/chat-web-base-schema/redis`
+- `@wlisfes/chat-web-base-schema/nacos`
+- `@wlisfes/chat-web-base-schema/auth`
+- `@wlisfes/chat-web-base-schema/database`
+
+See [Shared runtime modules](docs/runtime-modules.md) for registration and
+extension examples. Business authentication, permissions, database entities
+and gateway routing remain in their owning services.
 
 ## Shared HTTP response handling
 

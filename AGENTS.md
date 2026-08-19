@@ -12,6 +12,7 @@
 - Every table has a TypeScript module at `modules/table_name.ts` and a canonical create script at `sql/table_name.sql`.
 - Later changes require an immutable `sql/changes/YYYYMMDDHHmmss__table_name__action.sql` file and an update to the canonical create script in the same change.
 - Never edit or delete an incremental SQL file after it has been applied to a shared environment.
+- Schemas from different service directories are strict data boundaries. Shared entities and SQL may only be consumed by the owning service; cross-service reads and writes use typed service APIs instead of cross-database SQL.
 
 ## Required table contract
 
@@ -36,6 +37,7 @@
 - Keep implementation functions in the relevant utility module; do not move implementations into `src/types.ts`.
 - Internal source imports may use the `@/*` alias. The build must continue rewriting aliases for published output.
 - `DateWithColumn` must preserve write values and format database read values as `YYYY-MM-DD HH:mm:ss` by default.
+- Reusable Redis, Nacos, authentication, database configuration and grant-validation behavior belongs in the runtime modules here. Runtime helpers must preserve per-service Redis indexes and reject MySQL grants outside the owning database.
 
 ## Verification
 

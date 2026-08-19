@@ -2,7 +2,7 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 
 const { AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
-const { createMysqlOptions } = require('../dist/src/runtime/database')
+const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const { NacosService } = require('../dist/src/runtime/nacos')
 const { RedisService } = require('../dist/src/runtime/redis')
 
@@ -83,6 +83,21 @@ test('shared Redis URL parser merges explicit credentials', () => {
     assert.equal(url.pathname, '/2')
 })
 
+test('explicit Redis database overrides the database embedded in REDIS_URL', () => {
+    const service = new RedisService(
+        config({
+            REDIS_URL: 'rediss://account:secret@redis.example:6379/0',
+            REDIS_DATABASE: 6
+        })
+    )
+    const url = new URL(service.getConnectionUrl())
+
+    assert.equal(url.protocol, 'rediss:')
+    assert.equal(url.username, 'account')
+    assert.equal(url.password, 'secret')
+    assert.equal(url.pathname, '/6')
+})
+
 test('shared Redis readiness keeps the service boolean contract', async () => {
     const service = new RedisService(config({ REDIS_URL: 'redis://redis.example:6379/0' }))
     service.client = {
@@ -146,4 +161,22 @@ test('shared MySQL options apply only allowlisted environment overrides', () => 
     assert.equal(options.synchronize, false)
     assert.equal(options.migrationsRun, false)
     assert.deepEqual(options.extra, { decimalNumbers: true })
+})
+
+test('shared MySQL grant validation only permits the service database', () => {
+    assert.doesNotThrow(() =>
+        assertMysqlDatabaseIsolation(
+            [
+                'GRANT USAGE ON *.* TO `finance`@`%`',
+                'GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX ON `chat-web-finance`.* TO `finance`@`%`'
+            ],
+            'chat-web-finance'
+        )
+    )
+    assert.throws(
+        () => assertMysqlDatabaseIsolation(['GRANT SELECT ON `chat-web-account`.* TO `finance`@`%`'], 'chat-web-finance'),
+        /只能访问数据库/
+    )
+    assert.throws(() => assertMysqlDatabaseIsolation(['GRANT SELECT ON *.* TO `finance`@`%`'], 'chat-web-finance'), /全局权限/)
+    assert.throws(() => assertMysqlDatabaseIsolation(['GRANT `shared_role`@`%` TO `finance`@`%`'], 'chat-web-finance'), /角色/)
 })

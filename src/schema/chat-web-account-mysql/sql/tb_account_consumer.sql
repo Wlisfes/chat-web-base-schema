@@ -28,4 +28,4 @@ CREATE TABLE IF NOT EXISTS `tb_account_consumer` (
     KEY `idx_tb_account_consumer_brand_key_id` (`brand_key_id`),
     KEY `idx_tb_account_consumer_status` (`status`),
     KEY `idx_tb_account_consumer_currency` (`currency`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '外部客户账号表';
+) ENGINE = InnoDB AUTO_INCREMENT = 5181000 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '外部客户账号表';

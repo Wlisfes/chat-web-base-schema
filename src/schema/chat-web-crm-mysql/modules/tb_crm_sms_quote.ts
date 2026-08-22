@@ -9,7 +9,7 @@ export enum TbCrmSmsQuoteColumn {
     CONSUMER_KEY_ID = 'consumer_key_id',
     APPLICATION_KEY_ID = 'application_key_id',
     APP_ID = 'app_id',
-    CLIENT_ALIAS = 'client_alias',
+    CONSUMER_ALIAS = 'consumer_alias',
     APP_ALIAS = 'app_alias',
     COUNTRY_KEY_ID = 'country_key_id',
     CODE = 'code',
@@ -72,7 +72,7 @@ export class TbCrmSmsQuoteDto extends DataBaseByDto {
     @IsOptional()
     @IsString({ message: '客户别名必须是字符串' })
     @MaxLength(64, { message: '客户别名长度不能超过64位' })
-    clientAlias: string
+    consumerAlias: string
 
     @ApiProperty({ description: '应用别名快照', example: 'LYNKS-OTP' })
     @IsString({ message: '应用别名必须是字符串' })
@@ -171,8 +171,8 @@ export class TbCrmSmsQuote extends DataBaseByAdapter {
     @Column({ name: TbCrmSmsQuoteColumn.APP_ID, type: 'varchar', length: 32, nullable: false, comment: '应用ID快照' })
     appId: string
 
-    @Column({ name: TbCrmSmsQuoteColumn.CLIENT_ALIAS, type: 'varchar', length: 64, nullable: true, comment: '客户别名快照' })
-    clientAlias: string
+    @Column({ name: TbCrmSmsQuoteColumn.CONSUMER_ALIAS, type: 'varchar', length: 64, nullable: true, comment: '客户别名快照' })
+    consumerAlias: string
 
     @Column({ name: TbCrmSmsQuoteColumn.APP_ALIAS, type: 'varchar', length: 64, nullable: false, comment: '应用别名快照' })
     appAlias: string

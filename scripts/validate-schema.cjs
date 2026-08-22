@@ -5,6 +5,7 @@ const { basename, extname, resolve } = require('node:path')
 const { getMetadataArgsStorage } = require('typeorm')
 const accountSchema = require('../dist/src/schema/chat-web-account-mysql')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
+const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
 const { DataBaseAdapter, DataBaseByAdapter } = require('../dist/src/utils')
 
 function sorted(values) {
@@ -78,6 +79,9 @@ validateServiceFiles(accountServiceRoot)
 const financeServiceRoot = resolve(__dirname, '../src/schema/chat-web-finance-mysql')
 validateServiceFiles(financeServiceRoot)
 
+const crmServiceRoot = resolve(__dirname, '../src/schema/chat-web-crm-mysql')
+validateServiceFiles(crmServiceRoot)
+
 validateTable({
     entity: accountSchema.TbAccountUser,
     dto: accountSchema.TbAccountUserDto,
@@ -137,6 +141,30 @@ validateTable({
     dto: financeSchema.TbFinanceBasicSmsRateDto,
     columns: financeSchema.TbFinanceBasicSmsRateColumn,
     sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_basic_sms_rate.sql')
+})
+
+validateTable({
+    entity: crmSchema.TbCrmSmsApplication,
+    dto: crmSchema.TbCrmSmsApplicationDto,
+    columns: crmSchema.TbCrmSmsApplicationColumn,
+    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_application.sql'),
+    enumComments: [crmSchema.TbCrmSmsApplicationStatusComment, crmSchema.TbCrmSmsApplicationTypeComment]
+})
+
+validateTable({
+    entity: crmSchema.TbCrmSmsQuoteDraft,
+    dto: crmSchema.TbCrmSmsQuoteDraftDto,
+    columns: crmSchema.TbCrmSmsQuoteDraftColumn,
+    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_quote_draft.sql'),
+    enumComments: [crmSchema.TbCrmSmsQuoteDraftSourceComment, crmSchema.TbCrmSmsQuoteDraftStatusComment]
+})
+
+validateTable({
+    entity: crmSchema.TbCrmSmsQuote,
+    dto: crmSchema.TbCrmSmsQuoteDto,
+    columns: crmSchema.TbCrmSmsQuoteColumn,
+    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_quote.sql'),
+    enumComments: [crmSchema.TbCrmSmsQuoteStatusComment]
 })
 
 validateTable({

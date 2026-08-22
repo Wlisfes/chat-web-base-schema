@@ -87,6 +87,21 @@ validateTable({
 })
 
 validateTable({
+    entity: accountSchema.TbAccountConsumer,
+    dto: accountSchema.TbAccountConsumerDto,
+    columns: accountSchema.TbAccountConsumerColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_consumer.sql'),
+    enumComments: [
+        accountSchema.TbAccountConsumerStatusComment,
+        accountSchema.TbAccountConsumerPayModeComment,
+        accountSchema.TbAccountConsumerClassTypeComment,
+        accountSchema.TbAccountConsumerStageComment,
+        accountSchema.TbAccountConsumerAuthStatusComment,
+        accountSchema.TbAccountConsumerSourceComment
+    ]
+})
+
+validateTable({
     entity: financeSchema.TbFinanceBrand,
     dto: financeSchema.TbFinanceBrandDto,
     columns: financeSchema.TbFinanceBrandColumn,
@@ -115,42 +130,6 @@ validateTable({
     columns: financeSchema.TbFinanceCountryColumn,
     sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_country.sql'),
     enumComments: [financeSchema.TbFinanceCountryStatusComment]
-})
-
-validateTable({
-    entity: financeSchema.TbFinanceClient,
-    dto: financeSchema.TbFinanceClientDto,
-    columns: financeSchema.TbFinanceClientColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_client.sql'),
-    enumComments: [
-        financeSchema.TbFinanceClientStatusComment,
-        financeSchema.TbFinanceClientPayModeComment,
-        financeSchema.TbFinanceClientClassTypeComment,
-        financeSchema.TbFinanceClientStageComment,
-        financeSchema.TbFinanceClientAuthStatusComment,
-        financeSchema.TbFinanceClientSourceComment
-    ]
-})
-
-validateTable({
-    entity: financeSchema.TbFinanceClientTag,
-    dto: financeSchema.TbFinanceClientTagDto,
-    columns: financeSchema.TbFinanceClientTagColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_client_tag.sql')
-})
-
-validateTable({
-    entity: financeSchema.TbFinanceClientShare,
-    dto: financeSchema.TbFinanceClientShareDto,
-    columns: financeSchema.TbFinanceClientShareColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_client_share.sql')
-})
-
-validateTable({
-    entity: financeSchema.TbFinanceClientSettings,
-    dto: financeSchema.TbFinanceClientSettingsDto,
-    columns: financeSchema.TbFinanceClientSettingsColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_client_settings.sql')
 })
 
 validateTable({

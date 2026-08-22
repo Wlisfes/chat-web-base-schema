@@ -35,14 +35,32 @@ an ephemeral Nacos instance.
 ## Authentication
 
 The auth subpath exports the HS256 token codec, Redis session lifecycle,
-Bearer guard, request principal types and decorators. `SessionAuthModule`
-provides the standard downstream-service behavior: verify the account token,
-assert that its Redis session is active, and attach the principal.
+Bearer guard, request principal types and decorators.
 
 The account service keeps its own login, captcha, password and user-status
 logic. It provides that business authenticator through
 `AUTH_TOKEN_AUTHENTICATOR` while reusing the shared guard and token/session
 services.
+
+Business services must not read the account Redis database or hold the account
+JWT secret. Import `AccountRemoteAuthModule` to validate Bearer tokens through
+the account service `/auth/token/introspect` endpoint and attach the returned
+principal to the request.
+
+```ts
+import { AccountRemoteAuthModule, JwtAuthGuard } from '@wlisfes/chat-web-base-schema/auth'
+
+@Module({
+    imports: [AccountRemoteAuthModule],
+    providers: [{ provide: APP_GUARD, useExisting: JwtAuthGuard }]
+})
+export class AppModule {}
+```
+
+The remote client reads `ACCOUNT_SERVICE_URL` and the optional
+`ACCOUNT_AUTH_TIMEOUT_MS` value. `SessionAuthModule` is only for an owning
+service that is explicitly allowed to verify JWTs and access its own session
+store; it is not the downstream business-service default.
 
 ## MySQL options
 

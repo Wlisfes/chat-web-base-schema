@@ -53,3 +53,14 @@ and gateway routing remain in their owning services.
 All NestJS services should register the shared response interceptor and the
 filter matching their transport. See [统一响应与异常处理](docs/http-response.md)
 for the response contract and registration examples.
+
+## Shared service utilities
+
+Services import reusable pagination DTOs, tree validation/building, UID helpers
+and HTTP request context middleware from the existing utility subpath:
+
+```ts
+import { PageDto, buildTree, generateUid, requestContextMiddleware } from '@wlisfes/chat-web-base-schema/utils'
+```
+
+These helpers must not be copied into a service-level `src/common` directory.

@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS `tb_crm_sms_application` (
+    `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
+    `consumer_key_id` int NOT NULL COMMENT 'Account 客户主键',
+    `owner_user_uid` varchar(19) NOT NULL COMMENT '归属账号UID',
+    `app_id` varchar(32) NOT NULL COMMENT '应用ID',
+    `secret` varchar(128) NULL COMMENT '应用密钥',
+    `app_name` varchar(64) NOT NULL COMMENT '应用名称',
+    `app_alias` varchar(64) NOT NULL COMMENT '应用别名',
+    `status` varchar(32) NOT NULL COMMENT '短信应用状态：active=已激活（应用可正常发送短信）；disable=禁用（应用已停止使用）；inactive=未激活（应用尚未启用）',
+    `type` varchar(32) NOT NULL COMMENT '短信应用类型：market=营销短信（用于营销推广内容）；notify=通知短信（用于业务通知内容）；otp=验证码（用于一次性验证码）',
+    `push_url` varchar(1024) NULL COMMENT '报告推送地址',
+    `remark` varchar(1024) NULL COMMENT '备注',
+    `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
+    `modify_by` varchar(19) NULL COMMENT '更新账号UID',
+    `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    PRIMARY KEY (`key_id`),
+    UNIQUE KEY `uk_tb_crm_sms_application_app_id` (`app_id`),
+    UNIQUE KEY `uk_tb_crm_sms_application_consumer_alias` (`consumer_key_id`, `app_alias`),
+    KEY `idx_tb_crm_sms_application_consumer_key_id` (`consumer_key_id`),
+    KEY `idx_tb_crm_sms_application_owner_user_uid` (`owner_user_uid`),
+    KEY `idx_tb_crm_sms_application_status` (`status`)
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'CRM 客户短信应用表';

@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `tb_crm_sms_quote` (
     `consumer_key_id` int NOT NULL COMMENT 'Account 客户主键',
     `application_key_id` int NOT NULL COMMENT 'CRM 短信应用主键',
     `app_id` varchar(32) NOT NULL COMMENT '应用ID快照',
-    `client_alias` varchar(64) NULL COMMENT '客户别名快照',
+    `consumer_alias` varchar(64) NULL COMMENT '客户别名快照',
     `app_alias` varchar(64) NOT NULL COMMENT '应用别名快照',
     `country_key_id` int NOT NULL COMMENT 'Finance 国家/地区主键',
     `code` varchar(10) NOT NULL COMMENT '国家/地区国际区号',

@@ -16,7 +16,7 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
         path: '/auth/token/login',
         query: { keyword: 'tester' },
         params: {},
-        body: { name: 'tester', password: 'secret' },
+        body: { name: 'tester', password: 'secret', code: 'A7K9' },
         ip: '127.0.0.1',
         socket: {}
     }
@@ -47,5 +47,7 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
     assert.equal(payload.requestId, response['x-request-id'])
     assert.equal(payload.body.name, 'tester')
     assert.equal(payload.body.password, '[已隐藏]')
+    assert.equal(payload.body.code, '[已隐藏]')
     assert.equal(messages[0].includes('secret'), false)
+    assert.equal(messages[0].includes('A7K9'), false)
 })

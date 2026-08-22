@@ -21,8 +21,14 @@ function sanitize(value: unknown, depth = 0): unknown {
     if (Array.isArray(value)) return value.slice(0, 100).map(item => sanitize(item, depth + 1))
     if (!value || typeof value !== 'object') return value
 
+    const entries = Object.entries(value)
+    const containsPassword = entries.some(([key]) => key.toLowerCase() === 'password')
     return Object.fromEntries(
-        Object.entries(value).map(([key, item]) => [key, SENSITIVE_KEYS.has(key.toLowerCase()) ? '[已隐藏]' : sanitize(item, depth + 1)])
+        entries.map(([key, item]) => {
+            const normalizedKey = key.toLowerCase()
+            const sensitive = SENSITIVE_KEYS.has(normalizedKey) || (containsPassword && normalizedKey === 'code')
+            return [key, sensitive ? '[已隐藏]' : sanitize(item, depth + 1)]
+        })
     )
 }
 

@@ -3,6 +3,7 @@ const assert = require('node:assert/strict')
 const { plainToInstance } = require('class-transformer')
 const { validateSync } = require('class-validator')
 const { PageDto, SizePageDto, assertUid, assertValidTree, buildTree, generateUid, resolveRequestId } = require('../dist/src/utils')
+const requestContext = require('../dist/src/utils/modules/request-context')
 
 test('共享分页 DTO 保留两种现有请求契约', () => {
     const page = plainToInstance(PageDto, {})
@@ -34,4 +35,5 @@ test('共享 UID 与请求 ID 工具保持输入约束', () => {
     assert.throws(() => assertUid('invalid'), /必须是1-19位数字字符串/)
     assert.equal(resolveRequestId('request-123'), 'request-123')
     assert.match(resolveRequestId('bad request id'), /^[0-9a-f-]{36}$/)
+    assert.equal(requestContext.resolveRequestId('request-456'), 'request-456')
 })

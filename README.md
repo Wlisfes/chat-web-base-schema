@@ -60,7 +60,8 @@ Services import reusable pagination DTOs, tree validation/building, UID helpers
 and HTTP request context middleware from the existing utility subpath:
 
 ```ts
-import { PageDto, buildTree, generateUid, requestContextMiddleware } from '@wlisfes/chat-web-base-schema/utils'
+import { PageDto, buildTree, generateUid } from '@wlisfes/chat-web-base-schema/utils'
+import { requestContextMiddleware } from '@wlisfes/chat-web-base-schema/request-context'
 ```
 
 These helpers must not be copied into a service-level `src/common` directory.

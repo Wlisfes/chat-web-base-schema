@@ -39,6 +39,11 @@
             "require": "./dist/src/utils/index.js",
             "default": "./dist/src/utils/index.js"
         },
+        "./request-context": {
+            "types": "./dist/src/utils/modules/request-context.d.ts",
+            "require": "./dist/src/utils/modules/request-context.js",
+            "default": "./dist/src/utils/modules/request-context.js"
+        },
         "./interceptor": {
             "types": "./dist/src/interceptor/index.d.ts",
             "require": "./dist/src/interceptor/index.js",

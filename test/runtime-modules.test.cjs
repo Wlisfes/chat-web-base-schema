@@ -1,7 +1,8 @@
 const assert = require('node:assert/strict')
 const test = require('node:test')
 
-const { AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
+const { BadGatewayException, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
+const { AccountAuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const { NacosService } = require('../dist/src/runtime/nacos')
 const { RedisService } = require('../dist/src/runtime/redis')
@@ -18,6 +19,51 @@ function config(initial = {}) {
         values
     }
 }
+
+test('shared account auth client forwards the bearer token and returns the principal', async () => {
+    let request
+    const service = new AccountAuthClient(config({ ACCOUNT_SERVICE_URL: 'http://account.internal:3000' }), async (url, init) => {
+        request = { url, init }
+        return new Response(
+            JSON.stringify({ data: { uid: '2149446185344106496', sessionId: 'shared-auth-session' }, code: 200, message: '成功' }),
+            { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+    })
+
+    assert.deepEqual(await service.authenticateToken('account-token'), {
+        uid: '2149446185344106496',
+        sessionId: 'shared-auth-session'
+    })
+    assert.equal(request.url, 'http://account.internal:3000/auth/token/introspect')
+    assert.equal(request.init.method, 'GET')
+    assert.equal(request.init.headers.authorization, 'Bearer account-token')
+})
+
+test('shared account auth client preserves rejected-token semantics', async () => {
+    const service = new AccountAuthClient(config({}), async () => {
+        return new Response(JSON.stringify({ data: null, code: 401, message: '登录会话已失效' }), {
+            status: 401,
+            headers: { 'content-type': 'application/json' }
+        })
+    })
+
+    await assert.rejects(() => service.authenticateToken('expired-token'), UnauthorizedException)
+})
+
+test('shared account auth client distinguishes unavailable and invalid upstream responses', async () => {
+    const unavailable = new AccountAuthClient(config({}), async () => {
+        throw new Error('connect failed')
+    })
+    const invalid = new AccountAuthClient(config({}), async () => new Response('not-json', { status: 200 }))
+
+    await assert.rejects(() => unavailable.authenticateToken('account-token'), ServiceUnavailableException)
+    await assert.rejects(() => invalid.authenticateToken('account-token'), BadGatewayException)
+})
+
+test('shared account auth client validates service URL and timeout settings', () => {
+    assert.throws(() => new AccountAuthClient(config({ ACCOUNT_SERVICE_URL: 'redis://account' }), async () => new Response()), /http:\/\//)
+    assert.throws(() => new AccountAuthClient(config({ ACCOUNT_AUTH_TIMEOUT_MS: 99 }), async () => new Response()), /100-30000/)
+})
 
 test('shared token service signs and verifies account access tokens', () => {
     const values = {

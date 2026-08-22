@@ -1,5 +1,7 @@
 export * from './auth.interface'
 export * from './auth.decorator'
+export * from './account-auth.client'
+export * from './account-remote-auth.module'
 export * from './token.service'
 export * from './auth-session.service'
 export * from './session-authenticator.service'

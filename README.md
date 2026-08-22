@@ -62,6 +62,7 @@ and HTTP request context middleware from the existing utility subpath:
 ```ts
 import { PageDto, buildTree, generateUid } from '@wlisfes/chat-web-base-schema/utils'
 import { requestContextMiddleware } from '@wlisfes/chat-web-base-schema/request-context'
+import { createRequestLoggingMiddleware } from '@wlisfes/chat-web-base-schema/logging'
 ```
 
 These helpers must not be copied into a service-level `src/common` directory.

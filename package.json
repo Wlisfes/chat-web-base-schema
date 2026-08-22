@@ -44,6 +44,11 @@
             "require": "./dist/src/utils/modules/request-context.js",
             "default": "./dist/src/utils/modules/request-context.js"
         },
+        "./logging": {
+            "types": "./dist/src/runtime/logging/index.d.ts",
+            "require": "./dist/src/runtime/logging/index.js",
+            "default": "./dist/src/runtime/logging/index.js"
+        },
         "./interceptor": {
             "types": "./dist/src/interceptor/index.d.ts",
             "require": "./dist/src/interceptor/index.js",

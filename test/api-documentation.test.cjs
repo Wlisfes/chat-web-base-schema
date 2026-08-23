@@ -10,7 +10,7 @@ class RequestDto {}
 ApiProperty({ description: '名称', example: '测试名称' })(RequestDto.prototype, 'name')
 
 class ResponseDto {}
-ApiProperty({ description: '主键', example: 1 })(ResponseDto.prototype, 'keyId')
+ApiProperty({ type: Number, description: '主键', example: 1 })(ResponseDto.prototype, 'keyId')
 
 function decorateMethod(controller, methodName, decorator) {
     const descriptor = Object.getOwnPropertyDescriptor(controller.prototype, methodName)
@@ -50,7 +50,8 @@ test('ApiServiceDecorator 生成 body 请求与统一 DTO 响应 Schema', () => 
     assert.equal(parameters[0].type, RequestDto)
     assert.equal(schema.type, 'object')
     assert.equal(schema.allOf, undefined)
-    assert.equal(schema.properties.data.$ref, '#/components/schemas/ResponseDto')
+    assert.equal(schema.properties.data.type, 'object')
+    assert.deepEqual(schema.properties.data.properties.keyId, { type: 'number', description: '主键', example: 1 })
     assert.deepEqual(responses[200].content['application/json'].example, {
         data: { keyId: 1 },
         code: 200,
@@ -85,7 +86,9 @@ test('ApiServiceDecorator 支持数组 data 和原始非 JSON 响应', () => {
     const listData = listResponses[200].content['application/json'].schema.properties.data
     const captchaResponses = Reflect.getMetadata(DECORATORS.API_RESPONSE, TestController.prototype.captcha)
 
-    assert.deepEqual(listData, { type: 'array', items: { $ref: '#/components/schemas/ResponseDto' } })
+    assert.equal(listData.type, 'array')
+    assert.equal(listData.items.type, 'object')
+    assert.deepEqual(listData.items.properties.keyId, { type: 'number', description: '主键', example: 1 })
     assert.deepEqual(listResponses[200].content['application/json'].example.data, [{ keyId: 1 }])
     assert.deepEqual(captchaResponses[200].content['image/svg+xml'].schema, { type: 'string' })
     assert.equal(captchaResponses[200].content['image/svg+xml'].example, 'string')

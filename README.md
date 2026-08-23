@@ -43,6 +43,8 @@ only load the dependencies they use:
 - `@wlisfes/chat-web-base-schema/nacos`
 - `@wlisfes/chat-web-base-schema/auth`
 - `@wlisfes/chat-web-base-schema/database`
+- `@wlisfes/chat-web-base-schema/logging`
+- `@wlisfes/chat-web-base-schema/observability`
 
 See [Shared runtime modules](docs/runtime-modules.md) for registration and
 extension examples. Business authentication, permissions, database entities
@@ -66,3 +68,10 @@ import { createRequestLoggingMiddleware } from '@wlisfes/chat-web-base-schema/lo
 ```
 
 These helpers must not be copied into a service-level `src/common` directory.
+
+HTTP services should pass `createStructuredLogger()` to `NestFactory.create`
+so container output remains one-line JSON. Request logs and exception logs then
+share `service`, `environment`, `requestId`, `traceId` and `spanId` fields. The
+request context also forwards `x-request-id` automatically through shared Feign
+clients. OpenTelemetry SDK initialization remains the responsibility of each
+service process, while the shared observability helper reads its active span.

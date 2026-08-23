@@ -1,5 +1,6 @@
 import { BadGatewayException, Inject, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { getActiveRequestId } from '@/utils/modules/request-context'
 import { FEIGN_FETCH } from './feign.constants'
 import { getFeignClientOptions, getFeignMethodDefinitions } from './feign.decorator'
 import type {
@@ -35,6 +36,8 @@ export class FeignClientFactory {
     private async invoke(options: FeignClientOptions, definition: FeignMethodDefinition, args: unknown[]): Promise<unknown> {
         const url = new URL(definition.path, this.getBaseUrl(options))
         const headers = new Headers({ accept: 'application/json' })
+        const requestId = getActiveRequestId()
+        if (requestId) headers.set('x-request-id', requestId)
         let body: unknown
         for (const parameter of definition.parameters) {
             const value = args[parameter.index]

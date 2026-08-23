@@ -7,6 +7,7 @@ const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/sr
 const { AccountFeignClient, FeignClientFactory, FinanceFeignClient } = require('../dist/src/runtime/feign')
 const { NacosService } = require('../dist/src/runtime/nacos')
 const { RedisService } = require('../dist/src/runtime/redis')
+const { runWithRequestContext } = require('../dist/src/utils/modules/request-context')
 
 function config(initial = {}) {
     const values = { ...initial }
@@ -86,12 +87,13 @@ test('shared Feign finance client serializes POST body, headers and GET query', 
     })
     const service = factory.create(FinanceFeignClient)
 
-    await service.batchSmsRates('Bearer account-token', { countryKeyIds: [1, 2] })
+    await runWithRequestContext('finance-request-1', () => service.batchSmsRates('Bearer account-token', { countryKeyIds: [1, 2] }))
     await service.resolveCurrencyExchange('Bearer account-token', 'USD')
 
     assert.equal(requests[0].url, 'http://finance.internal:3010/rates/sms/batch')
     assert.equal(requests[0].init.method, 'POST')
     assert.equal(requests[0].init.headers.get('authorization'), 'Bearer account-token')
+    assert.equal(requests[0].init.headers.get('x-request-id'), 'finance-request-1')
     assert.deepEqual(JSON.parse(requests[0].init.body), { countryKeyIds: [1, 2] })
     assert.equal(requests[1].url, 'http://finance.internal:3010/currency/exchange/resolver?currency=USD')
     assert.equal(requests[1].init.method, 'GET')

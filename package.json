@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.4.5",
+    "version": "1.4.6",
     "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {
@@ -53,6 +53,11 @@
             "types": "./dist/src/runtime/logging/index.d.ts",
             "require": "./dist/src/runtime/logging/index.js",
             "default": "./dist/src/runtime/logging/index.js"
+        },
+        "./observability": {
+            "types": "./dist/src/runtime/observability/index.d.ts",
+            "require": "./dist/src/runtime/observability/index.js",
+            "default": "./dist/src/runtime/observability/index.js"
         },
         "./interceptor": {
             "types": "./dist/src/interceptor/index.d.ts",
@@ -168,6 +173,7 @@
         "typescript": "^5.7.3"
     },
     "dependencies": {
+        "@opentelemetry/api": "^1.9.0",
         "@types/lodash": "^4.17.25",
         "class-validator": "^0.15.1",
         "cookie-parser": "^1.4.7",

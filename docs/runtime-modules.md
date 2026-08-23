@@ -87,6 +87,26 @@ export class IntegrationModule {}
 
 Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Multi-select fields remain arrays in the POST body. Business services must not create their own `fetch`, Axios or cross-database implementation for an endpoint already declared by a shared Feign client.
 
+## Structured logging and trace correlation
+
+Use the shared logger during Nest application creation. It emits one JSON
+object per line and adds the active request and OpenTelemetry trace context to
+framework, business and exception logs.
+
+```ts
+import { createStructuredLogger } from '@wlisfes/chat-web-base-schema/logging'
+
+const logger = createStructuredLogger({ serviceName: 'chat-web-example-service' })
+const app = await NestFactory.create(AppModule, { logger })
+```
+
+Register `requestContextMiddleware` before `createRequestLoggingMiddleware`.
+The request context accepts a valid incoming `x-request-id`, creates one when it
+is absent, returns it in the response and forwards it through shared Feign
+clients. `getActiveTraceContext()` from the `observability` subpath returns the
+active `traceId` and `spanId`; it does not initialize or configure an
+OpenTelemetry SDK.
+
 ## MySQL options
 
 `createMysqlOptions` validates the common Nacos MySQL structure, applies an

@@ -39,4 +39,8 @@ test('共享 UID 与请求 ID 工具保持输入约束', () => {
     assert.equal(resolveRequestId('request-123'), 'request-123')
     assert.match(resolveRequestId('bad request id'), /^[0-9a-f-]{36}$/)
     assert.equal(requestContext.resolveRequestId('request-456'), 'request-456')
+    assert.equal(
+        requestContext.runWithRequestContext('request-789', () => requestContext.getActiveRequestId()),
+        'request-789'
+    )
 })

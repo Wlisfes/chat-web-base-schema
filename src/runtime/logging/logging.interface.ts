@@ -5,6 +5,7 @@ export interface RequestLoggingOptions {
 }
 
 export interface RequestLogPayload {
+    message: string
     service: string
     logId: string
     requestId: string
@@ -20,4 +21,11 @@ export interface RequestLogPayload {
     query?: unknown
     params?: unknown
     body?: unknown
+    traceId?: string
+    spanId?: string
+}
+
+export interface StructuredLoggerOptions {
+    serviceName: string
+    environment?: string
 }

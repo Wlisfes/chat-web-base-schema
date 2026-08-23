@@ -42,12 +42,13 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
     Logger.prototype.log = originalLog
 
     assert.equal(messages.length, 1)
-    const payload = JSON.parse(messages[0])
+    const payload = messages[0]
+    assert.equal(payload.message, 'HTTP请求完成')
     assert.equal(payload.logId, response['x-request-id'])
     assert.equal(payload.requestId, response['x-request-id'])
     assert.equal(payload.body.name, 'tester')
     assert.equal(payload.body.password, '[已隐藏]')
     assert.equal(payload.body.code, '[已隐藏]')
-    assert.equal(messages[0].includes('secret'), false)
-    assert.equal(messages[0].includes('A7K9'), false)
+    assert.equal(JSON.stringify(messages[0]).includes('secret'), false)
+    assert.equal(JSON.stringify(messages[0]).includes('A7K9'), false)
 })

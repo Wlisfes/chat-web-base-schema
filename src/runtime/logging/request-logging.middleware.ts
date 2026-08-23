@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common'
 import type { Request, RequestHandler } from 'express'
 import { resolveRequestId } from '@/utils/modules/request-context'
+import { getActiveTraceContext } from '@/runtime/observability'
 import type { RequestLoggingOptions } from '@/runtime/logging/logging.interface'
 
 const SENSITIVE_KEYS = new Set([
@@ -60,7 +61,9 @@ export function createRequestLoggingMiddleware(options: RequestLoggingOptions): 
 
         response.once('finish', () => {
             if (ignoredPaths.has(request.path)) return
+            const traceContext = getActiveTraceContext()
             const payload = {
+                message: 'HTTP请求完成',
                 service: options.serviceName,
                 logId: requestId,
                 requestId,
@@ -75,12 +78,12 @@ export function createRequestLoggingMiddleware(options: RequestLoggingOptions): 
                 userAgent: request.headers['user-agent'] ?? '',
                 query: truncate(request.query, maxPayloadLength),
                 params: truncate(request.params, maxPayloadLength),
-                body: truncate(request.body, maxPayloadLength)
+                body: truncate(request.body, maxPayloadLength),
+                ...traceContext
             }
-            const message = JSON.stringify(payload)
-            if (response.statusCode >= 500) logger.error(message)
-            else if (response.statusCode >= 400) logger.warn(message)
-            else logger.log(message)
+            if (response.statusCode >= 500) logger.error(payload)
+            else if (response.statusCode >= 400) logger.warn(payload)
+            else logger.log(payload)
         })
         next()
     }

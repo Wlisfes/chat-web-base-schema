@@ -4,6 +4,7 @@ const test = require('node:test')
 const { BadGatewayException, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
 const { AccountAuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
+const { AccountFeignClient, FeignClientFactory, FinanceFeignClient } = require('../dist/src/runtime/feign')
 const { NacosService } = require('../dist/src/runtime/nacos')
 const { RedisService } = require('../dist/src/runtime/redis')
 
@@ -20,9 +21,14 @@ function config(initial = {}) {
     }
 }
 
-test('shared account auth client forwards the bearer token and returns the principal', async () => {
+function accountAuthClient(values, fetchClient) {
+    const factory = new FeignClientFactory(config(values), fetchClient)
+    return new AccountAuthClient(factory.create(AccountFeignClient))
+}
+
+test('shared Feign account auth client forwards the bearer token and returns the principal', async () => {
     let request
-    const service = new AccountAuthClient(config({ ACCOUNT_SERVICE_URL: 'http://account.internal:3000' }), async (url, init) => {
+    const service = accountAuthClient({ ACCOUNT_SERVICE_URL: 'http://account.internal:3000' }, async (url, init) => {
         request = { url, init }
         return new Response(
             JSON.stringify({ data: { uid: '2149446185344106496', sessionId: 'shared-auth-session' }, code: 200, message: '成功' }),
@@ -34,13 +40,13 @@ test('shared account auth client forwards the bearer token and returns the princ
         uid: '2149446185344106496',
         sessionId: 'shared-auth-session'
     })
-    assert.equal(request.url, 'http://account.internal:3000/auth/token/introspect')
+    assert.equal(String(request.url), 'http://account.internal:3000/auth/token/introspect')
     assert.equal(request.init.method, 'GET')
-    assert.equal(request.init.headers.authorization, 'Bearer account-token')
+    assert.equal(request.init.headers.get('authorization'), 'Bearer account-token')
 })
 
 test('shared account auth client preserves rejected-token semantics', async () => {
-    const service = new AccountAuthClient(config({}), async () => {
+    const service = accountAuthClient({}, async () => {
         return new Response(JSON.stringify({ data: null, code: 401, message: '登录会话已失效' }), {
             status: 401,
             headers: { 'content-type': 'application/json' }
@@ -51,18 +57,44 @@ test('shared account auth client preserves rejected-token semantics', async () =
 })
 
 test('shared account auth client distinguishes unavailable and invalid upstream responses', async () => {
-    const unavailable = new AccountAuthClient(config({}), async () => {
+    const unavailable = accountAuthClient({}, async () => {
         throw new Error('connect failed')
     })
-    const invalid = new AccountAuthClient(config({}), async () => new Response('not-json', { status: 200 }))
+    const invalid = accountAuthClient({}, async () => new Response('not-json', { status: 200 }))
 
     await assert.rejects(() => unavailable.authenticateToken('account-token'), ServiceUnavailableException)
     await assert.rejects(() => invalid.authenticateToken('account-token'), BadGatewayException)
 })
 
-test('shared account auth client validates service URL and timeout settings', () => {
-    assert.throws(() => new AccountAuthClient(config({ ACCOUNT_SERVICE_URL: 'redis://account' }), async () => new Response()), /http:\/\//)
-    assert.throws(() => new AccountAuthClient(config({ ACCOUNT_AUTH_TIMEOUT_MS: 99 }), async () => new Response()), /100-30000/)
+test('shared Feign client validates service URL and timeout settings', async () => {
+    const invalidUrl = accountAuthClient({ ACCOUNT_SERVICE_URL: 'redis://account' }, async () => new Response())
+    const invalidTimeout = accountAuthClient({ ACCOUNT_AUTH_TIMEOUT_MS: 99 }, async () => new Response())
+
+    await assert.rejects(() => invalidUrl.authenticateToken('account-token'), /http:\/\//)
+    await assert.rejects(() => invalidTimeout.authenticateToken('account-token'), /100-30000/)
+})
+
+test('shared Feign finance client serializes POST body, headers and GET query', async () => {
+    const requests = []
+    const factory = new FeignClientFactory(config({ FINANCE_SERVICE_URL: 'http://finance.internal:3010' }), async (url, init) => {
+        requests.push({ url: String(url), init })
+        const data = requests.length === 1 ? [{ countryKeyId: 1, upUsd: 100, downUsd: 80 }] : { currency: 'USD', rate: 1 }
+        return new Response(JSON.stringify({ data, code: 200, message: '成功' }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+        })
+    })
+    const service = factory.create(FinanceFeignClient)
+
+    await service.batchSmsRates('Bearer account-token', { countryKeyIds: [1, 2] })
+    await service.resolveCurrencyExchange('Bearer account-token', 'USD')
+
+    assert.equal(requests[0].url, 'http://finance.internal:3010/rates/sms/batch')
+    assert.equal(requests[0].init.method, 'POST')
+    assert.equal(requests[0].init.headers.get('authorization'), 'Bearer account-token')
+    assert.deepEqual(JSON.parse(requests[0].init.body), { countryKeyIds: [1, 2] })
+    assert.equal(requests[1].url, 'http://finance.internal:3010/currency/exchange/resolver?currency=USD')
+    assert.equal(requests[1].init.method, 'GET')
 })
 
 test('shared token service signs and verifies account access tokens', () => {

@@ -62,6 +62,31 @@ The remote client reads `ACCOUNT_SERVICE_URL` and the optional
 service that is explicitly allowed to verify JWTs and access its own session
 store; it is not the downstream business-service default.
 
+## Declarative Feign clients
+
+Cross-service HTTP calls use the shared declarative Feign runtime. A client class only declares the service address, request method, path and parameter bindings; `FeignModule` supplies the HTTP proxy implementation and consistently handles timeouts, Bearer headers, response envelopes and upstream errors.
+
+```ts
+@FeignClient({
+    name: '账号服务',
+    baseUrlConfigKey: 'ACCOUNT_SERVICE_URL',
+    defaultBaseUrl: 'http://chat-web-account-service:3000'
+})
+export class AccountFeignClient {
+    @FeignGet('/consumer/resolver')
+    resolveConsumer(@FeignHeader('authorization') authorization: string, @FeignQuery('keyId') keyId: number): Promise<AccountConsumer> {
+        throw new Error('AccountFeignClient must be injected by FeignModule')
+    }
+}
+
+@Module({
+    imports: [FeignModule.register([AccountFeignClient])]
+})
+export class IntegrationModule {}
+```
+
+Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Multi-select fields remain arrays in the POST body. Business services must not create their own `fetch`, Axios or cross-database implementation for an endpoint already declared by a shared Feign client.
+
 ## MySQL options
 
 `createMysqlOptions` validates the common Nacos MySQL structure, applies an

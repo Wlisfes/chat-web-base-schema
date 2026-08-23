@@ -8,6 +8,7 @@ import {
     ApiProduces,
     ApiResponse,
     DECORATORS,
+    getSchemaPath,
     type ApiBodyOptions,
     type ApiOperationOptions,
     type OpenAPIObject
@@ -72,7 +73,7 @@ function createTypeSchema(type: DocumentType): DocumentSchema {
     if (type === String) return { type: 'string' }
     if (type === Number) return { type: 'number' }
     if (type === Boolean) return { type: 'boolean' }
-    return createModelSchema(type)
+    return { $ref: getSchemaPath(type) }
 }
 
 function createDataSchema(response: ApiServiceResponseOptions): DocumentSchema {
@@ -84,14 +85,16 @@ function createResponseSchema(response: ApiServiceResponseOptions): DocumentSche
     const dataSchema = createDataSchema(response)
     if (response.envelope === false) return dataSchema
     return {
-        type: 'object',
-        properties: {
-            data: dataSchema,
-            code: { type: 'number', description: '业务状态码', example: 200 },
-            message: { type: 'string', description: '响应消息', example: 'success' },
-            timestamp: { type: 'string', description: '服务端响应时间', example: '2026-08-23 12:00:00' }
-        },
-        required: ['data', 'code', 'message', 'timestamp']
+        allOf: [
+            { $ref: getSchemaPath(ApiResponseDocumentDto) },
+            {
+                type: 'object',
+                properties: {
+                    data: dataSchema
+                }
+            }
+        ],
+        example: createResponseExample(response)
     }
 }
 
@@ -128,71 +131,6 @@ function createPrimitiveExample(type: unknown): unknown {
     if (type === Boolean || type === 'boolean') return true
     if (type === Date) return '2026-08-23 12:00:00'
     return undefined
-}
-
-function createPrimitiveSchema(type: unknown): DocumentSchema {
-    if (type === String || type === 'string') return { type: 'string' }
-    if (type === Number || type === 'number') return { type: 'number' }
-    if (type === 'integer') return { type: 'integer' }
-    if (type === Boolean || type === 'boolean') return { type: 'boolean' }
-    if (type === Date) return { type: 'string', format: 'date-time' }
-    return { type: 'object' }
-}
-
-function applyPropertyMetadata(schema: DocumentSchema, metadata: ApiPropertyDocumentMetadata): DocumentSchema {
-    if ('$ref' in schema) return schema
-    const result = { ...schema }
-    const keys = [
-        'example',
-        'default',
-        'enum',
-        'description',
-        'format',
-        'nullable',
-        'readOnly',
-        'writeOnly',
-        'deprecated',
-        'minimum',
-        'maximum',
-        'minLength',
-        'maxLength',
-        'minItems',
-        'maxItems',
-        'pattern'
-    ] as const
-    for (const key of keys) {
-        const value = metadata[key]
-        if (value !== undefined) Object.assign(result, { [key]: value })
-    }
-    return result
-}
-
-function createModelSchema(type: unknown, visited = new Set<unknown>()): DocumentSchema {
-    if (typeof type !== 'function') return createPrimitiveSchema(type)
-    if (type === String || type === Number || type === Boolean || type === Date) return createPrimitiveSchema(type)
-    if (visited.has(type)) return { type: 'object' }
-
-    const nextVisited = new Set(visited).add(type)
-    const prototype = type.prototype as object
-    const propertyNames = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, prototype) ?? []) as string[]
-    const properties: Record<string, DocumentSchema> = {}
-    const required: string[] = []
-    for (const property of propertyNames) {
-        const propertyName = property.replace(/^:/, '')
-        const metadata = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, prototype, propertyName) ??
-            {}) as ApiPropertyDocumentMetadata
-        const propertyType = resolvePropertyType(metadata.type)
-        const propertySchema = createModelSchema(propertyType, nextVisited)
-        properties[propertyName] = metadata.isArray
-            ? applyPropertyMetadata({ type: 'array', items: propertySchema }, metadata)
-            : applyPropertyMetadata(propertySchema, metadata)
-        if (metadata.required !== false) required.push(propertyName)
-    }
-    return {
-        type: 'object',
-        properties,
-        ...(required.length ? { required } : {})
-    }
 }
 
 function createModelExample(type: unknown, visited = new Set<unknown>()): unknown {

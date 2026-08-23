@@ -8,7 +8,6 @@ import {
     ApiProduces,
     ApiResponse,
     DECORATORS,
-    getSchemaPath,
     type ApiBodyOptions,
     type ApiOperationOptions,
     type OpenAPIObject
@@ -73,7 +72,7 @@ function createTypeSchema(type: DocumentType): DocumentSchema {
     if (type === String) return { type: 'string' }
     if (type === Number) return { type: 'number' }
     if (type === Boolean) return { type: 'boolean' }
-    return { $ref: getSchemaPath(type) }
+    return createModelSchema(type)
 }
 
 function createDataSchema(response: ApiServiceResponseOptions): DocumentSchema {
@@ -102,6 +101,20 @@ interface ApiPropertyDocumentMetadata {
     example?: unknown
     default?: unknown
     enum?: unknown[]
+    description?: string
+    required?: boolean
+    format?: string
+    nullable?: boolean
+    readOnly?: boolean
+    writeOnly?: boolean
+    deprecated?: boolean
+    minimum?: number
+    maximum?: number
+    minLength?: number
+    maxLength?: number
+    minItems?: number
+    maxItems?: number
+    pattern?: string
 }
 
 function resolvePropertyType(type: unknown): unknown {
@@ -115,6 +128,71 @@ function createPrimitiveExample(type: unknown): unknown {
     if (type === Boolean || type === 'boolean') return true
     if (type === Date) return '2026-08-23 12:00:00'
     return undefined
+}
+
+function createPrimitiveSchema(type: unknown): DocumentSchema {
+    if (type === String || type === 'string') return { type: 'string' }
+    if (type === Number || type === 'number') return { type: 'number' }
+    if (type === 'integer') return { type: 'integer' }
+    if (type === Boolean || type === 'boolean') return { type: 'boolean' }
+    if (type === Date) return { type: 'string', format: 'date-time' }
+    return { type: 'object' }
+}
+
+function applyPropertyMetadata(schema: DocumentSchema, metadata: ApiPropertyDocumentMetadata): DocumentSchema {
+    if ('$ref' in schema) return schema
+    const result = { ...schema }
+    const keys = [
+        'example',
+        'default',
+        'enum',
+        'description',
+        'format',
+        'nullable',
+        'readOnly',
+        'writeOnly',
+        'deprecated',
+        'minimum',
+        'maximum',
+        'minLength',
+        'maxLength',
+        'minItems',
+        'maxItems',
+        'pattern'
+    ] as const
+    for (const key of keys) {
+        const value = metadata[key]
+        if (value !== undefined) Object.assign(result, { [key]: value })
+    }
+    return result
+}
+
+function createModelSchema(type: unknown, visited = new Set<unknown>()): DocumentSchema {
+    if (typeof type !== 'function') return createPrimitiveSchema(type)
+    if (type === String || type === Number || type === Boolean || type === Date) return createPrimitiveSchema(type)
+    if (visited.has(type)) return { type: 'object' }
+
+    const nextVisited = new Set(visited).add(type)
+    const prototype = type.prototype as object
+    const propertyNames = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, prototype) ?? []) as string[]
+    const properties: Record<string, DocumentSchema> = {}
+    const required: string[] = []
+    for (const property of propertyNames) {
+        const propertyName = property.replace(/^:/, '')
+        const metadata = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, prototype, propertyName) ??
+            {}) as ApiPropertyDocumentMetadata
+        const propertyType = resolvePropertyType(metadata.type)
+        const propertySchema = createModelSchema(propertyType, nextVisited)
+        properties[propertyName] = metadata.isArray
+            ? applyPropertyMetadata({ type: 'array', items: propertySchema }, metadata)
+            : applyPropertyMetadata(propertySchema, metadata)
+        if (metadata.required !== false) required.push(propertyName)
+    }
+    return {
+        type: 'object',
+        properties,
+        ...(required.length ? { required } : {})
+    }
 }
 
 function createModelExample(type: unknown, visited = new Set<unknown>()): unknown {

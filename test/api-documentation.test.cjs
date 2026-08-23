@@ -42,22 +42,23 @@ test('ApiServiceDecorator 生成 body 请求与统一 DTO 响应 Schema', () => 
     const method = TestController.prototype.create
     const parameters = Reflect.getMetadata(DECORATORS.API_PARAMETERS, method)
     const responses = Reflect.getMetadata(DECORATORS.API_RESPONSE, method)
-    const schema = responses[200].content['application/json'].schema
+    const media = responses[200].content['application/json']
+    const schema = media.schema
 
     assert.equal(Reflect.getMetadata(PATH_METADATA, method), 'create')
     assert.equal(Reflect.getMetadata(METHOD_METADATA, method), RequestMethod.POST)
     assert.equal(parameters[0].in, 'body')
     assert.equal(parameters[0].type, RequestDto)
-    assert.equal(schema.type, 'object')
-    assert.equal(schema.allOf, undefined)
-    assert.equal(schema.properties.data.type, 'object')
-    assert.deepEqual(schema.properties.data.properties.keyId, { type: 'number', description: '主键', example: 1 })
-    assert.deepEqual(responses[200].content['application/json'].example, {
+    assert.equal(schema.allOf.length, 2)
+    assert.equal(schema.allOf[0].$ref, '#/components/schemas/ApiResponseDocumentDto')
+    assert.equal(schema.allOf[1].properties.data.$ref, '#/components/schemas/ResponseDto')
+    assert.deepEqual(media.example, {
         data: { keyId: 1 },
         code: 200,
         message: 'success',
         timestamp: '2026-08-23 12:00:00'
     })
+    assert.deepEqual(schema.example, media.example)
 })
 
 test('ApiServiceDecorator 支持数组 data 和原始非 JSON 响应', () => {
@@ -83,13 +84,14 @@ test('ApiServiceDecorator 支持数组 data 和原始非 JSON 响应', () => {
     )
 
     const listResponses = Reflect.getMetadata(DECORATORS.API_RESPONSE, TestController.prototype.list)
-    const listData = listResponses[200].content['application/json'].schema.properties.data
+    const listMedia = listResponses[200].content['application/json']
+    const listData = listMedia.schema.allOf[1].properties.data
     const captchaResponses = Reflect.getMetadata(DECORATORS.API_RESPONSE, TestController.prototype.captcha)
 
     assert.equal(listData.type, 'array')
-    assert.equal(listData.items.type, 'object')
-    assert.deepEqual(listData.items.properties.keyId, { type: 'number', description: '主键', example: 1 })
-    assert.deepEqual(listResponses[200].content['application/json'].example.data, [{ keyId: 1 }])
+    assert.equal(listData.items.$ref, '#/components/schemas/ResponseDto')
+    assert.deepEqual(listMedia.example.data, [{ keyId: 1 }])
+    assert.deepEqual(listMedia.schema.example, listMedia.example)
     assert.deepEqual(captchaResponses[200].content['image/svg+xml'].schema, { type: 'string' })
     assert.equal(captchaResponses[200].content['image/svg+xml'].example, 'string')
 })

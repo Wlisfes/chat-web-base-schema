@@ -65,7 +65,7 @@ export class TbCrmSmsApplicationDto extends DataBaseByDto {
     @MaxLength(32, { message: '应用ID长度不能超过32位' })
     appId: string
 
-    @ApiProperty({ description: '应用密钥', required: false, writeOnly: true })
+    @ApiProperty({ description: '应用密钥', required: false, writeOnly: true, example: '0123456789abcdef0123456789abcdef' })
     @IsOptional()
     @IsString({ message: '应用密钥必须是字符串' })
     @MaxLength(128, { message: '应用密钥长度不能超过128位' })
@@ -95,13 +95,13 @@ export class TbCrmSmsApplicationDto extends DataBaseByDto {
     @IsEnum(TbCrmSmsApplicationType, { message: '短信应用类型格式错误' })
     type: TbCrmSmsApplicationType
 
-    @ApiProperty({ description: '报告推送地址', required: false })
+    @ApiProperty({ description: '报告推送地址', required: false, example: 'https://example.com/sms/report' })
     @IsOptional()
     @IsString({ message: '报告推送地址必须是字符串' })
     @MaxLength(1024, { message: '报告推送地址长度不能超过1024位' })
     pushUrl: string
 
-    @ApiProperty({ description: '备注', required: false })
+    @ApiProperty({ description: '备注', required: false, example: '客户验证码应用' })
     @IsOptional()
     @IsString({ message: '备注必须是字符串' })
     @MaxLength(1024, { message: '备注长度不能超过1024位' })

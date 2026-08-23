@@ -77,7 +77,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @MaxLength(32, { message: '应用ID长度不能超过32位' })
     appId: string
 
-    @ApiProperty({ description: '客户别名快照', required: false })
+    @ApiProperty({ description: '客户别名快照', required: false, example: '华东客户' })
     @IsOptional()
     @IsString({ message: '客户别名必须是字符串' })
     @MaxLength(64, { message: '客户别名长度不能超过64位' })
@@ -159,7 +159,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @IsEnum(TbCrmSmsQuoteDraftStatus, { message: '报价草稿状态格式错误' })
     status: TbCrmSmsQuoteDraftStatus
 
-    @ApiProperty({ description: '备注', required: false })
+    @ApiProperty({ description: '备注', required: false, example: '客户专属报价草稿' })
     @IsOptional()
     @IsString({ message: '备注必须是字符串' })
     @MaxLength(1024, { message: '备注长度不能超过1024位' })

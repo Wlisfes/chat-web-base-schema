@@ -1,8 +1,9 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const { Get, Post, RequestMethod } = require('@nestjs/common')
+const { Get, Module, Post, RequestMethod } = require('@nestjs/common')
 const { PATH_METADATA, METHOD_METADATA } = require('@nestjs/common/constants')
-const { ApiProperty, DECORATORS } = require('@nestjs/swagger')
+const { NestFactory } = require('@nestjs/core')
+const { ApiProperty, DECORATORS, DocumentBuilder, SwaggerModule } = require('@nestjs/swagger')
 const { ApiServiceDecorator, ApifoxController } = require('../dist/src/decorator')
 
 class RequestDto {}
@@ -79,4 +80,39 @@ test('ApiServiceDecorator 支持数组 data 和原始非 JSON 响应', () => {
 
     assert.deepEqual(listData, { type: 'array', items: { $ref: '#/components/schemas/ResponseDto' } })
     assert.deepEqual(captchaResponses[200].content['image/svg+xml'].schema, { type: 'string' })
+})
+
+test('共享完整字段 DTO 的标量字段均提供类型和示例', async () => {
+    const schemaModules = [
+        require('../dist/src/schema/chat-web-account-mysql'),
+        require('../dist/src/schema/chat-web-finance-mysql'),
+        require('../dist/src/schema/chat-web-crm-mysql')
+    ]
+    const extraModels = schemaModules.flatMap(schemaModule =>
+        Object.entries(schemaModule)
+            .filter(([name, value]) => name.endsWith('Dto') && typeof value === 'function')
+            .map(([, value]) => value)
+    )
+    class DocumentationModule {}
+    Module({})(DocumentationModule)
+    const app = await NestFactory.create(DocumentationModule, { logger: false })
+    const document = SwaggerModule.createDocument(app, new DocumentBuilder().build(), { extraModels })
+    const missingExamples = []
+
+    for (const [schemaName, schema] of Object.entries(document.components.schemas ?? {})) {
+        for (const [propertyName, property] of Object.entries(schema.properties ?? {})) {
+            assert.ok(property.type || property.$ref || property.allOf || property.oneOf, `${schemaName}.${propertyName} 缺少字段类型`)
+            if (
+                ['string', 'number', 'integer', 'boolean'].includes(property.type) &&
+                property.example === undefined &&
+                property.default === undefined &&
+                property.enum === undefined
+            ) {
+                missingExamples.push(`${schemaName}.${propertyName}`)
+            }
+        }
+    }
+
+    await app.close()
+    assert.deepEqual(missingExamples, [])
 })

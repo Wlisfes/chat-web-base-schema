@@ -22,11 +22,13 @@ export class PageDto {
 
 /** 兼容使用 page/size 参数的分页请求。 */
 export class SizePageDto {
+    @ApiPropertyOptional({ description: '页码，从1开始', default: 1, minimum: 1, example: 1 })
     @Type(() => Number)
     @IsInt({ message: '页码必须是整数' })
     @Min(1, { message: '页码不能小于1' })
     page: number = 1
 
+    @ApiPropertyOptional({ description: '每页数量', default: 50, minimum: 1, maximum: 100, example: 50 })
     @Type(() => Number)
     @IsInt({ message: '每页数量必须是整数' })
     @Min(1, { message: '每页数量不能小于1' })

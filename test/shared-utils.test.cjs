@@ -2,6 +2,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const { plainToInstance } = require('class-transformer')
 const { validateSync } = require('class-validator')
+const { DECORATORS } = require('@nestjs/swagger')
 const { PageDto, SizePageDto, assertUid, assertValidTree, buildTree, generateUid, resolveRequestId } = require('../dist/src/utils')
 const requestContext = require('../dist/src/utils/modules/request-context')
 
@@ -13,6 +14,8 @@ test('共享分页 DTO 保留两种现有请求契约', () => {
     assert.deepEqual({ page: sizePage.page, size: sizePage.size }, { page: 1, size: 50 })
     assert.equal(validateSync(plainToInstance(PageDto, { page: 0, pageSize: 101 })).length, 2)
     assert.equal(validateSync(plainToInstance(SizePageDto, { page: 0, size: 101 })).length, 2)
+    assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, SizePageDto.prototype, 'page').example, 1)
+    assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, SizePageDto.prototype, 'size').example, 50)
 })
 
 test('共享树工具校验层级并稳定排序', () => {

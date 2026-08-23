@@ -48,8 +48,15 @@ test('ApiServiceDecorator 生成 body 请求与统一 DTO 响应 Schema', () => 
     assert.equal(Reflect.getMetadata(METHOD_METADATA, method), RequestMethod.POST)
     assert.equal(parameters[0].in, 'body')
     assert.equal(parameters[0].type, RequestDto)
-    assert.equal(schema.allOf[0].$ref, '#/components/schemas/ApiResponseDocumentDto')
-    assert.equal(schema.allOf[1].properties.data.$ref, '#/components/schemas/ResponseDto')
+    assert.equal(schema.type, 'object')
+    assert.equal(schema.allOf, undefined)
+    assert.equal(schema.properties.data.$ref, '#/components/schemas/ResponseDto')
+    assert.deepEqual(responses[200].content['application/json'].example, {
+        data: { keyId: 1 },
+        code: 200,
+        message: 'success',
+        timestamp: '2026-08-23 12:00:00'
+    })
 })
 
 test('ApiServiceDecorator 支持数组 data 和原始非 JSON 响应', () => {
@@ -75,11 +82,13 @@ test('ApiServiceDecorator 支持数组 data 和原始非 JSON 响应', () => {
     )
 
     const listResponses = Reflect.getMetadata(DECORATORS.API_RESPONSE, TestController.prototype.list)
-    const listData = listResponses[200].content['application/json'].schema.allOf[1].properties.data
+    const listData = listResponses[200].content['application/json'].schema.properties.data
     const captchaResponses = Reflect.getMetadata(DECORATORS.API_RESPONSE, TestController.prototype.captcha)
 
     assert.deepEqual(listData, { type: 'array', items: { $ref: '#/components/schemas/ResponseDto' } })
+    assert.deepEqual(listResponses[200].content['application/json'].example.data, [{ keyId: 1 }])
     assert.deepEqual(captchaResponses[200].content['image/svg+xml'].schema, { type: 'string' })
+    assert.equal(captchaResponses[200].content['image/svg+xml'].example, 'string')
 })
 
 test('共享完整字段 DTO 的标量字段均提供类型和示例', async () => {

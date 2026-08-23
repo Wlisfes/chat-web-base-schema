@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {
@@ -93,6 +93,11 @@
             "types": "./dist/src/runtime/database/index.d.ts",
             "require": "./dist/src/runtime/database/index.js",
             "default": "./dist/src/runtime/database/index.js"
+        },
+        "./decorator": {
+            "types": "./dist/src/decorator/index.d.ts",
+            "require": "./dist/src/decorator/index.js",
+            "default": "./dist/src/decorator/index.js"
         }
     },
     "scripts": {

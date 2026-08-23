@@ -1,0 +1,144 @@
+import { HttpStatus, type Type, applyDecorators } from '@nestjs/common'
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiExtraModels,
+    ApiOperation,
+    ApiProduces,
+    ApiResponse,
+    getSchemaPath,
+    type ApiBodyOptions,
+    type ApiOperationOptions,
+    type OpenAPIObject
+} from '@nestjs/swagger'
+import { ApiResponseDocumentDto } from '@/decorator/api-response.dto'
+
+type DocumentType = Type<unknown> | StringConstructor | NumberConstructor | BooleanConstructor
+type DocumentSchema = NonNullable<NonNullable<OpenAPIObject['components']>['schemas']>[string]
+
+export interface ApiServiceRequestOptions {
+    /** 参数来源；body 会显式生成 requestBody，query 由 @Query DTO 展开字段。 */
+    source: 'body' | 'query'
+    /** 请求 DTO 类型。 */
+    type: DocumentType
+    /** 请求体是否为 DTO 数组。 */
+    isArray?: boolean
+    /** 请求参数是否必填。 */
+    required?: boolean
+    /** 请求参数说明。 */
+    description?: string
+}
+
+export interface ApiServiceResponseOptions {
+    /** HTTP 状态码。 */
+    status?: number
+    /** 响应说明。 */
+    description?: string
+    /** data 字段的 DTO 或基础类型。 */
+    type?: DocumentType
+    /** data 字段是否为数组。 */
+    isArray?: boolean
+    /** 完全自定义 data 或原始响应 Schema。 */
+    schema?: DocumentSchema
+    /** 响应示例。 */
+    example?: unknown
+    /** 响应媒体类型。 */
+    contentType?: string
+    /** 是否使用统一响应外壳；原始文件、重定向等响应应设为 false。 */
+    envelope?: boolean
+}
+
+export interface ApiServiceDecoratorOptions {
+    /** 接口用途和摘要。 */
+    operation: ApiOperationOptions
+    /** 请求文档定义。 */
+    request?: ApiServiceRequestOptions
+    /** 响应文档定义。 */
+    response: ApiServiceResponseOptions
+    /** 是否声明 Bearer Token 鉴权。 */
+    bearerAuth?: boolean
+    /** 可接收的请求媒体类型。 */
+    consumes?: string[]
+    /** 可返回的响应媒体类型。 */
+    produces?: string[]
+}
+
+function isModelType(type: DocumentType): type is Type<unknown> {
+    return type !== String && type !== Number && type !== Boolean
+}
+
+function createTypeSchema(type: DocumentType): DocumentSchema {
+    if (type === String) return { type: 'string' }
+    if (type === Number) return { type: 'number' }
+    if (type === Boolean) return { type: 'boolean' }
+    return { $ref: getSchemaPath(type) }
+}
+
+function createDataSchema(response: ApiServiceResponseOptions): DocumentSchema {
+    const schema = response.schema ?? (response.type ? createTypeSchema(response.type) : { type: 'object' })
+    return response.isArray ? { type: 'array', items: schema } : schema
+}
+
+function createResponseSchema(response: ApiServiceResponseOptions): DocumentSchema {
+    const dataSchema = createDataSchema(response)
+    if (response.envelope === false) return dataSchema
+    return {
+        allOf: [
+            { $ref: getSchemaPath(ApiResponseDocumentDto) },
+            {
+                type: 'object',
+                properties: {
+                    data: dataSchema
+                }
+            }
+        ]
+    }
+}
+
+/** 聚合 HTTP 路由、Swagger/Apifox 请求与统一响应文档装饰器。 */
+export function ApiServiceDecorator(methodRequest: MethodDecorator, options: ApiServiceDecoratorOptions): MethodDecorator {
+    const response = options.response
+    const consumes = options.consumes ?? ['application/json']
+    const produces = options.produces ?? [response.contentType ?? 'application/json']
+    const decorators: Array<ClassDecorator | MethodDecorator | PropertyDecorator> = [
+        methodRequest,
+        ApiOperation(options.operation),
+        ApiConsumes(...consumes),
+        ApiProduces(...produces),
+        ApiExtraModels(ApiResponseDocumentDto),
+        ApiResponse({
+            status: response.status ?? HttpStatus.OK,
+            description: response.description ?? '请求成功',
+            content: {
+                [response.contentType ?? 'application/json']: {
+                    schema: createResponseSchema(response),
+                    ...(response.example === undefined ? {} : { example: response.example })
+                }
+            }
+        })
+    ]
+
+    const modelTypes = [options.request?.type, response.type].filter(
+        (type): type is Type<unknown> => type !== undefined && isModelType(type)
+    )
+    if (modelTypes.length) {
+        decorators.push(ApiExtraModels(...modelTypes))
+    }
+
+    if (options.request?.source === 'body') {
+        const bodyOptions: ApiBodyOptions = {
+            type: options.request.type,
+            isArray: options.request.isArray,
+            required: options.request.required ?? true,
+            description: options.request.description
+        }
+        decorators.push(ApiBody(bodyOptions))
+    }
+
+    if (options.bearerAuth) {
+        decorators.push(ApiBearerAuth('authorization'))
+    }
+
+    return applyDecorators(...decorators)
+}

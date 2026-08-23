@@ -7,6 +7,7 @@ import {
     ApiOperation,
     ApiProduces,
     ApiResponse,
+    DECORATORS,
     getSchemaPath,
     type ApiBodyOptions,
     type ApiOperationOptions,
@@ -84,15 +85,87 @@ function createResponseSchema(response: ApiServiceResponseOptions): DocumentSche
     const dataSchema = createDataSchema(response)
     if (response.envelope === false) return dataSchema
     return {
-        allOf: [
-            { $ref: getSchemaPath(ApiResponseDocumentDto) },
-            {
-                type: 'object',
-                properties: {
-                    data: dataSchema
-                }
-            }
-        ]
+        type: 'object',
+        properties: {
+            data: dataSchema,
+            code: { type: 'number', description: '业务状态码', example: 200 },
+            message: { type: 'string', description: '响应消息', example: 'success' },
+            timestamp: { type: 'string', description: '服务端响应时间', example: '2026-08-23 12:00:00' }
+        },
+        required: ['data', 'code', 'message', 'timestamp']
+    }
+}
+
+interface ApiPropertyDocumentMetadata {
+    type?: unknown
+    isArray?: boolean
+    example?: unknown
+    default?: unknown
+    enum?: unknown[]
+}
+
+function resolvePropertyType(type: unknown): unknown {
+    if (typeof type === 'function' && type.name === 'type') return type()
+    return type
+}
+
+function createPrimitiveExample(type: unknown): unknown {
+    if (type === String || type === 'string') return 'string'
+    if (type === Number || type === 'number' || type === 'integer') return 1
+    if (type === Boolean || type === 'boolean') return true
+    if (type === Date) return '2026-08-23 12:00:00'
+    return undefined
+}
+
+function createModelExample(type: unknown, visited = new Set<unknown>()): unknown {
+    const primitive = createPrimitiveExample(type)
+    if (primitive !== undefined) return primitive
+    if (typeof type !== 'function' || visited.has(type)) return {}
+
+    const nextVisited = new Set(visited).add(type)
+    const prototype = type.prototype as object
+    const properties = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, prototype) ?? []) as string[]
+    const example: Record<string, unknown> = {}
+    for (const property of properties) {
+        const propertyName = property.replace(/^:/, '')
+        const metadata = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, prototype, propertyName) ??
+            {}) as ApiPropertyDocumentMetadata
+        let value = metadata.example ?? metadata.default ?? metadata.enum?.[0]
+        if (value === undefined) {
+            value = createModelExample(resolvePropertyType(metadata.type), nextVisited)
+            if (metadata.isArray) value = [value]
+        }
+        example[propertyName] = value
+    }
+    return example
+}
+
+function createSchemaExample(schema: DocumentSchema): unknown {
+    if ('example' in schema && schema.example !== undefined) return schema.example
+    if ('$ref' in schema) return {}
+    if (schema.enum?.length) return schema.enum[0]
+    if (schema.type === 'array') return schema.items ? [createSchemaExample(schema.items)] : []
+    if (schema.type === 'object' || schema.properties) {
+        return Object.fromEntries(
+            Object.entries(schema.properties ?? {}).map(([propertyName, propertySchema]) => [
+                propertyName,
+                createSchemaExample(propertySchema)
+            ])
+        )
+    }
+    return createPrimitiveExample(schema.type)
+}
+
+function createResponseExample(response: ApiServiceResponseOptions): unknown {
+    if (response.example !== undefined) return response.example
+    let data = response.type ? createModelExample(response.type) : createSchemaExample(response.schema ?? { type: 'object' })
+    if (response.isArray) data = [data]
+    if (response.envelope === false) return data
+    return {
+        data: data ?? null,
+        code: response.status ?? HttpStatus.OK,
+        message: 'success',
+        timestamp: '2026-08-23 12:00:00'
     }
 }
 
@@ -113,7 +186,7 @@ export function ApiServiceDecorator(methodRequest: MethodDecorator, options: Api
             content: {
                 [response.contentType ?? 'application/json']: {
                     schema: createResponseSchema(response),
-                    ...(response.example === undefined ? {} : { example: response.example })
+                    example: createResponseExample(response)
                 }
             }
         })

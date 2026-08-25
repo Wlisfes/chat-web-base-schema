@@ -3,6 +3,7 @@ import type { ApiResponse } from '@/types'
 import { createApiResponse } from '@/utils/modules/response'
 import { resolveExceptionData, resolveExceptionMessage, resolveExceptionStatus } from '@/filters/modules/exception-response'
 import { PRESERVE_HTTP_STATUS_METADATA, PRESERVE_HTTP_STATUS_REQUEST } from '@/filters/modules/preserve-http-status.decorator'
+import { getActiveTraceContext } from '@/runtime/observability'
 
 interface HttpRequestLike {
     [PRESERVE_HTTP_STATUS_REQUEST]?: boolean
@@ -33,7 +34,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const method = request.method ?? 'UNKNOWN'
         const url = request.originalUrl ?? request.url ?? '/'
         const requestId = request.logId ?? request.headers?.['x-request-id']
-        const logMessage = `${method} ${url} -> ${status} ${message}${requestId ? ` [${String(requestId)}]` : ''}`
+        const traceId = getActiveTraceContext().traceId
+        const logMessage = `${method} ${url} -> ${status} ${message}${requestId ? ` [${String(requestId)}]` : ''}${traceId ? ` [traceId=${traceId}]` : ''}`
 
         if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
             this.logger.error(logMessage, exception instanceof Error ? exception.stack : undefined)

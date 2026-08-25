@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Logger } from '@nest
 import { Observable, throwError } from 'rxjs'
 import { createApiResponse } from '@/utils/modules/response'
 import { resolveExceptionData, resolveExceptionMessage, resolveExceptionStatus } from '@/filters/modules/exception-response'
+import { getActiveTraceContext } from '@/runtime/observability'
 
 interface RpcRequestLike {
     logId?: string
@@ -20,7 +21,8 @@ export class RpcExceptionFilter implements ExceptionFilter {
         const message = resolveExceptionMessage(exception, status)
         const body = createApiResponse(resolveExceptionData(exception), { code: status, message })
         const requestId = data?.request?.logId ?? data?.logId
-        const logMessage = `${status} ${message}${requestId ? ` [${requestId}]` : ''}`
+        const traceId = getActiveTraceContext().traceId
+        const logMessage = `${status} ${message}${requestId ? ` [${requestId}]` : ''}${traceId ? ` [traceId=${traceId}]` : ''}`
 
         if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
             this.logger.error(logMessage, exception instanceof Error ? exception.stack : undefined)

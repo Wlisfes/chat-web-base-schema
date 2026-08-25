@@ -1,10 +1,11 @@
-CREATE TABLE IF NOT EXISTS `tb_finance_client` (
+CREATE TABLE IF NOT EXISTS `tb_account_consumer` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
+    `uid` varchar(19) NOT NULL COMMENT '客户UID',
     `owner_user_uid` varchar(19) NOT NULL COMMENT '归属账号UID',
     `name` varchar(64) NOT NULL COMMENT '客户名称',
     `alias` varchar(64) NULL COMMENT '客户别名',
-    `brand_key_id` int NOT NULL COMMENT '归属品牌主键',
-    `currency` varchar(16) NOT NULL COMMENT '币种编码',
+    `brand_key_id` int NOT NULL COMMENT '财务品牌主键',
+    `currency` varchar(16) NOT NULL COMMENT '财务币种编码',
     `email` varchar(128) NOT NULL COMMENT '邮箱',
     `phone` varchar(32) NULL COMMENT '电话号码',
     `status` varchar(32) NOT NULL COMMENT '客户状态：disable=禁用（客户账号不可用）；enable=启用（客户账号正常使用）',
@@ -22,8 +23,9 @@ CREATE TABLE IF NOT EXISTS `tb_finance_client` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
-    KEY `idx_tb_finance_client_owner_user_uid` (`owner_user_uid`),
-    KEY `idx_tb_finance_client_brand_key_id` (`brand_key_id`),
-    KEY `idx_tb_finance_client_status` (`status`),
-    KEY `idx_tb_finance_client_currency` (`currency`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '财务消费客户表';
+    UNIQUE KEY `uk_tb_account_consumer_uid` (`uid`),
+    KEY `idx_tb_account_consumer_owner_user_uid` (`owner_user_uid`),
+    KEY `idx_tb_account_consumer_brand_key_id` (`brand_key_id`),
+    KEY `idx_tb_account_consumer_status` (`status`),
+    KEY `idx_tb_account_consumer_currency` (`currency`)
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '外部客户账号表';

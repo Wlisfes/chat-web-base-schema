@@ -35,14 +35,77 @@ an ephemeral Nacos instance.
 ## Authentication
 
 The auth subpath exports the HS256 token codec, Redis session lifecycle,
-Bearer guard, request principal types and decorators. `SessionAuthModule`
-provides the standard downstream-service behavior: verify the account token,
-assert that its Redis session is active, and attach the principal.
+Bearer guard, request principal types and decorators.
 
 The account service keeps its own login, captcha, password and user-status
 logic. It provides that business authenticator through
 `AUTH_TOKEN_AUTHENTICATOR` while reusing the shared guard and token/session
 services.
+
+Business services must not read the account Redis database or hold the account
+JWT secret. Import `AccountRemoteAuthModule` to validate Bearer tokens through
+the account service `/auth/token/introspect` endpoint and attach the returned
+principal to the request.
+
+```ts
+import { AccountRemoteAuthModule, JwtAuthGuard } from '@wlisfes/chat-web-base-schema/auth'
+
+@Module({
+    imports: [AccountRemoteAuthModule],
+    providers: [{ provide: APP_GUARD, useExisting: JwtAuthGuard }]
+})
+export class AppModule {}
+```
+
+The remote client reads `ACCOUNT_SERVICE_URL` and the optional
+`ACCOUNT_AUTH_TIMEOUT_MS` value. `SessionAuthModule` is only for an owning
+service that is explicitly allowed to verify JWTs and access its own session
+store; it is not the downstream business-service default.
+
+## Declarative Feign clients
+
+Cross-service HTTP calls use the shared declarative Feign runtime. A client class only declares the service address, request method, path and parameter bindings; `FeignModule` supplies the HTTP proxy implementation and consistently handles timeouts, Bearer headers, response envelopes and upstream errors.
+
+```ts
+@FeignClient({
+    name: '账号服务',
+    baseUrlConfigKey: 'ACCOUNT_SERVICE_URL',
+    defaultBaseUrl: 'http://chat-web-account-service:3000'
+})
+export class AccountFeignClient {
+    @FeignGet('/consumer/resolver')
+    resolveConsumer(@FeignHeader('authorization') authorization: string, @FeignQuery('keyId') keyId: number): Promise<AccountConsumer> {
+        throw new Error('AccountFeignClient must be injected by FeignModule')
+    }
+}
+
+@Module({
+    imports: [FeignModule.register([AccountFeignClient])]
+})
+export class IntegrationModule {}
+```
+
+Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Multi-select fields remain arrays in the POST body. Business services must not create their own `fetch`, Axios or cross-database implementation for an endpoint already declared by a shared Feign client.
+
+## Structured logging and trace correlation
+
+Use the shared logger during Nest application creation. It emits one JSON
+object per line and adds the active request and OpenTelemetry trace context to
+framework, business and exception logs.
+
+```ts
+import { createStructuredLogger } from '@wlisfes/chat-web-base-schema/logging'
+
+const logger = createStructuredLogger({ serviceName: 'chat-web-example-service' })
+const app = await NestFactory.create(AppModule, { logger })
+```
+
+Register `requestContextMiddleware` before `createRequestLoggingMiddleware`.
+The request context accepts a valid incoming `x-request-id`, creates one when it
+is absent, returns it in the response and forwards it through shared Feign
+clients. `getActiveTraceContext()` from the `observability` subpath returns the
+active `traceId` and `spanId`; it does not initialize or configure an
+OpenTelemetry SDK.
 
 ## MySQL options
 

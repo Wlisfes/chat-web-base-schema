@@ -1,4 +1,5 @@
 export * from './modules/tb_account_menu'
+export * from './modules/tb_account_consumer'
 export * from './modules/tb_account_organization'
 export * from './modules/tb_account_organization_closure'
 export * from './modules/tb_account_role'

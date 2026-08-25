@@ -11,11 +11,16 @@ external SQL deployment scripts. It does not contain a DataSource or migrations.
 Import the account table definitions from the account schema subpath:
 
 ```ts
-import { TbAccountUser, TbAccountUserDto, TbAccountUserStatusOptions } from '@wlisfes/chat-web-base-schema/chat-web-account-mysql'
+import { TbAccountConsumer, TbAccountUser, TbAccountUserDto } from '@wlisfes/chat-web-base-schema/chat-web-account-mysql'
 ```
 
 Applications consuming this package must keep TypeORM `synchronize` and
 `migrationsRun` disabled.
+
+Internal users and external customers are both owned by the account schema.
+Finance only owns brands, currencies, exchange rates, countries and pricing;
+it must reference customers through the account service instead of defining a
+second customer table.
 
 Each table module has a canonical create script with the same filename under
 its service's `sql` directory. Later changes are stored as immutable scripts in
@@ -38,6 +43,8 @@ only load the dependencies they use:
 - `@wlisfes/chat-web-base-schema/nacos`
 - `@wlisfes/chat-web-base-schema/auth`
 - `@wlisfes/chat-web-base-schema/database`
+- `@wlisfes/chat-web-base-schema/logging`
+- `@wlisfes/chat-web-base-schema/observability`
 
 See [Shared runtime modules](docs/runtime-modules.md) for registration and
 extension examples. Business authentication, permissions, database entities
@@ -48,3 +55,23 @@ and gateway routing remain in their owning services.
 All NestJS services should register the shared response interceptor and the
 filter matching their transport. See [统一响应与异常处理](docs/http-response.md)
 for the response contract and registration examples.
+
+## Shared service utilities
+
+Services import reusable pagination DTOs, tree validation/building, UID helpers
+and HTTP request context middleware from the existing utility subpath:
+
+```ts
+import { PageDto, buildTree, generateUid } from '@wlisfes/chat-web-base-schema/utils'
+import { requestContextMiddleware } from '@wlisfes/chat-web-base-schema/request-context'
+import { createRequestLoggingMiddleware } from '@wlisfes/chat-web-base-schema/logging'
+```
+
+These helpers must not be copied into a service-level `src/common` directory.
+
+HTTP services should pass `createStructuredLogger()` to `NestFactory.create`
+so container output remains one-line JSON. Request logs and exception logs then
+share `service`, `environment`, `requestId`, `traceId` and `spanId` fields. The
+request context also forwards `x-request-id` automatically through shared Feign
+clients. OpenTelemetry SDK initialization remains the responsibility of each
+service process, while the shared observability helper reads its active span.

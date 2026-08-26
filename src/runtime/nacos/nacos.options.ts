@@ -1,6 +1,9 @@
 import { NacosRuntimeOptions } from './nacos.interface'
 
-/** 从环境变量构造 Nacos 运行参数时使用的服务固有默认值。 */
+/**
+ * `NacosModule.forRoot()` 从环境变量构造完整运行参数时所需的服务固有值。
+ * 业务服务只需传入这两项，不需要重复定义环境变量转换方法。
+ */
 export type NacosRuntimeDefaults = Pick<NacosRuntimeOptions, 'serviceName' | 'registerPort'>
 
 /** 可注入的环境变量集合；默认使用当前进程的 `process.env`。 */

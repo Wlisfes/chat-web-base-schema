@@ -5,7 +5,7 @@ const { BadGatewayException, ServiceUnavailableException, UnauthorizedException 
 const { AccountAuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const { AccountFeignClient, FeignClientFactory, FinanceFeignClient } = require('../dist/src/runtime/feign')
-const { createNacosRuntimeOptions, NacosService } = require('../dist/src/runtime/nacos')
+const { createNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
 const { RedisService } = require('../dist/src/runtime/redis')
 const { runWithRequestContext } = require('../dist/src/utils/modules/request-context')
 
@@ -648,6 +648,50 @@ test('shared Nacos environment adapter only requires server and namespace', () =
             }),
         /NACOS_REGISTER_PORT/
     )
+})
+
+test('NacosModule owns environment adaptation for service defaults', () => {
+    const module = NacosModule.forRoot({ serviceName: 'chat-web-example-service', registerPort: 3020 })
+    const provider = module.providers.find(candidate => candidate.provide === NACOS_RUNTIME_OPTIONS)
+    const previousServer = process.env.NACOS_SERVER
+    const previousNamespace = process.env.NACOS_NAMESPACE
+
+    process.env.NACOS_SERVER = 'nacos.internal:8848'
+    process.env.NACOS_NAMESPACE = 'example-namespace'
+    try {
+        assert.deepEqual(provider.useFactory(), {
+            serverAddr: 'nacos.internal:8848',
+            namespace: 'example-namespace',
+            username: undefined,
+            password: undefined,
+            requestTimeout: undefined,
+            configDataId: undefined,
+            configGroup: undefined,
+            registerEnabled: undefined,
+            registerRequired: undefined,
+            serviceName: 'chat-web-example-service',
+            discoveryGroup: undefined,
+            registerIp: undefined,
+            registerPort: 3020
+        })
+    } finally {
+        if (previousServer === undefined) delete process.env.NACOS_SERVER
+        else process.env.NACOS_SERVER = previousServer
+        if (previousNamespace === undefined) delete process.env.NACOS_NAMESPACE
+        else process.env.NACOS_NAMESPACE = previousNamespace
+    }
+})
+
+test('NacosModule still accepts an explicitly complete runtime contract', () => {
+    const options = {
+        serverAddr: 'nacos.internal:8848',
+        namespace: 'example-namespace',
+        serviceName: 'chat-web-example-service',
+        registerPort: 3020
+    }
+    const module = NacosModule.forRoot(options)
+    const provider = module.providers.find(candidate => candidate.provide === NACOS_RUNTIME_OPTIONS)
+    assert.equal(provider.useValue, options)
 })
 
 test('shared MySQL options apply only allowlisted environment overrides', () => {

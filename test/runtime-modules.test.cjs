@@ -5,7 +5,7 @@ const { BadGatewayException, ServiceUnavailableException, UnauthorizedException 
 const { AccountAuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const { AccountFeignClient, FeignClientFactory, FinanceFeignClient } = require('../dist/src/runtime/feign')
-const { NacosService } = require('../dist/src/runtime/nacos')
+const { createNacosRuntimeOptions, NacosService } = require('../dist/src/runtime/nacos')
 const { RedisService } = require('../dist/src/runtime/redis')
 const { runWithRequestContext } = require('../dist/src/utils/modules/request-context')
 
@@ -568,6 +568,86 @@ test('shared Nacos runtime rejects invalid numeric options', () => {
 test('shared Nacos runtime rejects non-boolean registration options', () => {
     assert.throws(() => new NacosService(config(), nacosOptions({ registerEnabled: 'true' })), /NacosRuntimeOptions\.registerEnabled/)
     assert.throws(() => new NacosService(config(), nacosOptions({ registerRequired: 'false' })), /NacosRuntimeOptions\.registerRequired/)
+})
+
+test('shared Nacos environment adapter maps the complete flattened runtime contract', () => {
+    assert.deepEqual(
+        createNacosRuntimeOptions(
+            { serviceName: 'chat-web-example-service', registerPort: 3020 },
+            {
+                NACOS_SERVER: 'nacos.internal:8848',
+                NACOS_NAMESPACE: 'example-namespace',
+                NACOS_USERNAME: 'example-user',
+                NACOS_PASSWORD: 'example-password',
+                NACOS_REQUEST_TIMEOUT: '7000',
+                NACOS_CONFIG_DATA_ID: 'example.yaml',
+                NACOS_CONFIG_GROUP: 'EXAMPLE_CONFIG',
+                NACOS_REGISTER_ENABLED: 'false',
+                NACOS_REGISTER_REQUIRED: 'true',
+                NACOS_SERVICE_NAME: 'example-custom',
+                NACOS_GROUP: 'EXAMPLE_DISCOVERY',
+                NACOS_REGISTER_IP: '10.0.0.8',
+                NACOS_REGISTER_PORT: '4020'
+            }
+        ),
+        {
+            serverAddr: 'nacos.internal:8848',
+            namespace: 'example-namespace',
+            username: 'example-user',
+            password: 'example-password',
+            requestTimeout: 7000,
+            configDataId: 'example.yaml',
+            configGroup: 'EXAMPLE_CONFIG',
+            registerEnabled: false,
+            registerRequired: true,
+            serviceName: 'example-custom',
+            discoveryGroup: 'EXAMPLE_DISCOVERY',
+            registerIp: '10.0.0.8',
+            registerPort: 4020
+        }
+    )
+})
+
+test('shared Nacos environment adapter only requires server and namespace', () => {
+    const defaults = { serviceName: 'chat-web-example-service', registerPort: 3020 }
+    assert.deepEqual(createNacosRuntimeOptions(defaults, { NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example' }), {
+        serverAddr: 'nacos:8848',
+        namespace: 'example',
+        username: undefined,
+        password: undefined,
+        requestTimeout: undefined,
+        configDataId: undefined,
+        configGroup: undefined,
+        registerEnabled: undefined,
+        registerRequired: undefined,
+        serviceName: 'chat-web-example-service',
+        discoveryGroup: undefined,
+        registerIp: undefined,
+        registerPort: 3020
+    })
+    assert.equal(
+        createNacosRuntimeOptions(defaults, { NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', PORT: '4020' }).registerPort,
+        4020
+    )
+    assert.throws(() => createNacosRuntimeOptions(defaults, { NACOS_NAMESPACE: 'example' }), /NACOS_SERVER/)
+    assert.throws(
+        () =>
+            createNacosRuntimeOptions(defaults, {
+                NACOS_SERVER: 'nacos:8848',
+                NACOS_NAMESPACE: 'example',
+                NACOS_REGISTER_ENABLED: 'yes'
+            }),
+        /NACOS_REGISTER_ENABLED/
+    )
+    assert.throws(
+        () =>
+            createNacosRuntimeOptions(defaults, {
+                NACOS_SERVER: 'nacos:8848',
+                NACOS_NAMESPACE: 'example',
+                NACOS_REGISTER_PORT: '65536'
+            }),
+        /NACOS_REGISTER_PORT/
+    )
 })
 
 test('shared MySQL options apply only allowlisted environment overrides', () => {

@@ -1,5 +1,14 @@
 # Deployment changelog
 
+## 2026-08-26 — Shared Nacos environment adapter
+
+- Affected machines: Company and Home consumers after upgrading; this library does not deploy a container.
+- Associated version: the exact `@wlisfes/chat-web-base-schema` version produced by this release.
+- Change: added and exported `createNacosRuntimeOptions` to convert flattened `NACOS_*` environment variables into the complete typed runtime contract. Only the server and namespace lack defaults; each consumer supplies its intrinsic service name and registration port, while optional values retain shared defaults.
+- Machine-side operations: verify that every consumer `.env` explicitly contains the machine-specific `NACOS_SERVER` and `NACOS_NAMESPACE`. No database, Redis, Runner, deploy-directory, port or external-network changes are required.
+- Verification: run `yarn verify`; consumers run their repository tests and Compose validation with a placeholder `IMAGE`, then verify the registered instance after deployment.
+- Rollback: redeploy each consumer's previous complete Git SHA pinned to its prior exact package version. Nacos data and infrastructure containers do not need rollback.
+
 ## 2026-08-26 — Unreleased explicit Nacos runtime options
 
 - Affected machines: Company and Home consumers after they explicitly upgrade to the future package release.

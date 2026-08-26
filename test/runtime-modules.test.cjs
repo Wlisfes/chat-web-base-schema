@@ -280,6 +280,19 @@ test('shared Redis URL parser merges explicit credentials', () => {
     assert.equal(url.pathname, '/2')
 })
 
+test('shared Redis defers connection option resolution until application bootstrap', () => {
+    const configService = config({ REDIS_HOST: 'before-nacos', REDIS_DATABASE: 0 })
+    const service = new RedisService(configService)
+
+    assert.equal(service.client, undefined)
+    configService.set('REDIS_HOST', 'after-nacos')
+    configService.set('REDIS_DATABASE', 1)
+
+    const url = new URL(service.getConnectionUrl())
+    assert.equal(url.hostname, 'after-nacos')
+    assert.equal(url.pathname, '/1')
+})
+
 test('explicit Redis database overrides the database embedded in REDIS_URL', () => {
     const service = new RedisService(
         config({

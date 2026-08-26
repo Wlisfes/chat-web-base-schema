@@ -5,9 +5,11 @@ import { createClient, RedisClientType } from 'redis'
 @Injectable()
 export class RedisService implements OnApplicationBootstrap, OnApplicationShutdown {
     private readonly logger = new Logger(RedisService.name)
-    private readonly client: RedisClientType
+    private client?: RedisClientType
 
-    constructor(private readonly configService: ConfigService) {
+    constructor(private readonly configService: ConfigService) {}
+
+    async onApplicationBootstrap(): Promise<void> {
         const connectionUrl = this.getConnectionUrl()
         const parsedConnectionUrl = new URL(connectionUrl)
         this.logger.log(
@@ -15,50 +17,56 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
                 `authenticated=${Boolean(parsedConnectionUrl.password)}, tls=${parsedConnectionUrl.protocol === 'rediss:'}, ` +
                 `database=${parsedConnectionUrl.pathname.slice(1) || '0'}`
         )
-        this.client = createClient({
+        const client = createClient({
             url: connectionUrl,
             socket: {
                 connectTimeout: this.getInteger('REDIS_CONNECT_TIMEOUT_MS', 5000, 100, 60_000),
                 reconnectStrategy: retries => Math.min(retries * 200, 3000)
             }
         })
-        this.client.on('error', error => this.logger.error(`Redis连接错误：${error instanceof Error ? error.message : String(error)}`))
-    }
-
-    async onApplicationBootstrap(): Promise<void> {
-        await this.client.connect()
-        await this.client.ping()
+        client.on('error', error => this.logger.error(`Redis连接错误：${error instanceof Error ? error.message : String(error)}`))
+        this.client = client
+        await client.connect()
+        await client.ping()
         this.logger.log('Redis连接已就绪')
     }
 
     async onApplicationShutdown(): Promise<void> {
-        if (this.client.isOpen) {
+        if (this.client?.isOpen) {
             await this.client.quit()
         }
     }
 
     async ping(): Promise<boolean> {
-        return this.client.isReady && (await this.client.ping()) === 'PONG'
+        const client = this.client
+        return Boolean(client?.isReady && (await client.ping()) === 'PONG')
     }
 
     async get(key: string): Promise<string | null> {
-        return this.normalizeValue(await this.client.get(key))
+        return this.normalizeValue(await this.getClient().get(key))
     }
 
     async getDel(key: string): Promise<string | null> {
-        return this.normalizeValue(await this.client.getDel(key))
+        return this.normalizeValue(await this.getClient().getDel(key))
     }
 
     async setEx(key: string, seconds: number, value: string): Promise<void> {
-        await this.client.setEx(key, seconds, value)
+        await this.getClient().setEx(key, seconds, value)
     }
 
     async del(key: string): Promise<void> {
-        await this.client.del(key)
+        await this.getClient().del(key)
     }
 
     async rotate(oldKey: string, newKey: string, seconds: number, value: string): Promise<void> {
-        await this.client.multi().setEx(newKey, seconds, value).del(oldKey).exec()
+        await this.getClient().multi().setEx(newKey, seconds, value).del(oldKey).exec()
+    }
+
+    private getClient(): RedisClientType {
+        if (!this.client) {
+            throw new Error('Redis 客户端尚未完成应用启动初始化')
+        }
+        return this.client
     }
 
     private getConnectionUrl(): string {

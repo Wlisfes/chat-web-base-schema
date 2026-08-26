@@ -41,6 +41,16 @@ function nacosOptions(overrides = {}) {
     }
 }
 
+function minimalNacosOptions(overrides = {}) {
+    return {
+        serverAddr: 'nacos.internal:8848',
+        namespace: 'example-namespace',
+        serviceName: 'chat-web-minimal-service',
+        registerPort: 3020,
+        ...overrides
+    }
+}
+
 function nacosShadowConfig(overrides = {}) {
     return config({
         NACOS_SERVER: 'hidden.example:8848',
@@ -451,6 +461,29 @@ test('shared Nacos runtime accepts requestTimeout and registerPort boundary valu
     assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ registerPort: 65535 })))
 })
 
+test('shared Nacos runtime supplies documented defaults for optional options', () => {
+    const service = new NacosService(config(), minimalNacosOptions())
+
+    assert.deepEqual(service.options, {
+        serverAddr: 'nacos.internal:8848',
+        namespace: 'example-namespace',
+        username: undefined,
+        password: undefined,
+        requestTimeout: 5000,
+        configDataId: 'chat-web-minimal-service.yaml',
+        configGroup: 'DEFAULT_GROUP',
+        registerEnabled: true,
+        registerRequired: false,
+        serviceName: 'chat-web-minimal-service',
+        discoveryGroup: 'DEFAULT_GROUP',
+        registerIp: undefined,
+        registerPort: 3020
+    })
+
+    const customGroupService = new NacosService(config(), minimalNacosOptions({ configGroup: 'CUSTOM_GROUP' }))
+    assert.equal(customGroupService.getDiscoveryGroup(), 'CUSTOM_GROUP')
+})
+
 test('shared Nacos behavior resolves exclusively from runtime options', () => {
     const reads = []
     const baseConfig = nacosShadowConfig()
@@ -502,10 +535,21 @@ test('shared Nacos configuration preserves explicit environment values', () => {
 })
 
 test('shared Nacos runtime rejects invalid required option strings', () => {
-    for (const property of ['serverAddr', 'namespace', 'configDataId', 'configGroup', 'serviceName', 'discoveryGroup']) {
+    for (const property of ['serverAddr', 'namespace', 'serviceName']) {
         for (const value of [undefined, null, 1, {}, '', '   ']) {
             assert.throws(
                 () => new NacosService(config(), nacosOptions({ [property]: value })),
+                new RegExp(`NacosRuntimeOptions\\.${property}`)
+            )
+        }
+    }
+})
+
+test('shared Nacos runtime rejects invalid provided optional strings', () => {
+    for (const property of ['configDataId', 'configGroup', 'discoveryGroup']) {
+        for (const value of [null, 1, {}, '', '   ']) {
+            assert.throws(
+                () => new NacosService(config(), minimalNacosOptions({ [property]: value })),
                 new RegExp(`NacosRuntimeOptions\\.${property}`)
             )
         }

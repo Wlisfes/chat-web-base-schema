@@ -16,9 +16,7 @@ import { RedisModule, RedisService } from '@wlisfes/chat-web-base-schema/redis'
 
 ## Nacos
 
-Register the shared module once with the complete Nacos bootstrap,
-subscription and registration contract. Only authentication and the
-registration IP are optional.
+Register the shared module once with its four deployment-specific values.
 
 ```ts
 import { NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
@@ -26,24 +24,23 @@ import { NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
 NacosModule.forRoot({
     serverAddr: 'nacos:8848',
     namespace: 'replace-with-nacos-namespace-id',
-    username: process.env.NACOS_USERNAME,
-    password: process.env.NACOS_PASSWORD,
-    requestTimeout: 5000,
-    configDataId: 'chat-web-example-service.yaml',
-    configGroup: 'DEFAULT_GROUP',
-    registerEnabled: true,
-    registerRequired: false,
     serviceName: 'chat-web-example-service',
-    discoveryGroup: 'DEFAULT_GROUP',
-    registerIp: process.env.NACOS_REGISTER_IP,
     registerPort: 3020
 })
 ```
 
 `NacosService` reads every Nacos client, subscription and registration value
 from this options object. It does not resolve `NACOS_*` or `server.port`
-through `ConfigService`. When `registerIp` is omitted, the service uses the
-first non-internal IPv4 interface and falls back to `127.0.0.1`.
+through `ConfigService`. Optional overrides and their defaults are:
+
+- `requestTimeout`: `5000` milliseconds.
+- `configDataId`: `${serviceName}.yaml`.
+- `configGroup`: `DEFAULT_GROUP`.
+- `registerEnabled`: `true`.
+- `registerRequired`: `false`.
+- `discoveryGroup`: the resolved `configGroup`.
+- `username`, `password`: omitted.
+- `registerIp`: the first non-internal IPv4 interface, falling back to `127.0.0.1`.
 
 `NacosService.loadConfig()` can be awaited by asynchronous database factories
 before opening their connections. The service also registers and deregisters

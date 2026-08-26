@@ -16,6 +16,9 @@ type ClosableNacosNamingClient = NacosNamingClient & {
     close: () => Promise<void>
 }
 
+type ResolvedNacosRuntimeOptions = Required<Omit<NacosRuntimeOptions, 'username' | 'password' | 'registerIp'>> &
+    Pick<NacosRuntimeOptions, 'username' | 'password' | 'registerIp'>
+
 function requiredString(property: string, value: unknown): string {
     if (typeof value !== 'string' || !value.trim()) {
         throw new Error(`NacosRuntimeOptions.${property} 必须是非空字符串`)
@@ -27,6 +30,10 @@ function optionalString(value: unknown): string | undefined {
     return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
+function stringOption(property: string, value: unknown, fallback: string): string {
+    return value === undefined ? fallback : requiredString(property, value)
+}
+
 function positiveInteger(property: string, value: unknown, maximum = Number.MAX_SAFE_INTEGER): number {
     if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > maximum) {
         throw new Error(`NacosRuntimeOptions.${property} 必须是 1-${maximum} 之间的整数`)
@@ -34,29 +41,38 @@ function positiveInteger(property: string, value: unknown, maximum = Number.MAX_
     return value
 }
 
-function booleanOption(property: string, value: unknown): boolean {
+function positiveIntegerOption(property: string, value: unknown, fallback: number): number {
+    return value === undefined ? fallback : positiveInteger(property, value)
+}
+
+function booleanOption(property: string, value: unknown, fallback: boolean): boolean {
+    if (value === undefined) {
+        return fallback
+    }
     if (typeof value !== 'boolean') {
         throw new Error(`NacosRuntimeOptions.${property} 必须是布尔值`)
     }
     return value
 }
 
-function normalizeOptions(options: NacosRuntimeOptions): NacosRuntimeOptions {
+function normalizeOptions(options: NacosRuntimeOptions): ResolvedNacosRuntimeOptions {
     if (!options || typeof options !== 'object') {
         throw new Error('NacosRuntimeOptions 必须是对象')
     }
+    const serviceName = requiredString('serviceName', options.serviceName)
+    const configGroup = stringOption('configGroup', options.configGroup, 'DEFAULT_GROUP')
     return {
         serverAddr: requiredString('serverAddr', options.serverAddr),
         namespace: requiredString('namespace', options.namespace),
         username: optionalString(options.username),
         password: optionalString(options.password),
-        requestTimeout: positiveInteger('requestTimeout', options.requestTimeout),
-        configDataId: requiredString('configDataId', options.configDataId),
-        configGroup: requiredString('configGroup', options.configGroup),
-        registerEnabled: booleanOption('registerEnabled', options.registerEnabled),
-        registerRequired: booleanOption('registerRequired', options.registerRequired),
-        serviceName: requiredString('serviceName', options.serviceName),
-        discoveryGroup: requiredString('discoveryGroup', options.discoveryGroup),
+        requestTimeout: positiveIntegerOption('requestTimeout', options.requestTimeout, 5000),
+        configDataId: stringOption('configDataId', options.configDataId, `${serviceName}.yaml`),
+        configGroup,
+        registerEnabled: booleanOption('registerEnabled', options.registerEnabled, true),
+        registerRequired: booleanOption('registerRequired', options.registerRequired, false),
+        serviceName,
+        discoveryGroup: stringOption('discoveryGroup', options.discoveryGroup, configGroup),
         registerIp: optionalString(options.registerIp),
         registerPort: positiveInteger('registerPort', options.registerPort, 65535)
     }
@@ -73,7 +89,7 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     private configListener?: (content: string) => void
     private namingClient?: ClosableNacosNamingClient
     private registeredInstance?: RegisteredInstance
-    private readonly options: NacosRuntimeOptions
+    private readonly options: ResolvedNacosRuntimeOptions
 
     constructor(
         private readonly configService: ConfigService,

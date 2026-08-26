@@ -32,19 +32,19 @@ export interface NacosRuntimeOptions {
     namespace: string
     username?: string
     password?: string
-    requestTimeout: number
-    configDataId: string
-    configGroup: string
-    registerEnabled: boolean
-    registerRequired: boolean
+    requestTimeout?: number
+    configDataId?: string
+    configGroup?: string
+    registerEnabled?: boolean
+    registerRequired?: boolean
     serviceName: string
-    discoveryGroup: string
+    discoveryGroup?: string
     registerIp?: string
     registerPort: number
 }
 ```
 
-`username`, `password`, and `registerIp` are optional because Nacos authentication may be disabled and the registration IP can be discovered from a non-internal IPv4 interface. All other properties are required. The flat contract intentionally keeps registration properties required even when `registerEnabled` is `false`; this trades conditional typing for a simple and uniform call site.
+Only `serverAddr`, `namespace`, `serviceName`, and `registerPort` are required because they vary by deployment or service and have no safe shared production value. `requestTimeout` defaults to `5000`, `configDataId` to `${serviceName}.yaml`, `configGroup` to `DEFAULT_GROUP`, `registerEnabled` to `true`, `registerRequired` to `false`, and `discoveryGroup` to the resolved configuration group. Authentication and registration IP remain optional.
 
 The existing `defaultPort` property is removed. `registerPort` is the exact port to register and is no longer resolved from `NACOS_REGISTER_PORT`, remote `server.port`, or a library default.
 
@@ -65,7 +65,7 @@ The existing `defaultPort` property is removed. `registerPort` is the exact port
 The service will validate options before creating either Nacos client:
 
 - Required strings must remain non-empty after trimming.
-- `requestTimeout` must be a positive integer.
+- A provided `requestTimeout` must be a positive integer.
 - `registerPort` must be an integer from 1 through 65535.
 - Optional credentials and `registerIp` are normalized so blank strings behave as absent values.
 
@@ -83,7 +83,7 @@ The runtime-module tests will cover the public behavior through the built packag
 
 - Options win even when `ConfigService` contains conflicting `NACOS_*` and `server.port` values.
 - Configuration subscription, registration group, service name, IP, and port resolve exclusively from options.
-- Blank required strings, invalid timeouts, and invalid ports are rejected with property-specific errors.
+- Defaults are applied when optional options are omitted; invalid provided values are rejected with property-specific errors.
 - Environment values still override matching keys from remote YAML.
 
 The repository-level `yarn verify` command remains the completion gate for formatting, type checking, build output, schema validation, and tests.

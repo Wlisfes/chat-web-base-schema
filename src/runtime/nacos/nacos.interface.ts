@@ -3,13 +3,13 @@ export interface NacosRuntimeOptions {
     namespace: string
     username?: string
     password?: string
-    requestTimeout: number
-    configDataId: string
-    configGroup: string
-    registerEnabled: boolean
-    registerRequired: boolean
+    requestTimeout?: number
+    configDataId?: string
+    configGroup?: string
+    registerEnabled?: boolean
+    registerRequired?: boolean
     serviceName: string
-    discoveryGroup: string
+    discoveryGroup?: string
     registerIp?: string
     registerPort: number
 }

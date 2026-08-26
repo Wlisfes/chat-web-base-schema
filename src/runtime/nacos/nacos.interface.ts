@@ -1,4 +1,4 @@
-/** `NacosModule.forRoot()` 使用的完整 Nacos 启动、订阅与服务注册配置。 */
+/** `NacosModule` 内部注入的完整 Nacos 启动、订阅与服务注册配置。 */
 export interface NacosRuntimeOptions {
     /** Nacos 配置中心与注册中心地址，例如 `nacos:8848`。必填。 */
     serverAddr: string

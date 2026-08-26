@@ -19,15 +19,12 @@ import { RedisModule, RedisService } from '@wlisfes/chat-web-base-schema/redis'
 Register the shared module once with its four deployment-specific values.
 
 ```ts
-import { NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
+import { createNacosRuntimeOptions, NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
 
-NacosModule.forRoot({
-    serverAddr: 'nacos:8848',
-    namespace: 'replace-with-nacos-namespace-id',
-    serviceName: 'chat-web-example-service',
-    registerPort: 3020
-})
+NacosModule.forRoot(createNacosRuntimeOptions({ serviceName: 'chat-web-example-service', registerPort: 3020 }))
 ```
+
+`createNacosRuntimeOptions` 统一读取和校验扁平化 `NACOS_*` 环境变量，避免每个服务重复实现字符串、布尔值和端口转换。调用前先执行 `ConfigModule.forRoot`，确保本地 `.env` 已加载。`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填；`NACOS_SERVICE_NAME`、`NACOS_REGISTER_PORT` 可覆盖服务固有默认值，未显式配置注册端口时还会读取 `PORT`。其余环境变量与下方可选字段一一对应。
 
 `NacosService` reads every Nacos client, subscription and registration value
 from this options object. It does not resolve `NACOS_*` or `server.port`

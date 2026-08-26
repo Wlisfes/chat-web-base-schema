@@ -22,6 +22,123 @@ function config(initial = {}) {
     }
 }
 
+function nacosOptions(overrides = {}) {
+    return {
+        serverAddr: 'nacos.internal:8848',
+        namespace: 'example-namespace',
+        username: 'example-user',
+        password: 'example-password',
+        requestTimeout: 5000,
+        configDataId: 'chat-web-example-service.yaml',
+        configGroup: 'EXAMPLE_CONFIG_GROUP',
+        registerEnabled: true,
+        registerRequired: true,
+        serviceName: 'chat-web-example-service',
+        discoveryGroup: 'EXAMPLE_DISCOVERY_GROUP',
+        registerIp: '10.0.0.8',
+        registerPort: 3020,
+        ...overrides
+    }
+}
+
+function minimalNacosOptions(overrides = {}) {
+    return {
+        serverAddr: 'nacos.internal:8848',
+        namespace: 'example-namespace',
+        serviceName: 'chat-web-minimal-service',
+        registerPort: 3020,
+        ...overrides
+    }
+}
+
+function nacosShadowConfig(overrides = {}) {
+    return config({
+        NACOS_SERVER: 'hidden.example:8848',
+        NACOS_NAMESPACE: 'hidden-namespace',
+        NACOS_USERNAME: 'hidden-user',
+        NACOS_PASSWORD: 'hidden-password',
+        NACOS_CONFIG_DATA_ID: 'hidden.yaml',
+        NACOS_CONFIG_GROUP: 'HIDDEN_CONFIG_GROUP',
+        NACOS_GROUP: 'HIDDEN_DISCOVERY_GROUP',
+        NACOS_SERVICE_NAME: 'hidden-service',
+        NACOS_REGISTER_ENABLED: true,
+        NACOS_REGISTER_REQUIRED: false,
+        NACOS_REGISTER_IP: '192.0.2.1',
+        NACOS_REGISTER_PORT: 6553,
+        'server.port': 6554,
+        ...overrides
+    })
+}
+
+function withPatchedNacosClients({ configContent = 'remoteOnly: applied', registrationError } = {}) {
+    const nacosConfigModule = require('nacos-config')
+    const nacosNamingModule = require('nacos-naming')
+    const originalConfigClient = nacosConfigModule.NacosConfigClient
+    const originalNamingClient = nacosNamingModule.NacosNamingClient
+    const records = {
+        configClientOptions: [],
+        configGetConfigCalls: [],
+        configSubscribeCalls: [],
+        namingClientOptions: [],
+        registerInstanceCalls: [],
+        readyCalls: 0
+    }
+
+    class FakeNacosConfigClient {
+        constructor(options) {
+            this.options = options
+            records.configClientOptions.push(options)
+        }
+
+        async getConfig(dataId, group) {
+            records.configGetConfigCalls.push({ dataId, group })
+            return configContent
+        }
+
+        subscribe(subscription, listener) {
+            records.configSubscribeCalls.push(subscription)
+            this.listener = listener
+        }
+
+        unSubscribe() {}
+
+        close() {}
+    }
+
+    class FakeNacosNamingClient {
+        constructor(options) {
+            this.options = options
+            records.namingClientOptions.push(options)
+        }
+
+        async ready() {
+            records.readyCalls += 1
+        }
+
+        async registerInstance(serviceName, instance, group) {
+            records.registerInstanceCalls.push({ serviceName, instance, group })
+            if (registrationError) {
+                throw registrationError
+            }
+        }
+
+        async deregisterInstance() {}
+
+        async close() {}
+    }
+
+    nacosConfigModule.NacosConfigClient = FakeNacosConfigClient
+    nacosNamingModule.NacosNamingClient = FakeNacosNamingClient
+
+    return {
+        records,
+        restore() {
+            nacosConfigModule.NacosConfigClient = originalConfigClient
+            nacosNamingModule.NacosNamingClient = originalNamingClient
+        }
+    }
+}
+
 function accountAuthClient(values, fetchClient) {
     const factory = new FeignClientFactory(config(values), fetchClient)
     return new AccountAuthClient(factory.create(AccountFeignClient))
@@ -196,13 +313,217 @@ test('shared Redis readiness keeps the service boolean contract', async () => {
     assert.equal(await service.ping(), false)
 })
 
+test('shared Nacos loadConfig and registerService use runtime options end-to-end', async () => {
+    const reads = []
+    const configServiceBase = nacosShadowConfig()
+    const configService = {
+        ...configServiceBase,
+        get(key, fallback) {
+            reads.push(key)
+            return configServiceBase.get(key, fallback)
+        }
+    }
+    const patched = withPatchedNacosClients({
+        configContent: 'remoteOnly: applied\nloaded: true'
+    })
+
+    try {
+        const service = new NacosService(
+            configService,
+            nacosOptions({
+                configDataId: 'options.yaml',
+                configGroup: 'OPTIONS_CONFIG_GROUP',
+                serviceName: 'options-service',
+                discoveryGroup: 'OPTIONS_DISCOVERY_GROUP',
+                registerIp: '10.0.0.9',
+                registerPort: 4020
+            })
+        )
+
+        await service.loadConfig()
+        await service.registerService()
+
+        assert.deepEqual(reads, [])
+        assert.deepEqual(patched.records.configClientOptions, [
+            {
+                serverAddr: 'nacos.internal:8848',
+                namespace: 'example-namespace',
+                username: 'example-user',
+                password: 'example-password',
+                requestTimeout: 5000
+            }
+        ])
+        assert.deepEqual(patched.records.configGetConfigCalls, [{ dataId: 'options.yaml', group: 'OPTIONS_CONFIG_GROUP' }])
+        assert.deepEqual(patched.records.configSubscribeCalls, [{ dataId: 'options.yaml', group: 'OPTIONS_CONFIG_GROUP' }])
+        assert.equal(patched.records.namingClientOptions[0].serverList, 'nacos.internal:8848')
+        assert.equal(patched.records.namingClientOptions[0].namespace, 'example-namespace')
+        assert.equal(patched.records.namingClientOptions[0].username, 'example-user')
+        assert.equal(patched.records.namingClientOptions[0].password, 'example-password')
+        assert.equal(typeof patched.records.namingClientOptions[0].logger.log, 'function')
+        assert.equal(typeof patched.records.namingClientOptions[0].logger.info, 'function')
+        assert.equal(typeof patched.records.namingClientOptions[0].logger.debug, 'function')
+        assert.deepEqual(patched.records.registerInstanceCalls, [
+            {
+                serviceName: 'options-service',
+                instance: {
+                    instanceId: '',
+                    healthy: true,
+                    enabled: true,
+                    ephemeral: true,
+                    ip: '10.0.0.9',
+                    port: 4020
+                },
+                group: 'OPTIONS_DISCOVERY_GROUP'
+            }
+        ])
+        assert.equal(configService.values.loaded, true)
+        assert.equal(configService.values.remoteOnly, 'applied')
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos registerService skips naming client construction when registration is disabled', async () => {
+    const reads = []
+    const configServiceBase = nacosShadowConfig({ NACOS_REGISTER_ENABLED: true })
+    const configService = {
+        ...configServiceBase,
+        get(key, fallback) {
+            reads.push(key)
+            return configServiceBase.get(key, fallback)
+        }
+    }
+    const patched = withPatchedNacosClients()
+
+    try {
+        const service = new NacosService(configService, nacosOptions({ registerEnabled: false }))
+
+        await service.loadConfig()
+        await service.registerService()
+
+        assert.deepEqual(reads, [])
+        assert.deepEqual(patched.records.namingClientOptions, [])
+        assert.deepEqual(patched.records.registerInstanceCalls, [])
+        assert.equal(patched.records.readyCalls, 0)
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos registerService respects registerRequired after registration failures', async () => {
+    const readsRequired = []
+    const readsOptional = []
+    const requiredBase = nacosShadowConfig({ NACOS_REGISTER_REQUIRED: false })
+    const optionalBase = nacosShadowConfig({ NACOS_REGISTER_REQUIRED: true })
+    const requiredConfigService = {
+        ...requiredBase,
+        get(key, fallback) {
+            readsRequired.push(key)
+            return requiredBase.get(key, fallback)
+        }
+    }
+    const optionalConfigService = {
+        ...optionalBase,
+        get(key, fallback) {
+            readsOptional.push(key)
+            return optionalBase.get(key, fallback)
+        }
+    }
+    const patched = withPatchedNacosClients({
+        registrationError: new Error('simulated registration failure')
+    })
+
+    try {
+        const requiredService = new NacosService(
+            requiredConfigService,
+            nacosOptions({ registerRequired: true, serviceName: 'required-service' })
+        )
+        const optionalService = new NacosService(
+            optionalConfigService,
+            nacosOptions({ registerRequired: false, serviceName: 'optional-service' })
+        )
+
+        await requiredService.loadConfig()
+        await optionalService.loadConfig()
+
+        assert.deepEqual(readsRequired, [])
+        assert.deepEqual(readsOptional, [])
+        await assert.rejects(() => requiredService.registerService(), /simulated registration failure/)
+        await assert.doesNotReject(() => optionalService.registerService())
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos runtime accepts requestTimeout and registerPort boundary values', () => {
+    assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ requestTimeout: 1 })))
+    assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ registerPort: 1 })))
+    assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ registerPort: 65535 })))
+})
+
+test('shared Nacos runtime supplies documented defaults for optional options', () => {
+    const service = new NacosService(config(), minimalNacosOptions())
+
+    assert.deepEqual(service.options, {
+        serverAddr: 'nacos.internal:8848',
+        namespace: 'example-namespace',
+        username: undefined,
+        password: undefined,
+        requestTimeout: 5000,
+        configDataId: 'chat-web-minimal-service.yaml',
+        configGroup: 'DEFAULT_GROUP',
+        registerEnabled: true,
+        registerRequired: false,
+        serviceName: 'chat-web-minimal-service',
+        discoveryGroup: 'DEFAULT_GROUP',
+        registerIp: undefined,
+        registerPort: 3020
+    })
+
+    const customGroupService = new NacosService(config(), minimalNacosOptions({ configGroup: 'CUSTOM_GROUP' }))
+    assert.equal(customGroupService.getDiscoveryGroup(), 'CUSTOM_GROUP')
+})
+
+test('shared Nacos behavior resolves exclusively from runtime options', () => {
+    const reads = []
+    const baseConfig = nacosShadowConfig()
+    const configService = {
+        ...baseConfig,
+        get(key, fallback) {
+            reads.push(key)
+            return baseConfig.get(key, fallback)
+        }
+    }
+    const service = new NacosService(
+        configService,
+        nacosOptions({
+            configDataId: 'options.yaml',
+            configGroup: 'OPTIONS_CONFIG_GROUP',
+            serviceName: 'options-service',
+            discoveryGroup: 'OPTIONS_DISCOVERY_GROUP',
+            registerIp: '10.0.0.9',
+            registerPort: 4020
+        })
+    )
+
+    assert.deepEqual(service.getConfigSubscription(), {
+        dataId: 'options.yaml',
+        group: 'OPTIONS_CONFIG_GROUP'
+    })
+    assert.equal(service.getServiceName(), 'options-service')
+    assert.equal(service.getDiscoveryGroup(), 'OPTIONS_DISCOVERY_GROUP')
+    assert.equal(service.resolveRegisterIp(), '10.0.0.9')
+    assert.equal(service.getRegisterPort(), 4020)
+    assert.deepEqual(reads, [])
+})
+
 test('shared Nacos configuration preserves explicit environment values', () => {
     const key = 'SHARED_RUNTIME_ENV_OVERRIDE'
     const previous = process.env[key]
     process.env[key] = 'environment'
     try {
         const configService = config()
-        const service = new NacosService(configService, { serviceName: 'example', defaultPort: 3020 })
+        const service = new NacosService(configService, nacosOptions())
         service.applyRemoteConfig(`${key}: remote\nremoteOnly: applied`, '已加载', 'example.yaml', 'DEFAULT_GROUP', 'public')
 
         assert.equal(configService.get(key), undefined)
@@ -211,6 +532,42 @@ test('shared Nacos configuration preserves explicit environment values', () => {
         if (previous === undefined) delete process.env[key]
         else process.env[key] = previous
     }
+})
+
+test('shared Nacos runtime rejects invalid required option strings', () => {
+    for (const property of ['serverAddr', 'namespace', 'serviceName']) {
+        for (const value of [undefined, null, 1, {}, '', '   ']) {
+            assert.throws(
+                () => new NacosService(config(), nacosOptions({ [property]: value })),
+                new RegExp(`NacosRuntimeOptions\\.${property}`)
+            )
+        }
+    }
+})
+
+test('shared Nacos runtime rejects invalid provided optional strings', () => {
+    for (const property of ['configDataId', 'configGroup', 'discoveryGroup']) {
+        for (const value of [null, 1, {}, '', '   ']) {
+            assert.throws(
+                () => new NacosService(config(), minimalNacosOptions({ [property]: value })),
+                new RegExp(`NacosRuntimeOptions\\.${property}`)
+            )
+        }
+    }
+})
+
+test('shared Nacos runtime rejects invalid numeric options', () => {
+    for (const requestTimeout of [0, -1, 1.5, Number.NaN]) {
+        assert.throws(() => new NacosService(config(), nacosOptions({ requestTimeout })), /NacosRuntimeOptions\.requestTimeout/)
+    }
+    for (const registerPort of [0, 65536, 1.5, Number.NaN]) {
+        assert.throws(() => new NacosService(config(), nacosOptions({ registerPort })), /NacosRuntimeOptions\.registerPort/)
+    }
+})
+
+test('shared Nacos runtime rejects non-boolean registration options', () => {
+    assert.throws(() => new NacosService(config(), nacosOptions({ registerEnabled: 'true' })), /NacosRuntimeOptions\.registerEnabled/)
+    assert.throws(() => new NacosService(config(), nacosOptions({ registerRequired: 'false' })), /NacosRuntimeOptions\.registerRequired/)
 })
 
 test('shared MySQL options apply only allowlisted environment overrides', () => {

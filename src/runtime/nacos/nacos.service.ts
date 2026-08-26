@@ -16,6 +16,68 @@ type ClosableNacosNamingClient = NacosNamingClient & {
     close: () => Promise<void>
 }
 
+type ResolvedNacosRuntimeOptions = Required<Omit<NacosRuntimeOptions, 'username' | 'password' | 'registerIp'>> &
+    Pick<NacosRuntimeOptions, 'username' | 'password' | 'registerIp'>
+
+function requiredString(property: string, value: unknown): string {
+    if (typeof value !== 'string' || !value.trim()) {
+        throw new Error(`NacosRuntimeOptions.${property} 必须是非空字符串`)
+    }
+    return value.trim()
+}
+
+function optionalString(value: unknown): string | undefined {
+    return typeof value === 'string' && value.trim() ? value.trim() : undefined
+}
+
+function stringOption(property: string, value: unknown, fallback: string): string {
+    return value === undefined ? fallback : requiredString(property, value)
+}
+
+function positiveInteger(property: string, value: unknown, maximum = Number.MAX_SAFE_INTEGER): number {
+    if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > maximum) {
+        throw new Error(`NacosRuntimeOptions.${property} 必须是 1-${maximum} 之间的整数`)
+    }
+    return value
+}
+
+function positiveIntegerOption(property: string, value: unknown, fallback: number): number {
+    return value === undefined ? fallback : positiveInteger(property, value)
+}
+
+function booleanOption(property: string, value: unknown, fallback: boolean): boolean {
+    if (value === undefined) {
+        return fallback
+    }
+    if (typeof value !== 'boolean') {
+        throw new Error(`NacosRuntimeOptions.${property} 必须是布尔值`)
+    }
+    return value
+}
+
+function normalizeOptions(options: NacosRuntimeOptions): ResolvedNacosRuntimeOptions {
+    if (!options || typeof options !== 'object') {
+        throw new Error('NacosRuntimeOptions 必须是对象')
+    }
+    const serviceName = requiredString('serviceName', options.serviceName)
+    const configGroup = stringOption('configGroup', options.configGroup, 'DEFAULT_GROUP')
+    return {
+        serverAddr: requiredString('serverAddr', options.serverAddr),
+        namespace: requiredString('namespace', options.namespace),
+        username: optionalString(options.username),
+        password: optionalString(options.password),
+        requestTimeout: positiveIntegerOption('requestTimeout', options.requestTimeout, 5000),
+        configDataId: stringOption('configDataId', options.configDataId, `${serviceName}.yaml`),
+        configGroup,
+        registerEnabled: booleanOption('registerEnabled', options.registerEnabled, true),
+        registerRequired: booleanOption('registerRequired', options.registerRequired, false),
+        serviceName,
+        discoveryGroup: stringOption('discoveryGroup', options.discoveryGroup, configGroup),
+        registerIp: optionalString(options.registerIp),
+        registerPort: positiveInteger('registerPort', options.registerPort, 65535)
+    }
+}
+
 @Injectable()
 export class NacosService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(NacosService.name)
@@ -27,11 +89,14 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     private configListener?: (content: string) => void
     private namingClient?: ClosableNacosNamingClient
     private registeredInstance?: RegisteredInstance
+    private readonly options: ResolvedNacosRuntimeOptions
 
     constructor(
         private readonly configService: ConfigService,
-        @Inject(NACOS_RUNTIME_OPTIONS) private readonly options: NacosRuntimeOptions
-    ) {}
+        @Inject(NACOS_RUNTIME_OPTIONS) options: NacosRuntimeOptions
+    ) {
+        this.options = normalizeOptions(options)
+    }
 
     async onModuleInit(): Promise<void> {
         await this.loadConfig()
@@ -73,13 +138,13 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
 
     private async initializeConfig(): Promise<void> {
         const { dataId, group } = this.getConfigSubscription()
-        const namespace = this.configService.get<string>('NACOS_NAMESPACE', 'public')
+        const namespace = this.options.namespace
         this.configClient = new NacosConfigClient({
-            serverAddr: this.configService.get<string>('NACOS_SERVER', '127.0.0.1:8848'),
+            serverAddr: this.options.serverAddr,
             namespace,
-            username: this.configService.get<string>('NACOS_USERNAME') || undefined,
-            password: this.configService.get<string>('NACOS_PASSWORD') || undefined,
-            requestTimeout: 5000
+            username: this.options.username,
+            password: this.options.password,
+            requestTimeout: this.options.requestTimeout
         })
         const content = await this.configClient.getConfig(dataId, group)
         this.applyRemoteConfig(content, '已加载', dataId, group, namespace)
@@ -137,17 +202,17 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     }
 
     private async registerService(): Promise<void> {
-        if (!this.getBooleanConfig('NACOS_REGISTER_ENABLED', true)) {
+        if (!this.options.registerEnabled) {
             this.logger.warn('Nacos 服务注册已关闭')
             return
         }
         try {
             this.namingClient = new NacosNamingClient({
                 logger: this.createNacosClientLogger(),
-                serverList: this.configService.get<string>('NACOS_SERVER', '127.0.0.1:8848'),
-                namespace: this.configService.get<string>('NACOS_NAMESPACE', 'public'),
-                username: this.configService.get<string>('NACOS_USERNAME') || undefined,
-                password: this.configService.get<string>('NACOS_PASSWORD') || undefined
+                serverList: this.options.serverAddr,
+                namespace: this.options.namespace,
+                username: this.options.username,
+                password: this.options.password
             }) as ClosableNacosNamingClient
             await this.namingClient.ready()
 
@@ -161,16 +226,15 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
             this.logger.log(`服务已注册到 Nacos：${this.getServiceName()} ${instance.ip}:${instance.port}`)
         } catch (error) {
             this.logger.error(`注册 Nacos 服务实例失败：${this.getErrorMessage(error)}`)
-            if (this.getBooleanConfig('NACOS_REGISTER_REQUIRED', false)) {
+            if (this.options.registerRequired) {
                 throw error
             }
         }
     }
 
     private resolveRegisterIp(): string {
-        const configuredIp = this.configService.get<string>('NACOS_REGISTER_IP')?.trim()
-        if (configuredIp) {
-            return configuredIp
+        if (this.options.registerIp) {
+            return this.options.registerIp
         }
         for (const addresses of Object.values(networkInterfaces())) {
             const address = addresses?.find(item => item.family === 'IPv4' && !item.internal)
@@ -182,48 +246,22 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     }
 
     private getRegisterPort(): number {
-        const value =
-            this.configService.get<string | number>('NACOS_REGISTER_PORT') ??
-            this.configService.get<number>('server.port', this.options.defaultPort)
-        const port = Number(value)
-        if (!Number.isInteger(port) || port < 1 || port > 65535) {
-            throw new Error('NACOS_REGISTER_PORT 必须是 1-65535 之间的整数')
-        }
-        return port
+        return this.options.registerPort
     }
 
     private getDiscoveryGroup(): string {
-        const group = (
-            this.configService.get<string>('NACOS_GROUP') ||
-            this.configService.get<string>('NACOS_CONFIG_GROUP') ||
-            'DEFAULT_GROUP'
-        ).trim()
-        return group || 'DEFAULT_GROUP'
+        return this.options.discoveryGroup
     }
 
     private getConfigSubscription(): { dataId: string; group: string } {
         return {
-            dataId: this.getRequiredConfig('NACOS_CONFIG_DATA_ID'),
-            group: this.configService.get<string>('NACOS_CONFIG_GROUP') || this.getRequiredConfig('NACOS_GROUP')
+            dataId: this.options.configDataId,
+            group: this.options.configGroup
         }
     }
 
     private getServiceName(): string {
-        return this.configService.get<string>('NACOS_SERVICE_NAME')?.trim() || this.options.serviceName
-    }
-
-    private getBooleanConfig(key: string, fallback: boolean): boolean {
-        const value = this.configService.get<boolean | string>(key)
-        if (value === undefined || value === null || value === '') {
-            return fallback
-        }
-        if (typeof value === 'boolean') {
-            return value
-        }
-        if (value === 'true' || value === 'false') {
-            return value === 'true'
-        }
-        throw new Error(`${key} 必须是 true 或 false`)
+        return this.options.serviceName
     }
 
     private createNacosClientLogger(): typeof console {
@@ -232,14 +270,6 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
         clientLogger.info = () => undefined
         clientLogger.debug = () => undefined
         return clientLogger
-    }
-
-    private getRequiredConfig(key: string): string {
-        const value = this.configService.get<string>(key)
-        if (!value?.trim()) {
-            throw new Error(`缺少环境变量：${key}`)
-        }
-        return value.trim()
     }
 
     private getErrorMessage(error: unknown): string {

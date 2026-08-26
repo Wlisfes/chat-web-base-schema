@@ -16,21 +16,39 @@ import { RedisModule, RedisService } from '@wlisfes/chat-web-base-schema/redis'
 
 ## Nacos
 
-Register the shared module once with service-specific defaults. Explicit
-environment variables continue to override remote top-level configuration.
+Register the shared module once with the complete Nacos bootstrap,
+subscription and registration contract. Only authentication and the
+registration IP are optional.
 
 ```ts
 import { NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
 
 NacosModule.forRoot({
+    serverAddr: 'nacos:8848',
+    namespace: 'replace-with-nacos-namespace-id',
+    username: process.env.NACOS_USERNAME,
+    password: process.env.NACOS_PASSWORD,
+    requestTimeout: 5000,
+    configDataId: 'chat-web-example-service.yaml',
+    configGroup: 'DEFAULT_GROUP',
+    registerEnabled: true,
+    registerRequired: false,
     serviceName: 'chat-web-example-service',
-    defaultPort: 3020
+    discoveryGroup: 'DEFAULT_GROUP',
+    registerIp: process.env.NACOS_REGISTER_IP,
+    registerPort: 3020
 })
 ```
 
+`NacosService` reads every Nacos client, subscription and registration value
+from this options object. It does not resolve `NACOS_*` or `server.port`
+through `ConfigService`. When `registerIp` is omitted, the service uses the
+first non-internal IPv4 interface and falls back to `127.0.0.1`.
+
 `NacosService.loadConfig()` can be awaited by asynchronous database factories
 before opening their connections. The service also registers and deregisters
-an ephemeral Nacos instance.
+an ephemeral Nacos instance. Explicit process environment values continue to
+override matching top-level keys from remote business configuration.
 
 ## Authentication
 

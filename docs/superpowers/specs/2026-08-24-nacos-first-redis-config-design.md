@@ -34,11 +34,11 @@ Each service owns a `redis` node in its existing Nacos Data ID:
 
 ```yaml
 redis:
-  host: chat-web-redis
-  port: 6379
-  database: 0
-  tls: false
-  connectTimeoutMs: 5000
+    host: chat-web-redis
+    port: 6379
+    database: 0
+    tls: false
+    connectTimeoutMs: 5000
 ```
 
 Finance uses the same shape with `database: 1`. Optional `url`, `username`, and `password` fields remain supported. Real credentials are never written to Git, deployment documentation, or logs.

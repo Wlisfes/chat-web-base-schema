@@ -41,7 +41,13 @@ export async function setupSwagger(app: NestExpressApplication, options: SetupOp
             docExpansion: 'none'
         }
     })
-    return await app.listen(
-        ['development'].includes(options.NODE_ENV) ? (options.port ?? 3000) : configService.get<number>('server.port', 3000)
-    )
+    const port = configService.get<number>('server.port', 3000)
+    return await app.listen(['development'].includes(options.NODE_ENV) ? (options.port ?? 3000) : port).then(async () => {
+        return {
+            vm: app,
+            configService,
+            port: (app.getHttpServer().address() as Omix<{ port: number }>).port,
+            NODE_ENV: options.NODE_ENV
+        }
+    })
 }

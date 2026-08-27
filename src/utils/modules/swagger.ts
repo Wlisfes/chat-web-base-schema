@@ -1,5 +1,6 @@
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
+import { ConfigService } from '@nestjs/config'
 import { ValidationPipe } from '@nestjs/common'
 import { Omix } from '@/types'
 import cookieParser from 'cookie-parser'
@@ -8,6 +9,7 @@ export interface SetupOptions extends Omix {
     title: string
     description: string
     port: number | string
+    NODE_ENV: string
 }
 
 /**文档挂载**/
@@ -20,6 +22,8 @@ export async function setupSwagger(app: NestExpressApplication, options: SetupOp
     app.use(express.urlencoded({ extended: true }))
     /**全局注册验证管道**/
     app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
+    /**获取配置服务**/
+    const configService = app.get(ConfigService)
     /**初始化文档**/
     const builder = new DocumentBuilder()
         .setTitle(options.title)
@@ -37,5 +41,7 @@ export async function setupSwagger(app: NestExpressApplication, options: SetupOp
             docExpansion: 'none'
         }
     })
-    return await app.listen(options.port)
+    return await app.listen(
+        ['development'].includes(options.NODE_ENV) ? (options.port ?? 3000) : configService.get<number>('server.port', 3000)
+    )
 }

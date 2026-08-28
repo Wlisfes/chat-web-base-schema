@@ -1,8 +1,8 @@
 /** `NacosModule` 内部注入的完整 Nacos 启动、订阅与服务注册配置。 */
 export interface NacosRuntimeOptions {
-    /** Nacos 配置中心与注册中心地址，例如 `nacos:8848`。必填。 */
+    /** Nacos 配置中心与注册中心地址。运行时必填，通常映射 `.env` 的 `NACOS_SERVER`。 */
     serverAddr: string
-    /** Nacos namespace ID。必填，生产环境应显式传入对应环境的 namespace。 */
+    /** Nacos namespace ID。运行时必填，通常映射 `.env` 的 `NACOS_NAMESPACE`。 */
     namespace: string
     /** Nacos 认证用户名；不需要认证时省略。 */
     username?: string
@@ -18,13 +18,13 @@ export interface NacosRuntimeOptions {
     registerEnabled?: boolean
     /** 注册失败时是否阻止应用启动。默认 `false`。 */
     registerRequired?: boolean
-    /** Nacos 服务注册名称，同时用于推导默认 Data ID。必填。 */
+    /** Nacos 服务注册名称，同时用于推导默认 Data ID。由服务代码提供，不需要写入 `.env`。 */
     serviceName: string
     /** 服务发现组。默认使用解析后的 `configGroup`。 */
     discoveryGroup?: string
     /** 注册实例 IP；省略时自动选择首个非内部 IPv4，最终回退到 `127.0.0.1`。 */
     registerIp?: string
-    /** 注册实例端口，即该服务可被其他服务访问的端口。必填，范围 `1-65535`。 */
+    /** 注册实例端口。由 `PORT`、`NACOS_REGISTER_PORT` 或服务代码默认端口解析，范围 `1-65535`。 */
     registerPort: number
 }
 

@@ -4,7 +4,7 @@
 
 - Affected machines: Company and Home consumers after upgrading; this library does not deploy a container.
 - Associated version: unreleased change after `@wlisfes/chat-web-base-schema@1.4.12`.
-- Change: removed the implicit `process.env` fallback from `createNacosRuntimeOptions`; consumers must explicitly map the complete typed Nacos environment contract before passing the resulting options to `NacosModule.forRoot()`.
+- Change: removed the implicit `process.env` fallback from `createNacosRuntimeOptions`; consumers must pass one flat object containing service defaults and the complete typed Nacos environment mapping before passing the result to `NacosModule.forRoot()`.
 - Machine-side operations: none before consumers upgrade. Keep each service's required Nacos connection values in its machine-specific `.env`.
 - Verification: run `yarn verify`; upgraded consumers must run their repository verification and post-deployment health checks on both machines.
 - Rollback: pin consumers to `@wlisfes/chat-web-base-schema@1.4.12` and redeploy each machine's previous complete Git SHA.

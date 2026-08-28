@@ -51,8 +51,10 @@ function minimalNacosOptions(overrides = {}) {
     }
 }
 
-function nacosEnvironment(overrides = {}) {
+function nacosRuntimeInput(overrides = {}) {
     return {
+        serviceName: 'chat-web-example-service',
+        registerPort: 3020,
         NACOS_SERVER: undefined,
         NACOS_NAMESPACE: undefined,
         NACOS_USERNAME: undefined,
@@ -606,8 +608,7 @@ test('shared Nacos runtime rejects non-boolean registration options', () => {
 test('shared Nacos environment adapter maps the complete flattened runtime contract', () => {
     assert.deepEqual(
         createNacosRuntimeOptions(
-            { serviceName: 'chat-web-example-service', registerPort: 3020 },
-            nacosEnvironment({
+            nacosRuntimeInput({
                 NACOS_SERVER: 'nacos.internal:8848',
                 NACOS_NAMESPACE: 'example-namespace',
                 NACOS_USERNAME: 'example-user',
@@ -642,8 +643,7 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
 })
 
 test('shared Nacos environment adapter only requires server and namespace', () => {
-    const defaults = { serviceName: 'chat-web-example-service', registerPort: 3020 }
-    assert.deepEqual(createNacosRuntimeOptions(defaults, nacosEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example' })), {
+    assert.deepEqual(createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example' })), {
         serverAddr: 'nacos:8848',
         namespace: 'example',
         username: undefined,
@@ -659,16 +659,14 @@ test('shared Nacos environment adapter only requires server and namespace', () =
         registerPort: 3020
     })
     assert.equal(
-        createNacosRuntimeOptions(defaults, nacosEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', PORT: '4020' }))
-            .registerPort,
+        createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', PORT: '4020' })).registerPort,
         4020
     )
-    assert.throws(() => createNacosRuntimeOptions(defaults, nacosEnvironment({ NACOS_NAMESPACE: 'example' })), /NACOS_SERVER/)
+    assert.throws(() => createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_NAMESPACE: 'example' })), /NACOS_SERVER/)
     assert.throws(
         () =>
             createNacosRuntimeOptions(
-                defaults,
-                nacosEnvironment({
+                nacosRuntimeInput({
                     NACOS_SERVER: 'nacos:8848',
                     NACOS_NAMESPACE: 'example',
                     NACOS_REGISTER_ENABLED: 'yes'
@@ -679,8 +677,7 @@ test('shared Nacos environment adapter only requires server and namespace', () =
     assert.throws(
         () =>
             createNacosRuntimeOptions(
-                defaults,
-                nacosEnvironment({
+                nacosRuntimeInput({
                     NACOS_SERVER: 'nacos:8848',
                     NACOS_NAMESPACE: 'example',
                     NACOS_REGISTER_PORT: '65536'
@@ -692,8 +689,7 @@ test('shared Nacos environment adapter only requires server and namespace', () =
 
 test('NacosModule receives the complete runtime contract without reading process.env', () => {
     const options = createNacosRuntimeOptions(
-        { serviceName: 'chat-web-example-service', registerPort: 3020 },
-        nacosEnvironment({ NACOS_SERVER: 'nacos.internal:8848', NACOS_NAMESPACE: 'example-namespace' })
+        nacosRuntimeInput({ NACOS_SERVER: 'nacos.internal:8848', NACOS_NAMESPACE: 'example-namespace' })
     )
     const module = NacosModule.forRoot(options)
     const provider = module.providers.find(candidate => candidate.provide === NACOS_RUNTIME_OPTIONS)

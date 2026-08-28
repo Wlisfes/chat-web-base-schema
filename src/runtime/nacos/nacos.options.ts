@@ -1,17 +1,16 @@
 import { NacosRuntimeOptions } from './nacos.interface'
 
 /**
- * 从环境变量构造完整 Nacos 运行参数时所需的服务固有默认值。
- */
-export type NacosRuntimeDefaults = Pick<NacosRuntimeOptions, 'serviceName' | 'registerPort'>
-
-/**
- * 业务服务必须显式传入的 Nacos 环境变量映射。
+ * 业务服务传给 `createNacosRuntimeOptions()` 的扁平参数。
  *
  * 所有属性均要求出现在调用处，值仍可为 `undefined`，以便从代码中直接看出
  * `.env` 支持的完整字段；实际必填项只有 `NACOS_SERVER` 和 `NACOS_NAMESPACE`。
  */
-export interface NacosRuntimeEnvironment {
+export interface NacosRuntimeOptionsInput {
+    /** 服务固有名称；未配置 `NACOS_SERVICE_NAME` 时使用。 */
+    serviceName: string
+    /** 服务固有注册端口；未配置 `NACOS_REGISTER_PORT` 和 `PORT` 时使用。 */
+    registerPort: number
     /** Nacos 配置中心与注册中心地址。必填。 */
     NACOS_SERVER: string | undefined
     /** Nacos namespace ID。必填。 */
@@ -83,24 +82,24 @@ function optionalPositiveInteger(name: string, value: string | undefined): numbe
  * 服务名与注册端口使用调用方传入的服务固有默认值；其余空值保持 `undefined`，
  * 由 `NacosService` 统一应用接口文档中声明的默认值。
  */
-export function createNacosRuntimeOptions(defaults: NacosRuntimeDefaults, environment: NacosRuntimeEnvironment): NacosRuntimeOptions {
+export function createNacosRuntimeOptions(options: NacosRuntimeOptionsInput): NacosRuntimeOptions {
     return {
-        serverAddr: requiredString('NACOS_SERVER', environment.NACOS_SERVER),
-        namespace: requiredString('NACOS_NAMESPACE', environment.NACOS_NAMESPACE),
-        username: optionalString(environment.NACOS_USERNAME),
-        password: optionalString(environment.NACOS_PASSWORD),
-        requestTimeout: optionalPositiveInteger('NACOS_REQUEST_TIMEOUT', environment.NACOS_REQUEST_TIMEOUT),
-        configDataId: optionalString(environment.NACOS_CONFIG_DATA_ID),
-        configGroup: optionalString(environment.NACOS_CONFIG_GROUP),
-        registerEnabled: optionalBoolean('NACOS_REGISTER_ENABLED', environment.NACOS_REGISTER_ENABLED),
-        registerRequired: optionalBoolean('NACOS_REGISTER_REQUIRED', environment.NACOS_REGISTER_REQUIRED),
-        serviceName: optionalString(environment.NACOS_SERVICE_NAME) ?? defaults.serviceName,
-        discoveryGroup: optionalString(environment.NACOS_GROUP),
-        registerIp: optionalString(environment.NACOS_REGISTER_IP),
+        serverAddr: requiredString('NACOS_SERVER', options.NACOS_SERVER),
+        namespace: requiredString('NACOS_NAMESPACE', options.NACOS_NAMESPACE),
+        username: optionalString(options.NACOS_USERNAME),
+        password: optionalString(options.NACOS_PASSWORD),
+        requestTimeout: optionalPositiveInteger('NACOS_REQUEST_TIMEOUT', options.NACOS_REQUEST_TIMEOUT),
+        configDataId: optionalString(options.NACOS_CONFIG_DATA_ID),
+        configGroup: optionalString(options.NACOS_CONFIG_GROUP),
+        registerEnabled: optionalBoolean('NACOS_REGISTER_ENABLED', options.NACOS_REGISTER_ENABLED),
+        registerRequired: optionalBoolean('NACOS_REGISTER_REQUIRED', options.NACOS_REGISTER_REQUIRED),
+        serviceName: optionalString(options.NACOS_SERVICE_NAME) ?? options.serviceName,
+        discoveryGroup: optionalString(options.NACOS_GROUP),
+        registerIp: optionalString(options.NACOS_REGISTER_IP),
         registerPort: positiveInteger(
             'NACOS_REGISTER_PORT',
-            optionalString(environment.NACOS_REGISTER_PORT) ?? optionalString(environment.PORT),
-            defaults.registerPort,
+            optionalString(options.NACOS_REGISTER_PORT) ?? optionalString(options.PORT),
+            options.registerPort,
             65535
         )
     }

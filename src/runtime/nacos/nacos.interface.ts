@@ -24,7 +24,7 @@ export interface NacosRuntimeOptions {
     discoveryGroup?: string
     /** 注册实例 IP；省略时自动选择首个非内部 IPv4，最终回退到 `127.0.0.1`。 */
     registerIp?: string
-    /** 注册实例端口。由 `PORT`、`NACOS_REGISTER_PORT` 或服务代码默认端口解析，范围 `1-65535`。 */
+    /** 注册实例端口。由调用方的 `registerPort` 或 `NACOS_REGISTER_PORT` 解析，范围 `1-65535`。 */
     registerPort: number
 }
 

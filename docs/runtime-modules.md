@@ -27,7 +27,7 @@ import { createNacosRuntimeOptions, NacosModule } from '@wlisfes/chat-web-base-s
 NacosModule.forRoot(
     createNacosRuntimeOptions({
         serviceName: 'chat-web-example-service',
-        registerPort: 3020,
+        registerPort: process.env.PORT,
         NACOS_SERVER: process.env.NACOS_SERVER,
         NACOS_NAMESPACE: process.env.NACOS_NAMESPACE,
         NACOS_USERNAME: process.env.NACOS_USERNAME,
@@ -40,13 +40,12 @@ NacosModule.forRoot(
         NACOS_SERVICE_NAME: process.env.NACOS_SERVICE_NAME,
         NACOS_GROUP: process.env.NACOS_GROUP,
         NACOS_REGISTER_IP: process.env.NACOS_REGISTER_IP,
-        NACOS_REGISTER_PORT: process.env.NACOS_REGISTER_PORT,
-        PORT: process.env.PORT
+        NACOS_REGISTER_PORT: process.env.NACOS_REGISTER_PORT
     })
 )
 ```
 
-`createNacosRuntimeOptions` 只转换和校验调用方显式传入的字段，不会在基础包内部读取 `process.env`。上例列出了全部可选覆盖项，实际只有 `NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填。调用前先执行 `ConfigModule.forRoot`，确保本地 `.env` 已加载；注册端口依次使用 `NACOS_REGISTER_PORT`、`PORT` 和服务固有端口。
+`createNacosRuntimeOptions` 只转换和校验调用方显式传入的字段，不会在基础包内部读取 `process.env`。上例列出了全部可选覆盖项，实际只有 `registerPort`、`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填。调用前先执行 `ConfigModule.forRoot`，确保本地 `.env` 已加载；`registerPort` 可直接接收 `process.env.PORT`，`NACOS_REGISTER_PORT` 可选覆盖该端口。
 
 `NacosService` reads every Nacos client, subscription and registration value
 from this options object. It does not resolve `NACOS_*` or `server.port`

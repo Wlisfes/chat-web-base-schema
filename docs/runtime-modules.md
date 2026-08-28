@@ -46,7 +46,7 @@ NacosModule.forRoot(
 )
 ```
 
-`createNacosRuntimeOptions` 只转换和校验调用方显式传入的字段，不会在基础包内部读取 `process.env`。调用前先执行 `ConfigModule.forRoot`，确保本地 `.env` 已加载。`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填；注册端口依次使用 `NACOS_REGISTER_PORT`、`PORT` 和服务固有端口。
+`createNacosRuntimeOptions` 只转换和校验调用方显式传入的字段，不会在基础包内部读取 `process.env`。上例列出了全部可选覆盖项，实际只有 `NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填。调用前先执行 `ConfigModule.forRoot`，确保本地 `.env` 已加载；注册端口依次使用 `NACOS_REGISTER_PORT`、`PORT` 和服务固有端口。
 
 `NacosService` reads every Nacos client, subscription and registration value
 from this options object. It does not resolve `NACOS_*` or `server.port`

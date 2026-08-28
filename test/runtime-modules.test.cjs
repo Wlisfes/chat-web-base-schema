@@ -643,21 +643,29 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
 })
 
 test('shared Nacos environment adapter only requires server and namespace', () => {
-    assert.deepEqual(createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example' })), {
-        serverAddr: 'nacos:8848',
-        namespace: 'example',
-        username: undefined,
-        password: undefined,
-        requestTimeout: undefined,
-        configDataId: undefined,
-        configGroup: undefined,
-        registerEnabled: undefined,
-        registerRequired: undefined,
-        serviceName: 'chat-web-example-service',
-        discoveryGroup: undefined,
-        registerIp: undefined,
-        registerPort: 3020
-    })
+    assert.deepEqual(
+        createNacosRuntimeOptions({
+            serviceName: 'chat-web-example-service',
+            registerPort: 3020,
+            NACOS_SERVER: 'nacos:8848',
+            NACOS_NAMESPACE: 'example'
+        }),
+        {
+            serverAddr: 'nacos:8848',
+            namespace: 'example',
+            username: undefined,
+            password: undefined,
+            requestTimeout: undefined,
+            configDataId: undefined,
+            configGroup: undefined,
+            registerEnabled: undefined,
+            registerRequired: undefined,
+            serviceName: 'chat-web-example-service',
+            discoveryGroup: undefined,
+            registerIp: undefined,
+            registerPort: 3020
+        }
+    )
     assert.equal(
         createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', PORT: '4020' })).registerPort,
         4020

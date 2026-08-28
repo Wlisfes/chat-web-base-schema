@@ -3,8 +3,8 @@ import { NacosRuntimeOptions } from './nacos.interface'
 /**
  * 业务服务传给 `createNacosRuntimeOptions()` 的扁平参数。
  *
- * 所有属性均要求出现在调用处，值仍可为 `undefined`，以便从代码中直接看出
- * `.env` 支持的完整字段；实际必填项只有 `NACOS_SERVER` 和 `NACOS_NAMESPACE`。
+ * 环境变量中只有 `NACOS_SERVER` 和 `NACOS_NAMESPACE` 必须出现在调用处；
+ * 其余环境变量均可省略并使用各字段声明的默认值。
  */
 export interface NacosRuntimeOptionsInput {
     /** 服务固有名称；未配置 `NACOS_SERVICE_NAME` 时使用。 */
@@ -16,29 +16,29 @@ export interface NacosRuntimeOptionsInput {
     /** Nacos namespace ID。必填。 */
     NACOS_NAMESPACE: string | undefined
     /** Nacos 认证用户名；未开启认证时不配置。 */
-    NACOS_USERNAME: string | undefined
+    NACOS_USERNAME?: string
     /** Nacos 认证密码；未开启认证时不配置。 */
-    NACOS_PASSWORD: string | undefined
+    NACOS_PASSWORD?: string
     /** 配置中心请求超时时间，单位毫秒；默认 `5000`。 */
-    NACOS_REQUEST_TIMEOUT: string | undefined
+    NACOS_REQUEST_TIMEOUT?: string
     /** 配置 Data ID；默认 `${serviceName}.yaml`。 */
-    NACOS_CONFIG_DATA_ID: string | undefined
+    NACOS_CONFIG_DATA_ID?: string
     /** 配置订阅组；默认 `DEFAULT_GROUP`。 */
-    NACOS_CONFIG_GROUP: string | undefined
+    NACOS_CONFIG_GROUP?: string
     /** 是否注册服务实例，只接受 `true` 或 `false`；默认 `true`。 */
-    NACOS_REGISTER_ENABLED: string | undefined
+    NACOS_REGISTER_ENABLED?: string
     /** 注册失败是否阻止应用启动，只接受 `true` 或 `false`；默认 `false`。 */
-    NACOS_REGISTER_REQUIRED: string | undefined
+    NACOS_REGISTER_REQUIRED?: string
     /** Nacos 服务名称；默认使用调用方提供的服务固有名称。 */
-    NACOS_SERVICE_NAME: string | undefined
+    NACOS_SERVICE_NAME?: string
     /** 服务发现组；默认使用配置订阅组。 */
-    NACOS_GROUP: string | undefined
+    NACOS_GROUP?: string
     /** 注册实例 IP；默认自动选择非内部 IPv4。 */
-    NACOS_REGISTER_IP: string | undefined
+    NACOS_REGISTER_IP?: string
     /** 注册实例端口；未配置时依次使用 `PORT` 和服务固有端口。 */
-    NACOS_REGISTER_PORT: string | undefined
+    NACOS_REGISTER_PORT?: string
     /** 应用监听端口，同时作为注册端口的后备值。 */
-    PORT: string | undefined
+    PORT?: string
 }
 
 function optionalString(value: string | undefined): string | undefined {

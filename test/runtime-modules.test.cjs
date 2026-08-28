@@ -51,6 +51,26 @@ function minimalNacosOptions(overrides = {}) {
     }
 }
 
+function nacosEnvironment(overrides = {}) {
+    return {
+        NACOS_SERVER: undefined,
+        NACOS_NAMESPACE: undefined,
+        NACOS_USERNAME: undefined,
+        NACOS_PASSWORD: undefined,
+        NACOS_REQUEST_TIMEOUT: undefined,
+        NACOS_CONFIG_DATA_ID: undefined,
+        NACOS_CONFIG_GROUP: undefined,
+        NACOS_REGISTER_ENABLED: undefined,
+        NACOS_REGISTER_REQUIRED: undefined,
+        NACOS_SERVICE_NAME: undefined,
+        NACOS_GROUP: undefined,
+        NACOS_REGISTER_IP: undefined,
+        NACOS_REGISTER_PORT: undefined,
+        PORT: undefined,
+        ...overrides
+    }
+}
+
 function nacosShadowConfig(overrides = {}) {
     return config({
         NACOS_SERVER: 'hidden.example:8848',
@@ -587,7 +607,7 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
     assert.deepEqual(
         createNacosRuntimeOptions(
             { serviceName: 'chat-web-example-service', registerPort: 3020 },
-            {
+            nacosEnvironment({
                 NACOS_SERVER: 'nacos.internal:8848',
                 NACOS_NAMESPACE: 'example-namespace',
                 NACOS_USERNAME: 'example-user',
@@ -601,7 +621,7 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
                 NACOS_GROUP: 'EXAMPLE_DISCOVERY',
                 NACOS_REGISTER_IP: '10.0.0.8',
                 NACOS_REGISTER_PORT: '4020'
-            }
+            })
         ),
         {
             serverAddr: 'nacos.internal:8848',
@@ -623,7 +643,7 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
 
 test('shared Nacos environment adapter only requires server and namespace', () => {
     const defaults = { serviceName: 'chat-web-example-service', registerPort: 3020 }
-    assert.deepEqual(createNacosRuntimeOptions(defaults, { NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example' }), {
+    assert.deepEqual(createNacosRuntimeOptions(defaults, nacosEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example' })), {
         serverAddr: 'nacos:8848',
         namespace: 'example',
         username: undefined,
@@ -639,63 +659,48 @@ test('shared Nacos environment adapter only requires server and namespace', () =
         registerPort: 3020
     })
     assert.equal(
-        createNacosRuntimeOptions(defaults, { NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', PORT: '4020' }).registerPort,
+        createNacosRuntimeOptions(defaults, nacosEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', PORT: '4020' }))
+            .registerPort,
         4020
     )
-    assert.throws(() => createNacosRuntimeOptions(defaults, { NACOS_NAMESPACE: 'example' }), /NACOS_SERVER/)
+    assert.throws(() => createNacosRuntimeOptions(defaults, nacosEnvironment({ NACOS_NAMESPACE: 'example' })), /NACOS_SERVER/)
     assert.throws(
         () =>
-            createNacosRuntimeOptions(defaults, {
-                NACOS_SERVER: 'nacos:8848',
-                NACOS_NAMESPACE: 'example',
-                NACOS_REGISTER_ENABLED: 'yes'
-            }),
+            createNacosRuntimeOptions(
+                defaults,
+                nacosEnvironment({
+                    NACOS_SERVER: 'nacos:8848',
+                    NACOS_NAMESPACE: 'example',
+                    NACOS_REGISTER_ENABLED: 'yes'
+                })
+            ),
         /NACOS_REGISTER_ENABLED/
     )
     assert.throws(
         () =>
-            createNacosRuntimeOptions(defaults, {
-                NACOS_SERVER: 'nacos:8848',
-                NACOS_NAMESPACE: 'example',
-                NACOS_REGISTER_PORT: '65536'
-            }),
+            createNacosRuntimeOptions(
+                defaults,
+                nacosEnvironment({
+                    NACOS_SERVER: 'nacos:8848',
+                    NACOS_NAMESPACE: 'example',
+                    NACOS_REGISTER_PORT: '65536'
+                })
+            ),
         /NACOS_REGISTER_PORT/
     )
 })
 
-test('NacosModule owns environment adaptation for service defaults', () => {
-    const module = NacosModule.forRoot({ serviceName: 'chat-web-example-service', registerPort: 3020 })
+test('NacosModule receives the complete runtime contract without reading process.env', () => {
+    const options = createNacosRuntimeOptions(
+        { serviceName: 'chat-web-example-service', registerPort: 3020 },
+        nacosEnvironment({ NACOS_SERVER: 'nacos.internal:8848', NACOS_NAMESPACE: 'example-namespace' })
+    )
+    const module = NacosModule.forRoot(options)
     const provider = module.providers.find(candidate => candidate.provide === NACOS_RUNTIME_OPTIONS)
-    const previousServer = process.env.NACOS_SERVER
-    const previousNamespace = process.env.NACOS_NAMESPACE
-
-    process.env.NACOS_SERVER = 'nacos.internal:8848'
-    process.env.NACOS_NAMESPACE = 'example-namespace'
-    try {
-        assert.deepEqual(provider.useFactory(), {
-            serverAddr: 'nacos.internal:8848',
-            namespace: 'example-namespace',
-            username: undefined,
-            password: undefined,
-            requestTimeout: undefined,
-            configDataId: undefined,
-            configGroup: undefined,
-            registerEnabled: undefined,
-            registerRequired: undefined,
-            serviceName: 'chat-web-example-service',
-            discoveryGroup: undefined,
-            registerIp: undefined,
-            registerPort: 3020
-        })
-    } finally {
-        if (previousServer === undefined) delete process.env.NACOS_SERVER
-        else process.env.NACOS_SERVER = previousServer
-        if (previousNamespace === undefined) delete process.env.NACOS_NAMESPACE
-        else process.env.NACOS_NAMESPACE = previousNamespace
-    }
+    assert.equal(provider.useValue, options)
 })
 
-test('NacosModule still accepts an explicitly complete runtime contract', () => {
+test('NacosModule accepts an explicitly complete runtime contract', () => {
     const options = {
         serverAddr: 'nacos.internal:8848',
         namespace: 'example-namespace',

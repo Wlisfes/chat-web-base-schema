@@ -18,15 +18,36 @@ import { RedisModule, RedisService } from '@wlisfes/chat-web-base-schema/redis'
 
 ## Nacos
 
-Register the shared module once with the service's intrinsic name and port.
+Map the bootstrap environment explicitly, then register the shared module with
+the complete runtime options.
 
 ```ts
-import { NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
+import { createNacosRuntimeOptions, NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
 
-NacosModule.forRoot({ serviceName: 'chat-web-example-service', registerPort: 3020 })
+NacosModule.forRoot(
+    createNacosRuntimeOptions(
+        { serviceName: 'chat-web-example-service', registerPort: 3020 },
+        {
+            NACOS_SERVER: process.env.NACOS_SERVER,
+            NACOS_NAMESPACE: process.env.NACOS_NAMESPACE,
+            NACOS_USERNAME: process.env.NACOS_USERNAME,
+            NACOS_PASSWORD: process.env.NACOS_PASSWORD,
+            NACOS_REQUEST_TIMEOUT: process.env.NACOS_REQUEST_TIMEOUT,
+            NACOS_CONFIG_DATA_ID: process.env.NACOS_CONFIG_DATA_ID,
+            NACOS_CONFIG_GROUP: process.env.NACOS_CONFIG_GROUP,
+            NACOS_REGISTER_ENABLED: process.env.NACOS_REGISTER_ENABLED,
+            NACOS_REGISTER_REQUIRED: process.env.NACOS_REGISTER_REQUIRED,
+            NACOS_SERVICE_NAME: process.env.NACOS_SERVICE_NAME,
+            NACOS_GROUP: process.env.NACOS_GROUP,
+            NACOS_REGISTER_IP: process.env.NACOS_REGISTER_IP,
+            NACOS_REGISTER_PORT: process.env.NACOS_REGISTER_PORT,
+            PORT: process.env.PORT
+        }
+    )
+)
 ```
 
-`NacosModule.forRoot` 内部统一读取和校验扁平化 `NACOS_*` 环境变量，避免每个服务重复实现字符串、布尔值和端口转换。调用前先执行 `ConfigModule.forRoot`，确保本地 `.env` 已加载。`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填；未显式配置注册端口时还会读取 `PORT`。其余环境变量与下方可选字段一一对应。
+`createNacosRuntimeOptions` 只转换和校验调用方显式传入的字段，不会在基础包内部读取 `process.env`。调用前先执行 `ConfigModule.forRoot`，确保本地 `.env` 已加载。`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填；注册端口依次使用 `NACOS_REGISTER_PORT`、`PORT` 和服务固有端口。
 
 `NacosService` reads every Nacos client, subscription and registration value
 from this options object. It does not resolve `NACOS_*` or `server.port`

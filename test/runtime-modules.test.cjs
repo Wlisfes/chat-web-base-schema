@@ -68,7 +68,6 @@ function nacosRuntimeInput(overrides = {}) {
         NACOS_GROUP: undefined,
         NACOS_REGISTER_IP: undefined,
         NACOS_REGISTER_PORT: undefined,
-        PORT: undefined,
         ...overrides
     }
 }
@@ -642,7 +641,7 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
     )
 })
 
-test('shared Nacos environment adapter only requires server and namespace', () => {
+test('shared Nacos environment adapter requires only registerPort, server and namespace', () => {
     assert.deepEqual(
         createNacosRuntimeOptions({
             serviceName: 'chat-web-example-service',
@@ -667,10 +666,22 @@ test('shared Nacos environment adapter only requires server and namespace', () =
         }
     )
     assert.equal(
-        createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', PORT: '4020' })).registerPort,
+        createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', registerPort: '4020' }))
+            .registerPort,
         4020
     )
     assert.throws(() => createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_NAMESPACE: 'example' })), /NACOS_SERVER/)
+    assert.throws(
+        () =>
+            createNacosRuntimeOptions(
+                nacosRuntimeInput({
+                    registerPort: undefined,
+                    NACOS_SERVER: 'nacos:8848',
+                    NACOS_NAMESPACE: 'example'
+                })
+            ),
+        /registerPort/
+    )
     assert.throws(
         () =>
             createNacosRuntimeOptions(

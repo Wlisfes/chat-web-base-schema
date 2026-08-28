@@ -1,5 +1,14 @@
 # Deployment changelog
 
+## 2026-08-28 — Unambiguous Nacos registration port mapping
+
+- Affected machines: Company and Home consumers after upgrading; this library does not deploy a container.
+- Associated version: unreleased change after `@wlisfes/chat-web-base-schema@1.4.13`.
+- Change: removed the duplicate `PORT` property from `NacosRuntimeOptionsInput`. Consumers now pass `process.env.PORT` through `registerPort`; the optional `NACOS_REGISTER_PORT` remains an explicit registration-only override.
+- Machine-side operations: none. Existing consumer `.env` files continue to define `PORT`, `NACOS_SERVER` and `NACOS_NAMESPACE`.
+- Verification: run `yarn verify`; upgraded consumers must run their repository verification and post-deployment health checks.
+- Rollback: pin consumers to `@wlisfes/chat-web-base-schema@1.4.13` and redeploy the previous complete Git SHA.
+
 ## 2026-08-28 — Explicit Nacos environment mapping
 
 - Affected machines: Company and Home consumers after upgrading; this library does not deploy a container.

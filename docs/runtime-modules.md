@@ -120,20 +120,25 @@ export class IntegrationModule {}
 
 Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Multi-select fields remain arrays in the POST body. Business services must not create their own `fetch`, Axios or cross-database implementation for an endpoint already declared by a shared Feign client.
 
-## Structured logging and trace correlation
+## Readable logging and trace correlation
 
-Use the shared logger during Nest application creation. It emits one JSON
-object per line and adds the active request and OpenTelemetry trace context to
-framework, business and exception logs.
+Use the shared readable logger during Nest application creation. Local request
+JSON is indented for terminal reading, while `NODE_ENV=production` compacts the
+request JSON to one physical line for Dozzle. The colored text header is kept in
+both environments.
 
 ```ts
-import { createStructuredLogger } from '@wlisfes/chat-web-base-schema/logging'
+import { ReadableConsoleLogger, createRequestLoggingMiddleware } from '@wlisfes/chat-web-base-schema/logging'
 
-const logger = createStructuredLogger({ serviceName: 'chat-web-example-service' })
+const serviceName = 'chat-web-example-service'
+const logger = new ReadableConsoleLogger({ NODE_ENV: process.env.NODE_ENV, prefix: serviceName })
 const app = await NestFactory.create(AppModule, { logger })
+app.use(createRequestLoggingMiddleware(serviceName))
 ```
 
 Register `requestContextMiddleware` before `createRequestLoggingMiddleware`.
+The request logging middleware only accepts the service name and applies the
+shared ignored path and payload length defaults.
 The request context accepts a valid incoming `x-request-id`, creates one when it
 is absent, returns it in the response and forwards it through shared Feign
 clients. `getActiveTraceContext()` from the `observability` subpath returns the

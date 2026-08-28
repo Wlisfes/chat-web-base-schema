@@ -64,14 +64,13 @@ and HTTP request context middleware from the existing utility subpath:
 ```ts
 import { PageDto, buildTree, generateUid } from '@wlisfes/chat-web-base-schema/utils'
 import { requestContextMiddleware } from '@wlisfes/chat-web-base-schema/request-context'
-import { createRequestLoggingMiddleware } from '@wlisfes/chat-web-base-schema/logging'
+import { ReadableConsoleLogger, createRequestLoggingMiddleware } from '@wlisfes/chat-web-base-schema/logging'
 ```
 
 These helpers must not be copied into a service-level `src/common` directory.
 
-HTTP services should pass `createStructuredLogger()` to `NestFactory.create`
-so container output remains one-line JSON. Request logs and exception logs then
-share `service`, `environment`, `requestId`, `traceId` and `spanId` fields. The
-request context also forwards `x-request-id` automatically through shared Feign
-clients. OpenTelemetry SDK initialization remains the responsibility of each
-service process, while the shared observability helper reads its active span.
+HTTP 服务统一将 `ReadableConsoleLogger` 传给 `NestFactory.create`。它在本地保留
+带缩进的彩色请求 JSON，在 `NODE_ENV=production` 时输出适合 Dozzle 的单行彩色
+请求 JSON。`createRequestLoggingMiddleware` 只接收服务名称，并默认过滤健康检查、
+浏览器探测、favicon 和接口文档等无业务价值路径。请求上下文仍会通过共享 Feign
+客户端自动转发 `x-request-id`，请求日志统一以 `logId` 展示该值。

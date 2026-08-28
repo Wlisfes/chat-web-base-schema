@@ -1,14 +1,7 @@
-export interface RequestLoggingOptions {
-    serviceName: string
-    ignoredPaths?: string[]
-    maxPayloadLength?: number
-}
-
 export interface RequestLogPayload {
     message: string
     service: string
     logId: string
-    requestId: string
     method: string
     url: string
     statusCode: number
@@ -28,4 +21,9 @@ export interface RequestLogPayload {
 export interface StructuredLoggerOptions {
     serviceName: string
     environment?: string
+}
+
+export interface ReadableConsoleLoggerOptions {
+    NODE_ENV?: string
+    prefix?: string
 }

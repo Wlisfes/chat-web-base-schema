@@ -2,7 +2,24 @@ import { Logger } from '@nestjs/common'
 import type { Request, RequestHandler } from 'express'
 import { resolveRequestId } from '@/utils/modules/request-context'
 import { getActiveTraceContext } from '@/runtime/observability'
-import type { RequestLoggingOptions } from '@/runtime/logging/logging.interface'
+
+const MAX_PAYLOAD_LENGTH = 4096
+
+export const DEFAULT_REQUEST_LOGGING_IGNORED_PATHS = [
+    '/health',
+    '/health/live',
+    '/health/ready',
+    '/favicon.ico',
+    '/robots.txt',
+    '/.well-known/appspecific/com.chrome.devtools.json',
+    '/api/swagger',
+    '/api/swagger-json',
+    '/doc.html',
+    '/services.json'
+] as const
+
+const ignoredPaths = new Set<string>(DEFAULT_REQUEST_LOGGING_IGNORED_PATHS)
+const ignoredPathPrefixes = ['/api/swagger/']
 
 const SENSITIVE_KEYS = new Set([
     'access_token',
@@ -47,11 +64,13 @@ function resolveClientIp(request: Request): string {
     return value?.trim() || request.ip || request.socket.remoteAddress || ''
 }
 
+function isIgnoredPath(path: string): boolean {
+    return ignoredPaths.has(path) || ignoredPathPrefixes.some(prefix => path.startsWith(prefix))
+}
+
 /** 记录与 nest-platform-service LoggerMiddleware 一致的请求、入参、来源和耗时信息。 */
-export function createRequestLoggingMiddleware(options: RequestLoggingOptions): RequestHandler {
-    const logger = new Logger(`${options.serviceName}:HTTP`)
-    const ignoredPaths = new Set(options.ignoredPaths ?? ['/health/live'])
-    const maxPayloadLength = options.maxPayloadLength ?? 4096
+export function createRequestLoggingMiddleware(serviceName: string): RequestHandler {
+    const logger = new Logger(`${serviceName}:HTTP`)
 
     return (request, response, next) => {
         const startedAt = Date.now()
@@ -60,13 +79,12 @@ export function createRequestLoggingMiddleware(options: RequestLoggingOptions): 
         response.setHeader('x-request-id', requestId)
 
         response.once('finish', () => {
-            if (ignoredPaths.has(request.path)) return
+            if (isIgnoredPath(request.path)) return
             const traceContext = getActiveTraceContext()
             const payload = {
                 message: 'HTTP请求完成',
-                service: options.serviceName,
+                service: serviceName,
                 logId: requestId,
-                requestId,
                 method: request.method,
                 url: request.originalUrl,
                 statusCode: response.statusCode,
@@ -76,9 +94,9 @@ export function createRequestLoggingMiddleware(options: RequestLoggingOptions): 
                 origin: request.headers.origin ?? '',
                 referer: request.headers.referer ?? '',
                 userAgent: request.headers['user-agent'] ?? '',
-                query: truncate(request.query, maxPayloadLength),
-                params: truncate(request.params, maxPayloadLength),
-                body: truncate(request.body, maxPayloadLength),
+                query: truncate(request.query, MAX_PAYLOAD_LENGTH),
+                params: truncate(request.params, MAX_PAYLOAD_LENGTH),
+                body: truncate(request.body, MAX_PAYLOAD_LENGTH),
                 ...traceContext
             }
             if (response.statusCode >= 500) logger.error(payload)

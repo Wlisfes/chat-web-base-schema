@@ -1,5 +1,14 @@
 # Deployment changelog
 
+## 2026-08-29 — Simplified Nacos module bootstrap
+
+- Affected machines: explicitly upgraded consumer services; this library does not deploy a container.
+- Associated version: unreleased change after `@wlisfes/chat-web-base-schema@1.4.15`.
+- Change: renamed `createNacosRuntimeOptions` to `forRootNacosRuntimeOptions` and changed it to accept `process.env` directly. The adapter now derives `serviceName` from `NACOS_SERVICE_NAME` and the default registration port from `PORT`, removing repetitive field-by-field mapping at each module call site.
+- Machine-side operations: none before the shared package is published and the explicitly selected consumers upgrade. Existing Nacos values and service ports are unchanged.
+- Verification: run `yarn verify`; upgraded consumers must run their repository build and tests.
+- Rollback: keep consumers on `@wlisfes/chat-web-base-schema@1.4.15` and restore the previous `createNacosRuntimeOptions` call sites.
+
 ## 2026-08-28 — Unambiguous Nacos registration port mapping
 
 - Affected machines: Company and Home consumers after upgrading; this library does not deploy a container.

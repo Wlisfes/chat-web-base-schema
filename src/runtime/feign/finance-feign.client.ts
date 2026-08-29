@@ -23,7 +23,7 @@ export interface FinanceSmsRateBatchRequest {
 @FeignClient({
     name: '财务服务',
     baseUrlConfigKey: 'FINANCE_SERVICE_URL',
-    defaultBaseUrl: 'http://chat-web-finance-service:3010',
+    defaultBaseUrl: 'http://chat-web-finance-service:5030',
     timeoutConfigKey: 'FINANCE_SERVICE_TIMEOUT_MS',
     defaultTimeoutMs: 5000
 })

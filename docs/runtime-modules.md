@@ -18,34 +18,17 @@ import { RedisModule, RedisService } from '@wlisfes/chat-web-base-schema/redis'
 
 ## Nacos
 
-Map the bootstrap environment explicitly, then register the shared module with
-the complete runtime options.
+Pass `process.env` directly to the environment adapter, then register the
+shared module with the complete runtime options.
 
 ```ts
-import { createNacosRuntimeOptions, NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
+import 'dotenv/config'
+import { forRootNacosRuntimeOptions, NacosModule } from '@wlisfes/chat-web-base-schema/nacos'
 
-NacosModule.forRoot(
-    createNacosRuntimeOptions({
-        serviceName: 'chat-web-example-service',
-        registerPort: process.env.PORT,
-        NACOS_SERVER: process.env.NACOS_SERVER,
-        NACOS_NAMESPACE: process.env.NACOS_NAMESPACE,
-        NACOS_USERNAME: process.env.NACOS_USERNAME,
-        NACOS_PASSWORD: process.env.NACOS_PASSWORD,
-        NACOS_REQUEST_TIMEOUT: process.env.NACOS_REQUEST_TIMEOUT,
-        NACOS_CONFIG_DATA_ID: process.env.NACOS_CONFIG_DATA_ID,
-        NACOS_CONFIG_GROUP: process.env.NACOS_CONFIG_GROUP,
-        NACOS_REGISTER_ENABLED: process.env.NACOS_REGISTER_ENABLED,
-        NACOS_REGISTER_REQUIRED: process.env.NACOS_REGISTER_REQUIRED,
-        NACOS_SERVICE_NAME: process.env.NACOS_SERVICE_NAME,
-        NACOS_GROUP: process.env.NACOS_GROUP,
-        NACOS_REGISTER_IP: process.env.NACOS_REGISTER_IP,
-        NACOS_REGISTER_PORT: process.env.NACOS_REGISTER_PORT
-    })
-)
+NacosModule.forRoot(forRootNacosRuntimeOptions(process.env))
 ```
 
-`createNacosRuntimeOptions` 只转换和校验调用方显式传入的字段，不会在基础包内部读取 `process.env`。上例列出了全部可选覆盖项，实际只有 `registerPort`、`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填。调用前先执行 `ConfigModule.forRoot`，确保本地 `.env` 已加载；`registerPort` 可直接接收 `process.env.PORT`，`NACOS_REGISTER_PORT` 可选覆盖该端口。
+`forRootNacosRuntimeOptions` 负责从 `process.env` 转换和校验 Nacos 启动参数。`PORT`、`NACOS_SERVICE_NAME`、`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填，其余字段均可省略并使用共享默认值。由于 `AppModule` 装饰器会在 `ConfigModule.forRoot()` 初始化前执行，入口文件应先加载 `dotenv/config`；容器环境则直接使用注入的环境变量。`NACOS_REGISTER_PORT` 仍可作为特殊场景的显式覆盖，但通常直接使用 `PORT`。
 
 `NacosService` reads every Nacos client, subscription and registration value
 from this options object. It does not resolve `NACOS_*` or `server.port`
@@ -103,7 +86,7 @@ Cross-service HTTP calls use the shared declarative Feign runtime. A client clas
 @FeignClient({
     name: '账号服务',
     baseUrlConfigKey: 'ACCOUNT_SERVICE_URL',
-    defaultBaseUrl: 'http://chat-web-account-service:3000'
+    defaultBaseUrl: 'http://chat-web-account-service:5010'
 })
 export class AccountFeignClient {
     @FeignGet('/consumer/resolver')

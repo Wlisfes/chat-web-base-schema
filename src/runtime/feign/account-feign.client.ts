@@ -17,7 +17,7 @@ export interface AccountConsumer {
 @FeignClient({
     name: '账号服务',
     baseUrlConfigKey: 'ACCOUNT_SERVICE_URL',
-    defaultBaseUrl: 'http://chat-web-account-service:3000',
+    defaultBaseUrl: 'http://chat-web-account-service:5010',
     timeoutConfigKey: 'ACCOUNT_AUTH_TIMEOUT_MS',
     defaultTimeoutMs: 3000
 })

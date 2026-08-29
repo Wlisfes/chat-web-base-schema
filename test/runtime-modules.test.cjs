@@ -5,7 +5,7 @@ const { BadGatewayException, ServiceUnavailableException, UnauthorizedException 
 const { AccountAuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const { AccountFeignClient, FeignClientFactory, FinanceFeignClient } = require('../dist/src/runtime/feign')
-const { createNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
+const { forRootNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
 const { RedisService } = require('../dist/src/runtime/redis')
 const { runWithRequestContext } = require('../dist/src/utils/modules/request-context')
 
@@ -51,10 +51,9 @@ function minimalNacosOptions(overrides = {}) {
     }
 }
 
-function nacosRuntimeInput(overrides = {}) {
+function nacosRuntimeEnvironment(overrides = {}) {
     return {
-        serviceName: 'chat-web-example-service',
-        registerPort: 3020,
+        PORT: '3020',
         NACOS_SERVER: undefined,
         NACOS_NAMESPACE: undefined,
         NACOS_USERNAME: undefined,
@@ -64,7 +63,7 @@ function nacosRuntimeInput(overrides = {}) {
         NACOS_CONFIG_GROUP: undefined,
         NACOS_REGISTER_ENABLED: undefined,
         NACOS_REGISTER_REQUIRED: undefined,
-        NACOS_SERVICE_NAME: undefined,
+        NACOS_SERVICE_NAME: 'chat-web-example-service',
         NACOS_GROUP: undefined,
         NACOS_REGISTER_IP: undefined,
         NACOS_REGISTER_PORT: undefined,
@@ -606,8 +605,8 @@ test('shared Nacos runtime rejects non-boolean registration options', () => {
 
 test('shared Nacos environment adapter maps the complete flattened runtime contract', () => {
     assert.deepEqual(
-        createNacosRuntimeOptions(
-            nacosRuntimeInput({
+        forRootNacosRuntimeOptions(
+            nacosRuntimeEnvironment({
                 NACOS_SERVER: 'nacos.internal:8848',
                 NACOS_NAMESPACE: 'example-namespace',
                 NACOS_USERNAME: 'example-user',
@@ -641,13 +640,13 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
     )
 })
 
-test('shared Nacos environment adapter requires only registerPort, server and namespace', () => {
+test('shared Nacos environment adapter requires only PORT, service name, server and namespace', () => {
     assert.deepEqual(
-        createNacosRuntimeOptions({
-            serviceName: 'chat-web-example-service',
-            registerPort: 3020,
+        forRootNacosRuntimeOptions({
+            PORT: '3020',
             NACOS_SERVER: 'nacos:8848',
-            NACOS_NAMESPACE: 'example'
+            NACOS_NAMESPACE: 'example',
+            NACOS_SERVICE_NAME: 'chat-web-example-service'
         }),
         {
             serverAddr: 'nacos:8848',
@@ -666,26 +665,26 @@ test('shared Nacos environment adapter requires only registerPort, server and na
         }
     )
     assert.equal(
-        createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', registerPort: '4020' }))
+        forRootNacosRuntimeOptions(nacosRuntimeEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', PORT: '4020' }))
             .registerPort,
         4020
     )
-    assert.throws(() => createNacosRuntimeOptions(nacosRuntimeInput({ NACOS_NAMESPACE: 'example' })), /NACOS_SERVER/)
+    assert.throws(() => forRootNacosRuntimeOptions(nacosRuntimeEnvironment({ NACOS_NAMESPACE: 'example' })), /NACOS_SERVER/)
     assert.throws(
         () =>
-            createNacosRuntimeOptions(
-                nacosRuntimeInput({
-                    registerPort: undefined,
+            forRootNacosRuntimeOptions(
+                nacosRuntimeEnvironment({
+                    PORT: undefined,
                     NACOS_SERVER: 'nacos:8848',
                     NACOS_NAMESPACE: 'example'
                 })
             ),
-        /registerPort/
+        /PORT/
     )
     assert.throws(
         () =>
-            createNacosRuntimeOptions(
-                nacosRuntimeInput({
+            forRootNacosRuntimeOptions(
+                nacosRuntimeEnvironment({
                     NACOS_SERVER: 'nacos:8848',
                     NACOS_NAMESPACE: 'example',
                     NACOS_REGISTER_ENABLED: 'yes'
@@ -695,8 +694,8 @@ test('shared Nacos environment adapter requires only registerPort, server and na
     )
     assert.throws(
         () =>
-            createNacosRuntimeOptions(
-                nacosRuntimeInput({
+            forRootNacosRuntimeOptions(
+                nacosRuntimeEnvironment({
                     NACOS_SERVER: 'nacos:8848',
                     NACOS_NAMESPACE: 'example',
                     NACOS_REGISTER_PORT: '65536'
@@ -706,9 +705,9 @@ test('shared Nacos environment adapter requires only registerPort, server and na
     )
 })
 
-test('NacosModule receives the complete runtime contract without reading process.env', () => {
-    const options = createNacosRuntimeOptions(
-        nacosRuntimeInput({ NACOS_SERVER: 'nacos.internal:8848', NACOS_NAMESPACE: 'example-namespace' })
+test('NacosModule receives the complete runtime contract from the environment adapter', () => {
+    const options = forRootNacosRuntimeOptions(
+        nacosRuntimeEnvironment({ NACOS_SERVER: 'nacos.internal:8848', NACOS_NAMESPACE: 'example-namespace' })
     )
     const module = NacosModule.forRoot(options)
     const provider = module.providers.find(candidate => candidate.provide === NACOS_RUNTIME_OPTIONS)

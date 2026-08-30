@@ -1,5 +1,17 @@
 # Repository instructions
 
+本文件在本仓库内独立生效，不依赖 `F:/chat-web-service/AGENTS.md` 或其他工作区文件。
+
+## 通用工程规则
+
+- 使用 Node.js 22、Yarn 1.22.22 和 TypeScript；源码使用 UTF-8，Shell、YAML 和 SQL 文件使用 LF。
+- 统一使用 4 空格、无分号、单引号、`printWidth: 140`、无尾随逗号；内部源码统一使用 `@/*` 路径别名。
+- 文件名使用小写 kebab-case 和职责后缀；类、接口、枚举使用 PascalCase，变量、函数使用 camelCase，常量使用 UPPER_SNAKE_CASE。
+- 日志、校验消息、Swagger 描述和面向维护者的错误信息使用中文，代码标识符使用英文。
+- 本仓库只提供共享 Entity、DTO、元数据和 SQL，不连接业务数据库；消费服务的 TypeORM 必须保持 `synchronize: false` 和 `migrationsRun: false`。
+- 跨服务数据只能通过强类型服务 API 访问，禁止复制 Entity、执行跨库 SQL 或在业务服务中重建共享表定义。
+- 每次改动至少执行格式检查、TypeScript 类型检查、构建和 Schema 一致性验证；已应用的增量 SQL 不得修改或删除。
+
 ## Scope and responsibility
 
 - This repository is the source of truth for shared TypeORM MySQL table definitions, complete field DTOs, validation metadata, Swagger metadata, and SQL files.
@@ -52,6 +64,10 @@
 - 对用户点名的消费服务，升级到明确的新版本，移除已经由共享包提供的重复实现，并完成该仓库规定的构建、测试和部署变更记录。
 - 验证通过后，Agent 应自行提交、推送、创建 PR 并合并到默认分支；只有权限、认证、分支保护或持续失败的 CI 确实阻止自动完成时，才向用户报告阻塞。
 - 禁止在包尚未发布时提前提交一个无法安装或无法构建的依赖版本。
+
+## 分支生命周期
+
+- 远程仓库只保留 `main`、`developer` 两个长期分支；临时需求分支必须先合并到 `developer`，发布时同步合并到 `main`，合并并验证通过后立即删除远程和本地临时分支。
 
 ## Git 提交规范
 

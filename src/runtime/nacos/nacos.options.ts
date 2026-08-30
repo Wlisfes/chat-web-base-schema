@@ -20,6 +20,14 @@ export interface NacosRuntimeEnvironment {
     NACOS_CONFIG_GROUP?: string
     /** 是否注册服务实例，只接受 `true` 或 `false`；默认 `true`。 */
     NACOS_REGISTER_ENABLED?: string
+    /** 是否启用服务发现；默认跟随 `NACOS_REGISTER_ENABLED`，未配置注册开关时为 `true`。 */
+    NACOS_DISCOVERY_ENABLED?: string
+    /** 服务发现连接失败是否阻止启动；默认 `false`。 */
+    NACOS_DISCOVERY_REQUIRED?: string
+    /** 是否启用配置中心；默认 `true`。 */
+    NACOS_CONFIG_ENABLED?: string
+    /** 配置中心加载失败是否阻止启动；默认 `true`。 */
+    NACOS_CONFIG_REQUIRED?: string
     /** 注册失败是否阻止应用启动，只接受 `true` 或 `false`；默认 `false`。 */
     NACOS_REGISTER_REQUIRED?: string
     /** Nacos 服务名称，同时用于推导默认 Data ID。必填。 */
@@ -30,6 +38,8 @@ export interface NacosRuntimeEnvironment {
     NACOS_REGISTER_IP?: string
     /** 注册实例端口；未配置时使用 `PORT`。 */
     NACOS_REGISTER_PORT?: string
+    /** 注册实例权重；未配置时使用 `1`，支持大于 0 且不超过 10000 的数值。 */
+    NACOS_REGISTER_WEIGHT?: string
 }
 
 function optionalString(value: string | undefined): string | undefined {
@@ -65,6 +75,16 @@ function optionalPositiveInteger(name: string, value: string | undefined): numbe
     return optionalString(value) === undefined ? undefined : positiveInteger(name, value)
 }
 
+function optionalPositiveNumber(name: string, value: string | undefined): number | undefined {
+    const normalized = optionalString(value)
+    if (normalized === undefined) return undefined
+    const parsed = Number(normalized)
+    if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 10_000) {
+        throw new Error(`${name} 必须是大于 0 且不超过 10000 的有限数值`)
+    }
+    return parsed
+}
+
 /**
  * 将调用方显式传入的扁平化环境变量转换为类型完整的 `NacosRuntimeOptions`。
  *
@@ -84,6 +104,10 @@ export function forRootNacosRuntimeOptions(environment: NacosRuntimeEnvironment 
         configDataId: optionalString(environment.NACOS_CONFIG_DATA_ID),
         configGroup: optionalString(environment.NACOS_CONFIG_GROUP),
         registerEnabled: optionalBoolean('NACOS_REGISTER_ENABLED', environment.NACOS_REGISTER_ENABLED),
+        discoveryEnabled: optionalBoolean('NACOS_DISCOVERY_ENABLED', environment.NACOS_DISCOVERY_ENABLED),
+        discoveryRequired: optionalBoolean('NACOS_DISCOVERY_REQUIRED', environment.NACOS_DISCOVERY_REQUIRED),
+        configEnabled: optionalBoolean('NACOS_CONFIG_ENABLED', environment.NACOS_CONFIG_ENABLED),
+        configRequired: optionalBoolean('NACOS_CONFIG_REQUIRED', environment.NACOS_CONFIG_REQUIRED),
         registerRequired: optionalBoolean('NACOS_REGISTER_REQUIRED', environment.NACOS_REGISTER_REQUIRED),
         serviceName,
         discoveryGroup: optionalString(environment.NACOS_GROUP),
@@ -92,6 +116,7 @@ export function forRootNacosRuntimeOptions(environment: NacosRuntimeEnvironment 
             registerPortOverride === undefined ? 'PORT' : 'NACOS_REGISTER_PORT',
             registerPortOverride ?? environment.PORT,
             65535
-        )
+        ),
+        registerWeight: optionalPositiveNumber('NACOS_REGISTER_WEIGHT', environment.NACOS_REGISTER_WEIGHT)
     }
 }

@@ -32,11 +32,16 @@ function nacosOptions(overrides = {}) {
         configDataId: 'chat-web-example-service.yaml',
         configGroup: 'EXAMPLE_CONFIG_GROUP',
         registerEnabled: true,
+        discoveryEnabled: true,
+        discoveryRequired: false,
+        configEnabled: true,
+        configRequired: true,
         registerRequired: true,
         serviceName: 'chat-web-example-service',
         discoveryGroup: 'EXAMPLE_DISCOVERY_GROUP',
         registerIp: '10.0.0.8',
         registerPort: 3020,
+        registerWeight: 1,
         ...overrides
     }
 }
@@ -62,11 +67,16 @@ function nacosRuntimeEnvironment(overrides = {}) {
         NACOS_CONFIG_DATA_ID: undefined,
         NACOS_CONFIG_GROUP: undefined,
         NACOS_REGISTER_ENABLED: undefined,
+        NACOS_DISCOVERY_ENABLED: undefined,
+        NACOS_DISCOVERY_REQUIRED: undefined,
+        NACOS_CONFIG_ENABLED: undefined,
+        NACOS_CONFIG_REQUIRED: undefined,
         NACOS_REGISTER_REQUIRED: undefined,
         NACOS_SERVICE_NAME: 'chat-web-example-service',
         NACOS_GROUP: undefined,
         NACOS_REGISTER_IP: undefined,
         NACOS_REGISTER_PORT: undefined,
+        NACOS_REGISTER_WEIGHT: undefined,
         ...overrides
     }
 }
@@ -90,7 +100,7 @@ function nacosShadowConfig(overrides = {}) {
     })
 }
 
-function withPatchedNacosClients({ configContent = 'remoteOnly: applied', registrationError } = {}) {
+function withPatchedNacosClients({ configContent = 'remoteOnly: applied', registrationError, instances = [] } = {}) {
     const nacosConfigModule = require('nacos-config')
     const nacosNamingModule = require('nacos-naming')
     const originalConfigClient = nacosConfigModule.NacosConfigClient
@@ -101,7 +111,12 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
         configSubscribeCalls: [],
         namingClientOptions: [],
         registerInstanceCalls: [],
-        readyCalls: 0
+        deregisterInstanceCalls: [],
+        getAllInstancesCalls: [],
+        subscribeCalls: [],
+        unsubscribeCalls: [],
+        readyCalls: 0,
+        namingCloseCalls: 0
     }
 
     class FakeNacosConfigClient {
@@ -142,9 +157,27 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
             }
         }
 
-        async deregisterInstance() {}
+        async deregisterInstance(serviceName, instance, group) {
+            records.deregisterInstanceCalls.push({ serviceName, instance, group })
+        }
 
-        async close() {}
+        async getAllInstances(serviceName, group, clusters, subscribe) {
+            records.getAllInstancesCalls.push({ serviceName, group, clusters, subscribe })
+            return instances
+        }
+
+        subscribe(info, listener) {
+            records.subscribeCalls.push(info)
+            this.listener = listener
+        }
+
+        unSubscribe(info, listener) {
+            records.unsubscribeCalls.push({ info, listener })
+        }
+
+        async _close() {
+            records.namingCloseCalls += 1
+        }
     }
 
     nacosConfigModule.NacosConfigClient = FakeNacosConfigClient
@@ -369,7 +402,8 @@ test('shared Nacos loadConfig and registerService use runtime options end-to-end
                 serviceName: 'options-service',
                 discoveryGroup: 'OPTIONS_DISCOVERY_GROUP',
                 registerIp: '10.0.0.9',
-                registerPort: 4020
+                registerPort: 4020,
+                registerWeight: 10
             })
         )
 
@@ -404,13 +438,82 @@ test('shared Nacos loadConfig and registerService use runtime options end-to-end
                     enabled: true,
                     ephemeral: true,
                     ip: '10.0.0.9',
-                    port: 4020
+                    port: 4020,
+                    weight: 10
                 },
                 group: 'OPTIONS_DISCOVERY_GROUP'
             }
         ])
         assert.equal(configService.values.loaded, true)
         assert.equal(configService.values.remoteOnly, 'applied')
+        await service.onModuleDestroy()
+        assert.deepEqual(patched.records.deregisterInstanceCalls, [
+            {
+                serviceName: 'options-service',
+                instance: {
+                    instanceId: '',
+                    healthy: true,
+                    enabled: true,
+                    ephemeral: true,
+                    ip: '10.0.0.9',
+                    port: 4020,
+                    weight: 10
+                },
+                group: 'OPTIONS_DISCOVERY_GROUP'
+            }
+        ])
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos discovery resolves weighted instances and owns subscriptions', async () => {
+    const instances = [
+        { instanceId: 'heavy', ip: '10.0.0.10', port: 5010, weight: 3, healthy: true, enabled: true, metadata: {} },
+        { instanceId: 'light', ip: '10.0.0.11', port: 5010, weight: 1, healthy: true, enabled: true, metadata: {} }
+    ]
+    const patched = withPatchedNacosClients({ configContent: 'gateway: {}', instances })
+
+    try {
+        const service = new NacosService(config(), nacosOptions({ registerEnabled: false }))
+        await service.onModuleInit()
+
+        const counts = { heavy: 0, light: 0 }
+        for (let index = 0; index < 40; index += 1) {
+            const target = await service.resolveService('chat-web-account-service', 'http://fallback:5010')
+            counts[target.includes('10.0.0.10') ? 'heavy' : 'light'] += 1
+        }
+
+        assert.deepEqual(counts, { heavy: 30, light: 10 })
+        assert.equal(service.getHealthyInstanceCount('chat-web-account-service'), 2)
+        assert.equal(patched.records.getAllInstancesCalls.length, 1)
+        assert.deepEqual(patched.records.getAllInstancesCalls[0], {
+            serviceName: 'chat-web-account-service',
+            group: 'EXAMPLE_DISCOVERY_GROUP',
+            clusters: '',
+            subscribe: false
+        })
+        assert.deepEqual(patched.records.subscribeCalls, [
+            { serviceName: 'chat-web-account-service', groupName: 'EXAMPLE_DISCOVERY_GROUP' }
+        ])
+        assert.equal(service.getStatus().connected, true)
+        await service.onModuleDestroy()
+        assert.equal(patched.records.unsubscribeCalls.length, 1)
+        assert.equal(patched.records.namingCloseCalls, 1)
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos discovery disabled returns the supplied fallback without opening a naming client', async () => {
+    const patched = withPatchedNacosClients({ configContent: 'remoteOnly: applied' })
+
+    try {
+        const service = new NacosService(config(), minimalNacosOptions({ discoveryEnabled: false, registerEnabled: false }))
+        await service.onModuleInit()
+        assert.equal(await service.resolveService('example-service', 'http://fallback:3020'), 'http://fallback:3020')
+        assert.deepEqual(patched.records.namingClientOptions, [])
+        assert.equal(service.getHealthyInstanceCount('example-service'), 0)
     } finally {
         patched.restore()
     }
@@ -488,10 +591,12 @@ test('shared Nacos registerService respects registerRequired after registration 
     }
 })
 
-test('shared Nacos runtime accepts requestTimeout and registerPort boundary values', () => {
+test('shared Nacos runtime accepts requestTimeout, registerPort and registerWeight boundary values', () => {
     assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ requestTimeout: 1 })))
     assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ registerPort: 1 })))
     assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ registerPort: 65535 })))
+    assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ registerWeight: 0.5 })))
+    assert.doesNotThrow(() => new NacosService(config(), nacosOptions({ registerWeight: 10000 })))
 })
 
 test('shared Nacos runtime supplies documented defaults for optional options', () => {
@@ -506,15 +611,23 @@ test('shared Nacos runtime supplies documented defaults for optional options', (
         configDataId: 'chat-web-minimal-service.yaml',
         configGroup: 'DEFAULT_GROUP',
         registerEnabled: true,
+        discoveryEnabled: true,
+        discoveryRequired: false,
+        configEnabled: true,
+        configRequired: true,
         registerRequired: false,
         serviceName: 'chat-web-minimal-service',
         discoveryGroup: 'DEFAULT_GROUP',
         registerIp: undefined,
-        registerPort: 3020
+        registerPort: 3020,
+        registerWeight: 1
     })
 
     const customGroupService = new NacosService(config(), minimalNacosOptions({ configGroup: 'CUSTOM_GROUP' }))
     assert.equal(customGroupService.getDiscoveryGroup(), 'CUSTOM_GROUP')
+
+    const registrationDisabledService = new NacosService(config(), minimalNacosOptions({ registerEnabled: false }))
+    assert.equal(registrationDisabledService.options.discoveryEnabled, false)
 })
 
 test('shared Nacos behavior resolves exclusively from runtime options', () => {
@@ -596,6 +709,9 @@ test('shared Nacos runtime rejects invalid numeric options', () => {
     for (const registerPort of [0, 65536, 1.5, Number.NaN]) {
         assert.throws(() => new NacosService(config(), nacosOptions({ registerPort })), /NacosRuntimeOptions\.registerPort/)
     }
+    for (const registerWeight of [0, -1, 10001, Number.NaN, Number.POSITIVE_INFINITY, '10']) {
+        assert.throws(() => new NacosService(config(), nacosOptions({ registerWeight })), /NacosRuntimeOptions\.registerWeight/)
+    }
 })
 
 test('shared Nacos runtime rejects non-boolean registration options', () => {
@@ -619,7 +735,8 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
                 NACOS_SERVICE_NAME: 'example-custom',
                 NACOS_GROUP: 'EXAMPLE_DISCOVERY',
                 NACOS_REGISTER_IP: '10.0.0.8',
-                NACOS_REGISTER_PORT: '4020'
+                NACOS_REGISTER_PORT: '4020',
+                NACOS_REGISTER_WEIGHT: '2.5'
             })
         ),
         {
@@ -631,11 +748,16 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
             configDataId: 'example.yaml',
             configGroup: 'EXAMPLE_CONFIG',
             registerEnabled: false,
+            discoveryEnabled: undefined,
+            discoveryRequired: undefined,
+            configEnabled: undefined,
+            configRequired: undefined,
             registerRequired: true,
             serviceName: 'example-custom',
             discoveryGroup: 'EXAMPLE_DISCOVERY',
             registerIp: '10.0.0.8',
-            registerPort: 4020
+            registerPort: 4020,
+            registerWeight: 2.5
         }
     )
 })
@@ -657,11 +779,16 @@ test('shared Nacos environment adapter requires only PORT, service name, server 
             configDataId: undefined,
             configGroup: undefined,
             registerEnabled: undefined,
+            discoveryEnabled: undefined,
+            discoveryRequired: undefined,
+            configEnabled: undefined,
+            configRequired: undefined,
             registerRequired: undefined,
             serviceName: 'chat-web-example-service',
             discoveryGroup: undefined,
             registerIp: undefined,
-            registerPort: 3020
+            registerPort: 3020,
+            registerWeight: undefined
         }
     )
     assert.equal(
@@ -703,6 +830,19 @@ test('shared Nacos environment adapter requires only PORT, service name, server 
             ),
         /NACOS_REGISTER_PORT/
     )
+    for (const NACOS_REGISTER_WEIGHT of ['0', '-1', '10001', 'NaN', 'Infinity']) {
+        assert.throws(
+            () =>
+                forRootNacosRuntimeOptions(
+                    nacosRuntimeEnvironment({
+                        NACOS_SERVER: 'nacos:8848',
+                        NACOS_NAMESPACE: 'example',
+                        NACOS_REGISTER_WEIGHT
+                    })
+                ),
+            /NACOS_REGISTER_WEIGHT/
+        )
+    }
 })
 
 test('NacosModule receives the complete runtime contract from the environment adapter', () => {

@@ -38,15 +38,39 @@ through `ConfigService`. Optional overrides and their defaults are:
 - `configDataId`: `${serviceName}.yaml`.
 - `configGroup`: `DEFAULT_GROUP`.
 - `registerEnabled`: `true`.
+- `configEnabled`: `true`.
+- `configRequired`: `true`; set it to `false` when the caller has an explicit
+  fallback configuration and should continue without Nacos Config.
+- `discoveryEnabled`: follows `registerEnabled` (and is `true` when the
+  registration option is omitted); set it explicitly to `true` for a
+  discovery-only consumer.
+- `discoveryRequired`: `false`; when disabled or unavailable, discovery callers
+  can use their own fallback address.
 - `registerRequired`: `false`.
 - `discoveryGroup`: the resolved `configGroup`.
 - `username`, `password`: omitted.
 - `registerIp`: the first non-internal IPv4 interface, falling back to `127.0.0.1`.
+- `registerWeight`: `1`. Set `NACOS_REGISTER_WEIGHT` in the local process environment
+  to give an instance a higher or lower weight (for example, `10` for a local
+  instance and `1` for a deployed instance). Positive decimal values greater than
+  `0` and no higher than `10000` are supported; the current Node.js SDK cannot
+  register zero reliably.
+
+`NACOS_REGISTER_WEIGHT` is a startup-only override. It is parsed by
+`forRootNacosRuntimeOptions` and sent as the Nacos naming instance `weight` when
+the service registers. `NacosService.resolveService()` uses the returned
+instance weights for smooth weighted round-robin selection, while callers that
+need a different balancing policy can use `getAllInstances()` and implement
+their own selection.
 
 `NacosService.loadConfig()` can be awaited by asynchronous database factories
-before opening their connections. The service also registers and deregisters
-an ephemeral Nacos instance. Explicit process environment values continue to
-override matching top-level keys from remote business configuration.
+before opening their connections. The same service owns the naming client and
+exposes `resolveService()`, `refreshSubscriptions()`,
+`getHealthyInstanceCount()`, `subscribeService()` and `unsubscribeService()`
+for gateways or other infrastructure modules; consumers do not need to create
+another Nacos client. It also registers and deregisters an ephemeral Nacos
+instance. Explicit process environment values continue to override matching
+top-level keys from remote business configuration.
 
 ## Authentication
 

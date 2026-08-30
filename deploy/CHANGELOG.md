@@ -1,5 +1,24 @@
 # Deployment changelog
 
+## 2026-08-30 — 统一 Nacos 服务发现运行时
+
+- Affected machines: Gateway after it upgrades to the released shared package; this library does not deploy a container.
+- Associated version: unreleased change after `@wlisfes/chat-web-base-schema@1.4.16` (the release workflow will assign the next available patch version).
+- Change: moved the shared Nacos naming client, discovery subscription lifecycle, health status, fallback resolution and smooth weighted selection into `NacosService`. Gateway no longer needs a second Nacos client implementation.
+- Change: hardened shared Nacos subscription and shutdown lifecycle; concurrent discovery lookups are de-duplicated, externally registered listeners are cleaned up, and both `_close()` (the Node SDK API) and `close()` wrappers are supported.
+- Machine-side operations: none until this package is published and Gateway explicitly upgrades to the new version. Existing Nacos Data IDs, groups, namespaces, routes and service registration values remain unchanged.
+- Verification: run `yarn verify`; after the package is available, run Gateway format/type/build/tests and verify `/health/ready` plus each configured `/api/{service}` route.
+- Rollback: keep Gateway on the previous complete Git SHA and `@wlisfes/chat-web-base-schema@1.4.16`; no Nacos data or business database rollback is required.
+
+## 2026-08-30 — Nacos 注册实例权重
+
+- Affected machines: explicitly upgraded consumer services; this library does not deploy a container.
+- Associated version: unreleased change after `@wlisfes/chat-web-base-schema@1.4.15`.
+- Change: added optional `registerWeight` to the shared Nacos runtime contract. `forRootNacosRuntimeOptions()` reads `NACOS_REGISTER_WEIGHT` as a positive finite number and the registration and deregistration requests carry the configured weight; the default remains `1`.
+- Machine-side operations: none before the package is published and explicitly selected consumers upgrade. Local services may set `NACOS_REGISTER_WEIGHT=10` in their uncommitted `.env` when the new package version is available.
+- Verification: run `yarn verify`; upgraded consumers must run their repository build and tests.
+- Rollback: keep consumers on the previous package version and restore the previous complete Git SHA.
+
 ## 2026-08-29 — Simplified Nacos module bootstrap
 
 - Affected machines: explicitly upgraded consumer services; this library does not deploy a container.

@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, ExecutionContext, HttpStatus, Lo
 import type { ApiResponse } from '@/types'
 import { createApiResponse } from '@/utils/modules/response'
 import { resolveRequestId } from '@/utils/modules/request-context'
+import { resolvePublicRequestUrl } from '@/utils/modules/request-url'
 import {
     resolveExceptionData,
     resolveExceptionExecutionMethod,
@@ -41,7 +42,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const logId = resolveRequestId(request.logId ?? request.headers?.['x-request-id'])
         const body = createApiResponse(resolveExceptionData(exception), { code: status, message, logId })
         const method = request.method ?? 'UNKNOWN'
-        const url = request.originalUrl ?? request.url ?? '/'
+        const url = resolvePublicRequestUrl(request)
         const executionMethod = resolveExceptionExecutionMethod(
             exception,
             request.executionMethod ?? this.resolveRouteExecutionMethod(host)

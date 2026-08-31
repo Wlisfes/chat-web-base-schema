@@ -3,7 +3,16 @@ const assert = require('node:assert/strict')
 const { plainToInstance } = require('class-transformer')
 const { validateSync } = require('class-validator')
 const { DECORATORS } = require('@nestjs/swagger')
-const { PageDto, SizePageDto, assertUid, assertValidTree, buildTree, generateUid, resolveRequestId } = require('../dist/src/utils')
+const {
+    PageDto,
+    SizePageDto,
+    assertUid,
+    assertValidTree,
+    buildTree,
+    generateUid,
+    resolvePublicRequestUrl,
+    resolveRequestId
+} = require('../dist/src/utils')
 const { PageResponseDataDto } = require('../dist/src/decorator')
 const requestContext = require('../dist/src/utils/modules/request-context')
 
@@ -50,5 +59,21 @@ test('共享 UID 与请求 ID 工具保持输入约束', () => {
     assert.equal(
         requestContext.runWithRequestContext('request-789', () => requestContext.getActiveRequestId()),
         'request-789'
+    )
+})
+
+test('公共请求地址还原网关服务前缀且避免重复拼接', () => {
+    assert.equal(
+        resolvePublicRequestUrl({ originalUrl: '/menu/update?source=manager', headers: { 'x-forwarded-prefix': '/api/account' } }),
+        '/api/account/menu/update?source=manager'
+    )
+    assert.equal(
+        resolvePublicRequestUrl({ originalUrl: '/api/account/menu/update', headers: { 'x-forwarded-prefix': '/api/account/' } }),
+        '/api/account/menu/update'
+    )
+    assert.equal(resolvePublicRequestUrl({ originalUrl: '/menu/update', headers: {} }), '/menu/update')
+    assert.equal(
+        resolvePublicRequestUrl({ originalUrl: '/menu/update', headers: { 'x-forwarded-prefix': 'https://malicious.example/api' } }),
+        '/menu/update'
     )
 })

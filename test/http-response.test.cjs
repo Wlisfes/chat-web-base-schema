@@ -155,6 +155,37 @@ test('HttpExceptionFilter falls back to the controller handler when the stack ha
     assert.equal(request.executionMethod, 'TestController.defaultHandler')
 })
 
+test('HttpExceptionFilter logs the public gateway URL', () => {
+    const filter = new HttpExceptionFilter()
+    const request = {
+        method: 'POST',
+        originalUrl: '/menu/update',
+        headers: { 'x-request-id': 'request-public-url', 'x-forwarded-prefix': '/api/account' }
+    }
+    const response = {
+        headersSent: false,
+        status(code) {
+            this.statusCode = code
+            return this
+        },
+        setHeader() {},
+        json() {}
+    }
+    const originalWarn = Logger.prototype.warn
+    let loggedMessage
+    Logger.prototype.warn = message => {
+        loggedMessage = message
+    }
+
+    try {
+        filter.catch(new BadRequestException('菜单ID不能为空'), createHttpContext(response, defaultHandler, request))
+    } finally {
+        Logger.prototype.warn = originalWarn
+    }
+
+    assert.match(loggedMessage, /^POST \/api\/account\/menu\/update -> 400 菜单ID不能为空/)
+})
+
 test('HttpExceptionFilter hides unhandled server error details', () => {
     const filter = new HttpExceptionFilter()
     const response = {

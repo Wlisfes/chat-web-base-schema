@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common'
 import type { Request, RequestHandler } from 'express'
 import { resolveRequestId } from '@/utils/modules/request-context'
+import { resolvePublicRequestUrl } from '@/utils/modules/request-url'
 import { getActiveTraceContext } from '@/runtime/observability'
 
 type RequestWithExecutionMethod = Request & { executionMethod?: string }
@@ -89,7 +90,7 @@ export function createRequestLoggingMiddleware(serviceName: string): RequestHand
                 service: serviceName,
                 logId: requestId,
                 method: currentRequest.method,
-                url: currentRequest.originalUrl,
+                url: resolvePublicRequestUrl(currentRequest),
                 statusCode: response.statusCode,
                 durationMs: Date.now() - startedAt,
                 executionMethod: currentRequest.executionMethod,

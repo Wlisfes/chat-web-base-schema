@@ -10,9 +10,9 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
     Logger.prototype.log = message => messages.push(message)
     const listeners = new Map()
     const request = {
-        headers: { 'user-agent': 'node-test' },
+        headers: { 'user-agent': 'node-test', 'x-forwarded-prefix': '/api/account' },
         method: 'POST',
-        originalUrl: '/auth/token/login',
+        originalUrl: '/auth/token/login?source=manager',
         path: '/auth/token/login',
         query: { keyword: 'tester' },
         params: {},
@@ -47,6 +47,7 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
     assert.equal(payload.message, 'HTTP请求完成')
     assert.equal(payload.logId, response['x-request-id'])
     assert.equal(payload.executionMethod, 'AuthController.httpBaseAccountLoginAuth')
+    assert.equal(payload.url, '/api/account/auth/token/login?source=manager')
     assert.equal('requestId' in payload, false)
     assert.equal(payload.body.name, 'tester')
     assert.equal(payload.body.password, '[已隐藏]')

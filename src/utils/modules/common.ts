@@ -27,3 +27,13 @@ export function defineEnumMetadata<const TEnum extends StringEnum>(
         comment
     }
 }
+
+/**
+ * 字段输出控制
+ * @param alias 表别名
+ * @param fields 表字段
+ * @returns 表字段查询组合键
+ */
+export function fetchSelection(alias: string, fields: string[]) {
+    return (fields ?? []).map(field => (isNotEmpty(alias) ? `${alias}.${field}` : field))
+}

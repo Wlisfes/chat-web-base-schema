@@ -6,7 +6,7 @@ const { AccountAuthClient, AuthSessionService, TokenService } = require('../dist
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const { AccountFeignClient, FeignClientFactory, FinanceFeignClient } = require('../dist/src/runtime/feign')
 const { forRootNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
-const { RedisService } = require('../dist/src/runtime/redis')
+const { REDIS_RUNTIME_OPTIONS, RedisModule, RedisService } = require('../dist/src/runtime/redis')
 const { runWithRequestContext } = require('../dist/src/utils/modules/request-context')
 
 function config(initial = {}) {
@@ -331,6 +331,35 @@ test('shared Redis URL parser merges explicit credentials', () => {
     assert.equal(url.username, 'account')
     assert.equal(url.password, 'secret')
     assert.equal(url.pathname, '/2')
+})
+
+test('shared Redis reads the nested Nacos redis node and enforces the service index', () => {
+    const service = new RedisService(
+        config({
+            redis: {
+                host: '127.0.0.1',
+                port: 6379,
+                database: 0,
+                password: '123456'
+            }
+        }),
+        { database: 0 }
+    )
+    const url = new URL(service.getConnectionUrl())
+    assert.equal(url.hostname, '127.0.0.1')
+    assert.equal(url.port, '6379')
+    assert.equal(url.pathname, '/0')
+    assert.equal(url.password, '123456')
+    assert.throws(
+        () => new RedisService(config({ redis: { host: '127.0.0.1', port: 6379, database: 1 } }), { database: 0 }).getConnectionUrl(),
+        /本服务分配的 index：0/
+    )
+})
+
+test('RedisModule injects its runtime options through forRoot', () => {
+    const module = RedisModule.forRoot({ database: 1 })
+    const provider = module.providers.find(candidate => candidate.provide === REDIS_RUNTIME_OPTIONS)
+    assert.deepEqual(provider.useValue, { database: 1 })
 })
 
 test('shared Redis defers connection option resolution until application bootstrap', () => {

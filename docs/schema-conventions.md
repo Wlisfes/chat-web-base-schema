@@ -84,3 +84,13 @@ External SQL must copy the same comment.
 
 Run `yarn verify`. The schema consistency check requires the Entity database
 columns, column enum and Swagger DTO properties to contain the same fields.
+
+## Pagination contract
+
+All paginated endpoints share the same transport contract:
+
+- Request fields are `page` (1-based) and `size` (1-100, default 50).
+- Response fields are `page`, `size`, `total` and `list`.
+- `pageSize`, `items`, `records` and `rows` must not be introduced as aliases for
+  these fields. Endpoint-specific filters may be added without changing the
+  pagination names.

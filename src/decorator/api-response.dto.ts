@@ -32,8 +32,8 @@ export class PageResponseDataDto {
     @ApiProperty({ description: '当前页码', example: 1 })
     page: number
 
-    @ApiProperty({ description: '每页数量', example: 20 })
-    pageSize: number
+    @ApiProperty({ description: '每页数量', example: 50 })
+    size: number
 
     @ApiProperty({ description: '数据总数', example: 128 })
     total: number

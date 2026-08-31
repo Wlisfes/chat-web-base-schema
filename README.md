@@ -69,6 +69,10 @@ import { ReadableConsoleLogger, createRequestLoggingMiddleware } from '@wlisfes/
 
 These helpers must not be copied into a service-level `src/common` directory.
 
+分页接口统一使用 `PageDto`（`page`、`size`）作为请求 DTO，默认第 1 页、每页
+50 条，单次最多 100 条；响应数据统一返回 `page`、`size`、`total` 和 `list`。
+`SizePageDto` 仅作为已发布版本的兼容别名，新接口应优先使用 `PageDto`。
+
 HTTP 服务统一将 `ReadableConsoleLogger` 传给 `NestFactory.create`。它在本地保留
 带缩进的彩色请求 JSON，在 `NODE_ENV=production` 时输出适合 Dozzle 的单行彩色
 请求 JSON。`createRequestLoggingMiddleware` 只接收服务名称，并默认过滤健康检查、

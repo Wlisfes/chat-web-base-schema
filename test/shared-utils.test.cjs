@@ -4,18 +4,25 @@ const { plainToInstance } = require('class-transformer')
 const { validateSync } = require('class-validator')
 const { DECORATORS } = require('@nestjs/swagger')
 const { PageDto, SizePageDto, assertUid, assertValidTree, buildTree, generateUid, resolveRequestId } = require('../dist/src/utils')
+const { PageResponseDataDto } = require('../dist/src/decorator')
 const requestContext = require('../dist/src/utils/modules/request-context')
 
-test('共享分页 DTO 保留两种现有请求契约', () => {
+test('共享分页 DTO 使用统一的 page/size 请求契约', () => {
     const page = plainToInstance(PageDto, {})
     const sizePage = plainToInstance(SizePageDto, {})
 
-    assert.deepEqual({ page: page.page, pageSize: page.pageSize }, { page: 1, pageSize: 20 })
+    assert.deepEqual({ page: page.page, size: page.size }, { page: 1, size: 50 })
     assert.deepEqual({ page: sizePage.page, size: sizePage.size }, { page: 1, size: 50 })
-    assert.equal(validateSync(plainToInstance(PageDto, { page: 0, pageSize: 101 })).length, 2)
+    assert.equal(validateSync(plainToInstance(PageDto, { page: 0, size: 101 })).length, 2)
     assert.equal(validateSync(plainToInstance(SizePageDto, { page: 0, size: 101 })).length, 2)
     assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, SizePageDto.prototype, 'page').example, 1)
     assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, SizePageDto.prototype, 'size').example, 50)
+})
+
+test('共享分页响应字段统一为 page/size/total', () => {
+    const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, PageResponseDataDto.prototype) ?? []
+    assert.deepEqual(properties.map(property => property.replace(/^:/, '')).sort(), ['page', 'size', 'total'])
+    assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, PageResponseDataDto.prototype, 'pageSize'), undefined)
 })
 
 test('共享树工具校验层级并稳定排序', () => {

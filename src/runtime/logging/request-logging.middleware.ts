@@ -3,6 +3,8 @@ import type { Request, RequestHandler } from 'express'
 import { resolveRequestId } from '@/utils/modules/request-context'
 import { getActiveTraceContext } from '@/runtime/observability'
 
+type RequestWithExecutionMethod = Request & { executionMethod?: string }
+
 const MAX_PAYLOAD_LENGTH = 4096
 
 export const DEFAULT_REQUEST_LOGGING_IGNORED_PATHS = [
@@ -73,30 +75,32 @@ export function createRequestLoggingMiddleware(serviceName: string): RequestHand
     const logger = new Logger(`${serviceName}:HTTP`)
 
     return (request, response, next) => {
+        const currentRequest = request as RequestWithExecutionMethod
         const startedAt = Date.now()
-        const requestId = resolveRequestId(request.headers['x-request-id'])
-        request.headers['x-request-id'] = requestId
+        const requestId = resolveRequestId(currentRequest.headers['x-request-id'])
+        currentRequest.headers['x-request-id'] = requestId
         response.setHeader('x-request-id', requestId)
 
         response.once('finish', () => {
-            if (isIgnoredPath(request.path)) return
+            if (isIgnoredPath(currentRequest.path)) return
             const traceContext = getActiveTraceContext()
             const payload = {
                 message: 'HTTP请求完成',
                 service: serviceName,
                 logId: requestId,
-                method: request.method,
-                url: request.originalUrl,
+                method: currentRequest.method,
+                url: currentRequest.originalUrl,
                 statusCode: response.statusCode,
                 durationMs: Date.now() - startedAt,
-                ip: resolveClientIp(request),
-                host: request.headers.host ?? '',
-                origin: request.headers.origin ?? '',
-                referer: request.headers.referer ?? '',
-                userAgent: request.headers['user-agent'] ?? '',
-                query: truncate(request.query, MAX_PAYLOAD_LENGTH),
-                params: truncate(request.params, MAX_PAYLOAD_LENGTH),
-                body: truncate(request.body, MAX_PAYLOAD_LENGTH),
+                executionMethod: currentRequest.executionMethod,
+                ip: resolveClientIp(currentRequest),
+                host: currentRequest.headers.host ?? '',
+                origin: currentRequest.headers.origin ?? '',
+                referer: currentRequest.headers.referer ?? '',
+                userAgent: currentRequest.headers['user-agent'] ?? '',
+                query: truncate(currentRequest.query, MAX_PAYLOAD_LENGTH),
+                params: truncate(currentRequest.params, MAX_PAYLOAD_LENGTH),
+                body: truncate(currentRequest.body, MAX_PAYLOAD_LENGTH),
                 ...traceContext
             }
             if (response.statusCode >= 500) logger.error(payload)

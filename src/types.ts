@@ -21,6 +21,7 @@ export interface ApiResponse<T = unknown> {
     data: T | null
     code: number
     message: string
+    logId: string
     timestamp: string
 }
 
@@ -28,4 +29,5 @@ export interface ApiResponse<T = unknown> {
 export interface ApiResponseOptions {
     code?: number
     message?: string
+    logId?: string
 }

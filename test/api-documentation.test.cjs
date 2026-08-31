@@ -56,6 +56,7 @@ test('ApiServiceDecorator 生成 body 请求与统一 DTO 响应 Schema', () => 
         data: { keyId: 1 },
         code: 200,
         message: 'success',
+        logId: '34ec4ca9-2abf-49b8-85f6-77d7fd23ea1d',
         timestamp: '2026-08-23 12:00:00'
     })
     assert.deepEqual(schema.example, media.example)

@@ -1,6 +1,7 @@
 import { HttpStatus } from '@nestjs/common'
 import type { ApiResponse, ApiResponseOptions } from '@/types'
 import { moment } from '@/utils/modules/common'
+import { getActiveRequestId, resolveRequestId } from '@/utils/modules/request-context'
 
 const RESPONSE_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:mm:ss'
 
@@ -22,6 +23,7 @@ export function createApiResponse<T = unknown>(data: T, options: ApiResponseOpti
         data: data ?? null,
         code: options.code ?? HttpStatus.OK,
         message: options.message ?? resolveSuccessMessage(data),
+        logId: resolveRequestId(options.logId ?? getActiveRequestId()),
         timestamp: moment().format(RESPONSE_TIMESTAMP_FORMAT)
     }
 }
@@ -33,6 +35,7 @@ export function isApiResponse(value: unknown): value is ApiResponse {
         'data' in value &&
         typeof value.code === 'number' &&
         typeof value.message === 'string' &&
+        typeof value.logId === 'string' &&
         typeof value.timestamp === 'string'
     )
 }

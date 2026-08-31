@@ -1,6 +1,7 @@
 import { ConsoleLogger, type LogLevel } from '@nestjs/common'
 import { styleText } from 'node:util'
 import type { ReadableConsoleLoggerOptions, RequestLogPayload } from '@/runtime/logging/logging.interface'
+import { getActiveRequestId } from '@/utils/modules/request-context'
 
 type TerminalColor = Parameters<typeof styleText>[0]
 
@@ -51,6 +52,7 @@ function createRequestLogDetails(payload: RequestLogPayload) {
         url: payload.url,
         statusCode: payload.statusCode,
         durationMs: payload.durationMs,
+        ...(payload.executionMethod ? { executionMethod: payload.executionMethod } : {}),
         ip: payload.ip,
         host: payload.host,
         origin: payload.origin,
@@ -114,7 +116,8 @@ export class ReadableConsoleLogger extends ConsoleLogger {
         timestampDiff: string
     ): string {
         const requestLog = isRequestLogPayload(message) ? message : undefined
-        const header = this.formatReadableHeader(logLevel, contextMessage, requestLog, this.options.colors === true, this.getTimestamp())
+        const executionMethod = requestLog?.executionMethod ?? contextMessage
+        const header = this.formatReadableHeader(logLevel, executionMethod, requestLog, this.options.colors === true, this.getTimestamp())
         const content = this.stringifyMessage(message, logLevel)
 
         return `${header}  ${content}${timestampDiff}\n`
@@ -140,7 +143,8 @@ export class ReadableConsoleLogger extends ConsoleLogger {
         const time = colorHex(colors, '#fb9300', timestamp)
         const levelName = logLevel === 'log' ? 'INFO' : logLevel.toUpperCase()
         const level = colorText(colors, logLevel === 'error' || logLevel === 'fatal' ? 'redBright' : 'greenBright', levelName)
-        const logId = requestLog ? colorHex(colors, '#536dfe', `日志ID:[${requestLog.logId}]`) : ''
+        const activeLogId = requestLog?.logId ?? getActiveRequestId()
+        const logId = activeLogId ? colorHex(colors, '#536dfe', `日志ID:[${activeLogId}]`) : ''
         const method = executionMethod ? colorHex(colors, '#ff3d68', `执行方法:[${executionMethod}]`) : ''
         const url = requestLog ? colorHex(colors, '#fc5404', `接口地址:[${requestLog.url}]`) : ''
         const duration = requestLog ? colorHex(colors, '#ff3d68', `耗时:${requestLog.durationMs}ms`) : ''

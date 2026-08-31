@@ -7,18 +7,20 @@
 
 ## 响应契约
 
-HTTP 成功和异常响应都使用相同的四个字段：
+HTTP 成功和异常响应都使用相同的五个字段：
 
 ```json
 {
     "data": null,
     "code": 200,
     "message": "success",
+    "logId": "34ec4ca9-2abf-49b8-85f6-77d7fd23ea1d",
     "timestamp": "2026-08-18 12:00:00"
 }
 ```
 
 - 成功时 `code` 为 `200`，异常时为实际业务状态码。
+- `logId` 与响应头 `x-request-id`、服务请求日志使用同一个值，前端可据此定位一次请求的完整日志。
 - HTTP JSON 业务异常默认使用传输状态 `200`，前端只通过响应体 `code` 判断业务结果，避免 Axios 将业务异常转入网络错误分支。
 - `data` 只在值为 `null` 或 `undefined` 时转换为 `null`，`false`、`0` 和空字符串会原样保留。
 - 显式设置 `Content-Type` 的 SVG、文件流等响应不会被包装。

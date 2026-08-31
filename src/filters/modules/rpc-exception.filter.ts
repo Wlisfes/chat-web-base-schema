@@ -19,10 +19,10 @@ export class RpcExceptionFilter implements ExceptionFilter {
         const data = context.getData<RpcRequestLike>()
         const status = resolveExceptionStatus(exception)
         const message = resolveExceptionMessage(exception, status)
-        const body = createApiResponse(resolveExceptionData(exception), { code: status, message })
         const requestId = data?.request?.logId ?? data?.logId
+        const body = createApiResponse(resolveExceptionData(exception), { code: status, message, logId: requestId })
         const traceId = getActiveTraceContext().traceId
-        const logMessage = `${status} ${message}${requestId ? ` [${requestId}]` : ''}${traceId ? ` [traceId=${traceId}]` : ''}`
+        const logMessage = `${status} ${message} [${body.logId}]${traceId ? ` [traceId=${traceId}]` : ''}`
 
         if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
             this.logger.error(logMessage, exception instanceof Error ? exception.stack : undefined)

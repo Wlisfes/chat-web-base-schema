@@ -8,6 +8,9 @@ export class ApiResponseDocumentDto {
     @ApiProperty({ description: '响应消息', example: 'success' })
     message: string
 
+    @ApiProperty({ description: '请求日志 ID，用于关联前端报错与服务日志', example: '34ec4ca9-2abf-49b8-85f6-77d7fd23ea1d' })
+    logId: string
+
     @ApiProperty({ description: '服务端响应时间', example: '2026-08-23 12:00:00' })
     timestamp: string
 

@@ -181,6 +181,7 @@ function createResponseExample(response: ApiServiceResponseOptions): unknown {
         data: data ?? null,
         code: response.status ?? HttpStatus.OK,
         message: 'success',
+        logId: '34ec4ca9-2abf-49b8-85f6-77d7fd23ea1d',
         timestamp: '2026-08-23 12:00:00'
     }
 }

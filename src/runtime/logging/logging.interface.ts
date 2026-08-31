@@ -6,6 +6,7 @@ export interface RequestLogPayload {
     url: string
     statusCode: number
     durationMs: number
+    executionMethod?: string
     ip: string
     host: string
     origin: string

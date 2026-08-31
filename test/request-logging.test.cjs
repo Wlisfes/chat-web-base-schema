@@ -17,6 +17,7 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
         query: { keyword: 'tester' },
         params: {},
         body: { name: 'tester', password: 'secret', code: 'A7K9' },
+        executionMethod: 'AuthController.httpBaseAccountLoginAuth',
         ip: '127.0.0.1',
         socket: {}
     }
@@ -45,6 +46,7 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
     const payload = messages[0]
     assert.equal(payload.message, 'HTTP请求完成')
     assert.equal(payload.logId, response['x-request-id'])
+    assert.equal(payload.executionMethod, 'AuthController.httpBaseAccountLoginAuth')
     assert.equal('requestId' in payload, false)
     assert.equal(payload.body.name, 'tester')
     assert.equal(payload.body.password, '[已隐藏]')

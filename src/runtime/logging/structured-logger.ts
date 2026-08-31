@@ -47,7 +47,7 @@ export class StructuredLogger implements LoggerService {
             service: this.options.serviceName,
             environment: this.environment,
             ...(context ? { context } : {}),
-            ...(getActiveRequestId() ? { requestId: getActiveRequestId() } : {}),
+            ...(getActiveRequestId() ? { logId: getActiveRequestId() } : {}),
             ...getActiveTraceContext(),
             ...(stack ? { stack } : {})
         }

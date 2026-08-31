@@ -21,7 +21,7 @@ export function runWithRequestContext<T>(requestId: string, callback: () => T): 
     return requestStorage.run({ requestId: resolveRequestId(requestId) }, callback)
 }
 
-export function resolveRequestId(value: string | string[] | undefined): string {
+export function resolveRequestId(value: unknown): string {
     const candidate = Array.isArray(value) ? value[0] : value
-    return candidate && REQUEST_ID_PATTERN.test(candidate) ? candidate : randomUUID()
+    return typeof candidate === 'string' && REQUEST_ID_PATTERN.test(candidate) ? candidate : randomUUID()
 }

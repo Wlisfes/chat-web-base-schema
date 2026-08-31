@@ -23,5 +23,6 @@ test('结构化日志输出服务、环境和请求上下文', () => {
     assert.equal(payload.service, 'test-service')
     assert.equal(payload.environment, 'test')
     assert.equal(payload.context, 'TestContext')
-    assert.equal(payload.requestId, 'request-structured')
+    assert.equal(payload.logId, 'request-structured')
+    assert.equal('requestId' in payload, false)
 })

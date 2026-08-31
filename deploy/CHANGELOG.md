@@ -1,5 +1,13 @@
 # Deployment changelog
 
+## 2026-08-31 — Nacos-first Redis runtime configuration
+
+- Affected consumers: CRM and Finance after upgrading to `@wlisfes/chat-web-base-schema@1.4.19`; the library itself deploys no container.
+- Change: added `RedisModule.forRoot({ database })` with injected service-isolated Redis index; `RedisService` now waits for Nacos configuration and reads the nested `redis` node (`host`, `port`, `database`, `tls`, `connectTimeoutMs`, and optional credentials/URL). Legacy `REDIS_*` keys remain emergency overrides.
+- Machine-side operations: publish the package, then update only the explicitly selected consumers and their service-local Nacos Data IDs. Do not copy Redis credentials into repository files or deployment logs.
+- Verification: run `yarn verify`; upgraded consumers must run their repository build, tests and Redis index checks.
+- Rollback: pin consumers to the previous released package and restore the prior service images; Nacos data and Redis contents are not rolled back.
+
 ## 2026-08-30 — 统一 Nacos 服务发现运行时
 
 - Affected machines: Gateway after it upgrades to the released shared package; this library does not deploy a container.

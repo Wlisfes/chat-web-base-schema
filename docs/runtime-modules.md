@@ -6,14 +6,33 @@ root does not load Redis, Nacos or database adapters.
 ## Redis
 
 `RedisModule` owns connection parsing, lifecycle hooks and the common commands
-used by authentication sessions. Configuration is read from `REDIS_URL` or the
-`REDIS_HOST`, `REDIS_PORT`, `REDIS_DATABASE`, `REDIS_USERNAME`,
-`REDIS_PASSWORD` and `REDIS_TLS` values. Client creation is deferred until
-application bootstrap, after `NacosService` has loaded remote configuration,
-so these keys can live in the service's Nacos Data ID instead of root `.env`.
+used by authentication sessions. Each owning service supplies its isolated
+Redis database index through `forRoot`; the connection is then read from the
+`redis` node in that service's Nacos Data ID. Client creation is deferred until
+application bootstrap, after `NacosService` has loaded remote configuration.
+The legacy `REDIS_*` environment keys remain emergency overrides and should not
+be placed in the normal `.env` file.
 
 ```ts
 import { RedisModule, RedisService } from '@wlisfes/chat-web-base-schema/redis'
+
+@Module({
+    imports: [RedisModule.forRoot({ database: 1 })]
+})
+export class AppModule {}
+```
+
+The Nacos node uses this shape. `database` must match the index assigned to the
+service; a URL path is always rewritten to that index. `host`, `port`, `tls`
+and `connectTimeoutMs` default to `chat-web-redis`, `6379`, `false` and `5000`.
+`url`, `username` and `password` are optional.
+
+```yaml
+redis:
+    host: '127.0.0.1'
+    port: 6379
+    database: 0
+    password: '123456'
 ```
 
 ## Nacos

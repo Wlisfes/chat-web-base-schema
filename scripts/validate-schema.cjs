@@ -191,6 +191,20 @@ validateTable({
 })
 
 validateTable({
+    entity: accountSchema.TbAccountPosition,
+    dto: accountSchema.TbAccountPositionDto,
+    columns: accountSchema.TbAccountPositionColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_position.sql')
+})
+
+validateTable({
+    entity: accountSchema.TbAccountUserPosition,
+    dto: accountSchema.TbAccountUserPositionDto,
+    columns: accountSchema.TbAccountUserPositionColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user_position.sql')
+})
+
+validateTable({
     entity: accountSchema.TbAccountMenu,
     dto: accountSchema.TbAccountMenuDto,
     columns: accountSchema.TbAccountMenuColumn,

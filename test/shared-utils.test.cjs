@@ -64,16 +64,16 @@ test('共享 UID 与请求 ID 工具保持输入约束', () => {
 
 test('公共请求地址还原网关服务前缀且避免重复拼接', () => {
     assert.equal(
-        resolvePublicRequestUrl({ originalUrl: '/menu/update?source=manager', headers: { 'x-forwarded-prefix': '/api/account' } }),
-        '/api/account/menu/update?source=manager'
+        resolvePublicRequestUrl({ originalUrl: '/sheet/update?source=manager', headers: { 'x-forwarded-prefix': '/api/account' } }),
+        '/api/account/sheet/update?source=manager'
     )
     assert.equal(
-        resolvePublicRequestUrl({ originalUrl: '/api/account/menu/update', headers: { 'x-forwarded-prefix': '/api/account/' } }),
-        '/api/account/menu/update'
+        resolvePublicRequestUrl({ originalUrl: '/api/account/sheet/update', headers: { 'x-forwarded-prefix': '/api/account/' } }),
+        '/api/account/sheet/update'
     )
-    assert.equal(resolvePublicRequestUrl({ originalUrl: '/menu/update', headers: {} }), '/menu/update')
+    assert.equal(resolvePublicRequestUrl({ originalUrl: '/sheet/update', headers: {} }), '/sheet/update')
     assert.equal(
-        resolvePublicRequestUrl({ originalUrl: '/menu/update', headers: { 'x-forwarded-prefix': 'https://malicious.example/api' } }),
-        '/menu/update'
+        resolvePublicRequestUrl({ originalUrl: '/sheet/update', headers: { 'x-forwarded-prefix': 'https://malicious.example/api' } }),
+        '/sheet/update'
     )
 })

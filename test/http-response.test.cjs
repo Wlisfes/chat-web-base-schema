@@ -159,7 +159,7 @@ test('HttpExceptionFilter logs the public gateway URL', () => {
     const filter = new HttpExceptionFilter()
     const request = {
         method: 'POST',
-        originalUrl: '/menu/update',
+        originalUrl: '/sheet/update',
         headers: { 'x-request-id': 'request-public-url', 'x-forwarded-prefix': '/api/account' }
     }
     const response = {
@@ -183,7 +183,7 @@ test('HttpExceptionFilter logs the public gateway URL', () => {
         Logger.prototype.warn = originalWarn
     }
 
-    assert.match(loggedMessage, /^POST \/api\/account\/menu\/update -> 400 菜单ID不能为空/)
+    assert.match(loggedMessage, /^POST \/api\/account\/sheet\/update -> 400 菜单ID不能为空/)
 })
 
 test('HttpExceptionFilter hides unhandled server error details', () => {
@@ -278,9 +278,9 @@ test('resolveExceptionExecutionMethod locates the application throw site', () =>
     const exception = new BadRequestException('菜单ID不能为空')
     exception.stack = [
         'BadRequestException: 菜单ID不能为空',
-        '    at MenuUtilsService.findRequired (F:\\chat-web-service\\chat-web-account-service\\src\\modules\\menu\\menu.utils.service.ts:27:19)',
+        '    at SheetUtilsService.findRequired (F:\\chat-web-service\\chat-web-account-service\\src\\modules\\sheet\\sheet.utils.service.ts:27:19)',
         '    at node:internal/process/task_queues:105:5'
     ].join('\n')
 
-    assert.equal(resolveExceptionExecutionMethod(exception), 'MenuUtilsService.findRequired (menu.utils.service.ts:27:19)')
+    assert.equal(resolveExceptionExecutionMethod(exception), 'SheetUtilsService.findRequired (sheet.utils.service.ts:27:19)')
 })

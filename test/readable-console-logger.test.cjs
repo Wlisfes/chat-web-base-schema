@@ -92,10 +92,10 @@ test('生产请求日志保留颜色并将 JSON 压缩为单个物理行', () =>
 test('异常日志头部显示实际抛错方法', () => {
     const line = captureWarn(
         { NODE_ENV: 'development', prefix: 'chat-web-example-service' },
-        'POST /menu/update -> 400 菜单ID不能为空',
-        'MenuUtilsService.findRequired (menu.utils.service.ts:27:19)'
+        'POST /sheet/update -> 400 菜单ID不能为空',
+        'SheetUtilsService.findRequired (sheet.utils.service.ts:27:19)'
     )
     const plain = stripVTControlCharacters(line)
 
-    assert.match(plain, /执行方法:\[MenuUtilsService\.findRequired \(menu\.utils\.service\.ts:27:19\)\]/)
+    assert.match(plain, /执行方法:\[SheetUtilsService\.findRequired \(sheet\.utils\.service\.ts:27:19\)\]/)
 })

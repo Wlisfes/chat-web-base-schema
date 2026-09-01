@@ -54,7 +54,7 @@
 
 ## NestJS 模块编码基准
 
-- `chat-web-account-service/src/modules/menu/` 是各消费服务 Controller、Service、DTO、Utils Service 和 Module 的结构基准；本共享包不得承载具体业务 Controller、业务路由或业务编排。
+- `chat-web-account-service/src/modules/sheet/` 是各消费服务 Controller、Service、DTO、Utils Service 和 Module 的结构基准；菜单模块使用 `sheet` 命名，数据库实体仍保留 `TbAccountMenu` 等持久化名称。本共享包不得承载具体业务 Controller、业务路由或业务编排。
 - 共享 Service 和工具类不得依赖 Express `Request`、`Response`、Cookie 或响应发送逻辑；公开方法使用明确参数、显式返回类型和中文职责注释，由消费服务的薄 Controller 原样调用。
 - 请求和响应 DTO 必须提供完整类型、Swagger 示例/中文说明、必要的类型转换及中文校验消息；分页统一复用 `PageDto` 和 `PageResult<T>`。
 - Entity 查询工具统一优先使用 `DataBaseService.builder()`，QueryBuilder 别名固定为 `t`；事务工具必须保持同一个 `EntityManager` 或 `QueryRunner` 的连接与事务边界。

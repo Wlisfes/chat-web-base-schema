@@ -269,6 +269,39 @@ test('shared Feign finance client serializes POST body, headers and GET query', 
     assert.equal(requests[1].init.method, 'GET')
 })
 
+test('shared Feign finance client serializes currency exchange sync requests and responses', async () => {
+    let request
+    const factory = new FeignClientFactory(config({ FINANCE_SERVICE_URL: 'http://finance.internal:3010' }), async (url, init) => {
+        request = { url: String(url), init }
+        return new Response(
+            JSON.stringify({
+                data: {
+                    date: '2026-09-02',
+                    count: 1,
+                    list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
+                },
+                code: 200,
+                message: '成功'
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+    })
+    const service = factory.create(FinanceFeignClient)
+    const input = { date: '2026-09-02', rates: [{ currency: 'CNY', rate: 7.2534 }] }
+
+    const result = await service.syncCurrencyExchange('Bearer finance-token', input)
+
+    assert.equal(request.url, 'http://finance.internal:3010/currency/exchange/sync')
+    assert.equal(request.init.method, 'POST')
+    assert.equal(request.init.headers.get('authorization'), 'Bearer finance-token')
+    assert.deepEqual(JSON.parse(request.init.body), input)
+    assert.deepEqual(result, {
+        date: '2026-09-02',
+        count: 1,
+        list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
+    })
+})
+
 test('shared token service signs and verifies account access tokens', () => {
     const values = {
         JWT_SECRET: '0123456789abcdef0123456789abcdef',

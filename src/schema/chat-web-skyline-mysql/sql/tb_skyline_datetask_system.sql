@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_datetask_system` (
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_skyline_datetask_system_task_name` (`task_name`),
-    KEY `idx_tb_skyline_datetask_system_task_id` (`task_id`),
+    UNIQUE KEY `uk_tb_skyline_datetask_system_task_id` (`task_id`),
     KEY `idx_tb_skyline_datetask_system_status` (`status`)
 ) ENGINE = InnoDB
   DEFAULT CHARACTER SET = utf8mb4

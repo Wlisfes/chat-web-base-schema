@@ -118,14 +118,16 @@ export class TbSkylineDatetaskSystemDto extends DataBaseDto {
     body: Record<string, unknown>
 
     @ApiProperty({ description: '上次执行时间', format: 'date-time', example: '2026-09-02 08:00:00.000', required: false })
+    @IsOptional()
     lastTime: Date
 
     @ApiProperty({ description: '下次执行时间', format: 'date-time', example: '2026-09-03 08:00:00.000', required: false })
+    @IsOptional()
     nextTime: Date
 }
 
 @Index('uk_tb_skyline_datetask_system_task_name', ['taskName'], { unique: true })
-@Index('idx_tb_skyline_datetask_system_task_id', ['taskId'])
+@Index('uk_tb_skyline_datetask_system_task_id', ['taskId'], { unique: true })
 @Index('idx_tb_skyline_datetask_system_status', ['status'])
 @Entity({ name: 'tb_skyline_datetask_system', comment: 'Skyline 系统定时任务表' })
 export class TbSkylineDatetaskSystem extends DataBaseAdapter {

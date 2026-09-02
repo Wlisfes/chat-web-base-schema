@@ -8,7 +8,7 @@ export enum TbFinanceCurrencyExchangeColumn {
     KEY_ID = 'key_id',
     CURRENCY = 'currency',
     RATE = 'rate',
-    RATE_DATE = 'rate_date',
+    RATE_DATE = 'date',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
@@ -48,6 +48,7 @@ export class TbFinanceCurrencyExchange extends DataBaseAdapter {
     })
     rate: number
 
+    // 数据库列名统一为 date，属性名保留 rateDate 以兼容既有服务间接口。
     @Column({ name: TbFinanceCurrencyExchangeColumn.RATE_DATE, type: 'date', nullable: false, comment: '汇率日期' })
     rateDate: string
 }

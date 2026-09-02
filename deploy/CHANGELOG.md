@@ -1,5 +1,13 @@
 # Deployment changelog
 
+## 2026-09-02 — 统一财务汇率日期列名
+
+- Affected consumers: Finance after upgrading to the shared package release containing this schema change; this library deploys no container.
+- Change: renamed the physical `tb_finance_currency_exchange.rate_date` column to `date` in the canonical SQL and added the immutable migration `20260902090000__tb_finance_currency_exchange__rename_rate_date_to_date.sql`. The TypeORM property `rateDate` remains as the compatibility-facing camelCase field.
+- Machine-side operations: publish the tested package, upgrade Finance, and let its schema applicator run the new migration before restarting the service. Do not edit the already-applied `20260818193000__tb_finance_schema__create.sql` file.
+- Verification: run `yarn verify` here, then Finance build/tests and a schema check confirming the `date` column, unique key and lookup index.
+- Rollback: pin Finance to the previous image only before applying this migration; after applying it, restore the column with a separately reviewed SQL change rather than relying on an image rollback.
+
 ## 2026-08-31 — Nacos-first Redis runtime configuration
 
 - Affected consumers: CRM and Finance after upgrading to `@wlisfes/chat-web-base-schema@1.4.19`; the library itself deploys no container.

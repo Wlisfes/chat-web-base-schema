@@ -6,6 +6,7 @@ const { getMetadataArgsStorage } = require('typeorm')
 const accountSchema = require('../dist/src/schema/chat-web-account-mysql')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
+const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
 const { DataBaseAdapter, DataBaseByAdapter } = require('../dist/src/utils')
 
 function sorted(values) {
@@ -81,6 +82,9 @@ validateServiceFiles(financeServiceRoot)
 
 const crmServiceRoot = resolve(__dirname, '../src/schema/chat-web-crm-mysql')
 validateServiceFiles(crmServiceRoot)
+
+const skylineServiceRoot = resolve(__dirname, '../src/schema/chat-web-skyline-mysql')
+validateServiceFiles(skylineServiceRoot)
 
 validateTable({
     entity: accountSchema.TbAccountUser,
@@ -165,6 +169,14 @@ validateTable({
     columns: crmSchema.TbCrmSmsQuoteColumn,
     sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_quote.sql'),
     enumComments: [crmSchema.TbCrmSmsQuoteStatusComment]
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineDatetaskSystem,
+    dto: skylineSchema.TbSkylineDatetaskSystemDto,
+    columns: skylineSchema.TbSkylineDatetaskSystemColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_datetask_system.sql'),
+    enumComments: [skylineSchema.TbSkylineDatetaskSystemTypeComment, skylineSchema.TbSkylineDatetaskSystemStatusComment]
 })
 
 validateTable({

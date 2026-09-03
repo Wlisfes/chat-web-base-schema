@@ -39,6 +39,11 @@
             "require": "./dist/src/schema/chat-web-crm-mysql/index.js",
             "default": "./dist/src/schema/chat-web-crm-mysql/index.js"
         },
+        "./chat-web-skyline-mysql": {
+            "types": "./dist/src/schema/chat-web-skyline-mysql/index.d.ts",
+            "require": "./dist/src/schema/chat-web-skyline-mysql/index.js",
+            "default": "./dist/src/schema/chat-web-skyline-mysql/index.js"
+        },
         "./utils": {
             "types": "./dist/src/utils/index.d.ts",
             "require": "./dist/src/utils/index.js",

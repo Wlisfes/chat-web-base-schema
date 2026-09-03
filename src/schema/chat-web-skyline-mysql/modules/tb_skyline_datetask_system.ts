@@ -1,6 +1,6 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, Length, MaxLength } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, Length, Matches, MaxLength } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, DateWithColumn, WithJsonColumn, defineEnumMetadata } from '@/utils'
 
 /** tb_skyline_datetask_system 的数据库字段名。 */
@@ -68,6 +68,7 @@ export class TbSkylineDatetaskSystemDto extends DataBaseDto {
     @IsString({ message: '任务ID必须是字符串' })
     @IsNotEmpty({ message: '任务ID必填' })
     @Length(1, 19, { message: '任务ID长度不能超过19位' })
+    @Matches(/^\d{1,19}$/, { message: '任务ID必须是1至19位数字字符串' })
     taskId: string
 
     @ApiProperty({ description: '任务名称', example: '汇率同步定时任务' })

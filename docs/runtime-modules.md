@@ -155,6 +155,10 @@ Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Mu
 Every declared Feign URL and timeout is required in the service's Nacos `feign`
 node. Environment-style `*_SERVICE_URL` and `*_TIMEOUT_MS` keys are not read,
 and the shared clients do not provide fallback addresses or timeouts.
+Access-token introspection clients do not set `serviceTokenKey`; their Bearer
+value is the user token being validated. A server-side client that protects a
+service-only endpoint may set `serviceTokenKey` to require the configured
+service credential before dispatching to its implementation.
 When a client exposes internal routes, set `prefix: 'feign'` to apply the same
 `/feign` prefix to outgoing requests and inherited server routes.
 

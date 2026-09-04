@@ -4,7 +4,13 @@ const test = require('node:test')
 const { BadGatewayException, RequestMethod, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
 const { AuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
-const { FeignClientAccountManager, FeignClientFactory, FeignClientFinanceManager } = require('../dist/src/feign')
+const {
+    FeignClient,
+    FeignClientAccountManager,
+    FeignClientFactory,
+    FeignClientFinanceManager,
+    FeignWebClient
+} = require('../dist/src/feign')
 const { PATH_METADATA, METHOD_METADATA, ROUTE_ARGS_METADATA } = require('@nestjs/common/constants')
 const { forRootNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
 const { REDIS_RUNTIME_OPTIONS, RedisModule, RedisService } = require('../dist/src/runtime/redis')
@@ -243,7 +249,7 @@ test('shared Feign client can be inherited directly as a server route', async ()
                 return { authorization }
             }
         },
-        config({ feign: { service_token: 'account-token' } })
+        config({ feign: { service_token: 'service-token' } })
     )
     const method = AccountFeignController.prototype.introspect
     assert.equal(Reflect.getMetadata(PATH_METADATA, method), '/feign/auth/token/introspect')
@@ -253,19 +259,29 @@ test('shared Feign client can be inherited directly as a server route', async ()
     assert.deepEqual(await controller.introspect('Bearer account-token'), { authorization: 'Bearer account-token' })
 })
 
-test('shared Feign server dispatch validates the configured service token before delegation', async () => {
-    class AccountFeignController extends FeignClientAccountManager {}
-    const controller = new AccountFeignController(
+test('shared Feign server dispatch validates a configured service token when declared', async () => {
+    class ServiceTokenController extends FeignWebClient {
+        invoke(authorization) {
+            return this.dispatch('invoke', authorization)
+        }
+    }
+    FeignClient({
+        name: '服务令牌测试服务',
+        serviceTokenKey: 'feign.service_token',
+        baseUrlConfigKey: 'feign.test.url',
+        timeoutConfigKey: 'feign.test.timeout'
+    })(ServiceTokenController)
+    const controller = new ServiceTokenController(
         {
-            async introspect(authorization) {
+            async invoke(authorization) {
                 return { authorization }
             }
         },
-        config({ feign: { service_token: 'account-token' } })
+        config({ feign: { service_token: 'service-token' } })
     )
 
-    assert.deepEqual(await controller.introspect('Bearer account-token'), { authorization: 'Bearer account-token' })
-    await assert.rejects(() => controller.introspect('Bearer another-token'), UnauthorizedException)
+    assert.deepEqual(await controller.invoke('Bearer service-token'), { authorization: 'Bearer service-token' })
+    assert.throws(() => controller.invoke('Bearer another-token'), UnauthorizedException)
 })
 
 test('shared account auth client preserves rejected-token semantics', async () => {

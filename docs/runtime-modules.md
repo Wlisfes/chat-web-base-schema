@@ -103,7 +103,7 @@ services.
 
 Business services must not read the account Redis database or hold the account
 JWT secret. Import `AuthModule` to validate Bearer tokens through
-the account service `/auth/token/introspect` endpoint and attach the returned
+the account service `/feign/auth/token/introspect` endpoint and attach the returned
 principal to the request.
 
 ```ts
@@ -133,6 +133,7 @@ Cross-service HTTP calls use the shared declarative Feign runtime. A client clas
 ```ts
 @FeignClient({
     name: '账号服务',
+    prefix: 'feign',
     baseUrlConfigKey: 'feign.chat-web-account.url',
     timeoutConfigKey: 'feign.chat-web-account.timeout'
 })
@@ -153,6 +154,8 @@ Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Mu
 Every declared Feign URL and timeout is required in the service's Nacos `feign`
 node. Environment-style `*_SERVICE_URL` and `*_TIMEOUT_MS` keys are not read,
 and the shared clients do not provide fallback addresses or timeouts.
+When a client exposes internal routes, set `prefix: 'feign'` to apply the same
+`/feign` prefix to outgoing requests and inherited server routes.
 
 The same client declaration can be used as the owning service's Controller contract.
 `@FeignGet`/`@FeignPost` and the parameter decorators also apply the Nest route metadata,

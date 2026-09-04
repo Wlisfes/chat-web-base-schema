@@ -1,5 +1,5 @@
 import { BadGatewayException, Injectable } from '@nestjs/common'
-import { FeignClientAccount } from '@/feign/chat-web-account-service-feign/feign-account.client'
+import { FeignClientAccount } from '@/feign/chat-web-account-service-feign/feign-account.client.controller'
 import type { AuthPrincipal, AuthTokenAuthenticator } from './auth.interface'
 
 @Injectable()

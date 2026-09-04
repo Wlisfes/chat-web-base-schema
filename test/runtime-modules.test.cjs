@@ -222,7 +222,7 @@ test('shared Feign account auth client forwards the bearer token and returns the
         uid: '2149446185344106496',
         sessionId: 'shared-auth-session'
     })
-    assert.equal(String(request.url), 'http://account.internal:3000/auth/token/introspect')
+    assert.equal(String(request.url), 'http://account.internal:3000/feign/auth/token/introspect')
     assert.equal(request.init.method, 'GET')
     assert.equal(request.init.headers.get('authorization'), 'Bearer account-token')
 })
@@ -235,7 +235,7 @@ test('shared Feign client can be inherited directly as a server route', async ()
         }
     })
     const method = AccountFeignController.prototype.introspect
-    assert.equal(Reflect.getMetadata(PATH_METADATA, method), '/auth/token/introspect')
+    assert.equal(Reflect.getMetadata(PATH_METADATA, method), '/feign/auth/token/introspect')
     assert.equal(Reflect.getMetadata(METHOD_METADATA, method), RequestMethod.GET)
     assert.equal(Reflect.getMetadata('auth:is-public', method), true)
     assert.equal(Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'introspect')['6:0'].data, 'authorization')

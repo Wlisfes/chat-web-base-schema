@@ -1,9 +1,11 @@
 import { FeignBody, FeignClient, FeignGet, FeignHeader, FeignPost, FeignQuery } from '../feign.decorator'
+import { FeignWebClient } from '../feign.web.client'
+import type * as CrmTypes from './feign-crm.interface'
 
-/**CRM服务 Feign 客户端*/
 @FeignClient({
     name: 'CRM服务',
+    prefix: 'feign',
     baseUrlConfigKey: 'feign.chat-web-crm.url',
     timeoutConfigKey: 'feign.chat-web-crm.timeout'
 })
-export class FeignClientCrm {}
+export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCrmImplementation> {}

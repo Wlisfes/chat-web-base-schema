@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { FeignClientAccount } from '@/feign/chat-web-account-service-feign/feign-account.client'
+import { FeignClientAccount } from '@/feign/chat-web-account-service-feign/feign-account.client.controller'
 import { FeignModule } from '@/feign/feign.module'
 import { AuthClient } from './auth.client'
 import { AUTH_TOKEN_AUTHENTICATOR, JwtAuthGuard } from './jwt-auth.guard'

@@ -11,6 +11,8 @@ export type FeignHttpMethod = 'GET' | 'POST'
 export interface FeignClientOptions {
     /** 服务显示名称，用于异常信息和日志。 */
     name: string
+    /** 所有接口共用的路径前缀，例如 `feign` 或 `/feign`。 */
+    prefix?: string
     /** 服务地址对应的 ConfigService 配置键。 */
     baseUrlConfigKey: string
     /** 请求超时对应的 ConfigService 配置键。 */

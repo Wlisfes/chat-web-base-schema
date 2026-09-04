@@ -95,9 +95,9 @@
             "default": "./dist/src/runtime/auth/index.js"
         },
         "./feign": {
-            "types": "./dist/src/runtime/feign/index.d.ts",
-            "require": "./dist/src/runtime/feign/index.js",
-            "default": "./dist/src/runtime/feign/index.js"
+            "types": "./dist/src/feign/index.d.ts",
+            "require": "./dist/src/feign/index.js",
+            "default": "./dist/src/feign/index.js"
         },
         "./database": {
             "types": "./dist/src/runtime/database/index.d.ts",

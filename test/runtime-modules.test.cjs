@@ -2,9 +2,9 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 
 const { BadGatewayException, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
-const { AccountAuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
+const { AuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
-const { AccountFeignClient, FeignClientFactory, FinanceFeignClient } = require('../dist/src/runtime/feign')
+const { FeignClientAccount, FeignClientFactory, FeignClientFinance } = require('../dist/src/feign')
 const { forRootNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
 const { REDIS_RUNTIME_OPTIONS, RedisModule, RedisService } = require('../dist/src/runtime/redis')
 const { runWithRequestContext } = require('../dist/src/utils/modules/request-context')
@@ -13,7 +13,12 @@ function config(initial = {}) {
     const values = { ...initial }
     return {
         get(key, fallback) {
-            return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : fallback
+            if (Object.prototype.hasOwnProperty.call(values, key)) return values[key]
+            const resolved = key.split('.').reduce((current, segment) => {
+                if (!current || typeof current !== 'object' || !Object.prototype.hasOwnProperty.call(current, segment)) return undefined
+                return current[segment]
+            }, values)
+            return resolved === undefined ? fallback : resolved
         },
         set(key, value) {
             values[key] = value
@@ -194,18 +199,23 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
 
 function accountAuthClient(values, fetchClient) {
     const factory = new FeignClientFactory(config(values), fetchClient)
-    return new AccountAuthClient(factory.create(AccountFeignClient))
+    return new AuthClient(factory.create(FeignClientAccount))
 }
 
 test('shared Feign account auth client forwards the bearer token and returns the principal', async () => {
     let request
-    const service = accountAuthClient({ ACCOUNT_SERVICE_URL: 'http://account.internal:3000' }, async (url, init) => {
-        request = { url, init }
-        return new Response(
-            JSON.stringify({ data: { uid: '2149446185344106496', sessionId: 'shared-auth-session' }, code: 200, message: '成功' }),
-            { status: 200, headers: { 'content-type': 'application/json' } }
-        )
-    })
+    const service = accountAuthClient(
+        {
+            feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } }
+        },
+        async (url, init) => {
+            request = { url, init }
+            return new Response(
+                JSON.stringify({ data: { uid: '2149446185344106496', sessionId: 'shared-auth-session' }, code: 200, message: '成功' }),
+                { status: 200, headers: { 'content-type': 'application/json' } }
+            )
+        }
+    )
 
     assert.deepEqual(await service.authenticateToken('account-token'), {
         uid: '2149446185344106496',
@@ -217,45 +227,84 @@ test('shared Feign account auth client forwards the bearer token and returns the
 })
 
 test('shared account auth client preserves rejected-token semantics', async () => {
-    const service = accountAuthClient({}, async () => {
-        return new Response(JSON.stringify({ data: null, code: 401, message: '登录会话已失效' }), {
-            status: 401,
-            headers: { 'content-type': 'application/json' }
-        })
-    })
+    const service = accountAuthClient(
+        { feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } },
+        async () => {
+            return new Response(JSON.stringify({ data: null, code: 401, message: '登录会话已失效' }), {
+                status: 401,
+                headers: { 'content-type': 'application/json' }
+            })
+        }
+    )
 
     await assert.rejects(() => service.authenticateToken('expired-token'), UnauthorizedException)
 })
 
 test('shared account auth client distinguishes unavailable and invalid upstream responses', async () => {
-    const unavailable = accountAuthClient({}, async () => {
-        throw new Error('connect failed')
-    })
-    const invalid = accountAuthClient({}, async () => new Response('not-json', { status: 200 }))
+    const unavailable = accountAuthClient(
+        { feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } },
+        async () => {
+            throw new Error('connect failed')
+        }
+    )
+    const invalid = accountAuthClient(
+        { feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } },
+        async () => new Response('not-json', { status: 200 })
+    )
 
     await assert.rejects(() => unavailable.authenticateToken('account-token'), ServiceUnavailableException)
     await assert.rejects(() => invalid.authenticateToken('account-token'), BadGatewayException)
 })
 
 test('shared Feign client validates service URL and timeout settings', async () => {
-    const invalidUrl = accountAuthClient({ ACCOUNT_SERVICE_URL: 'redis://account' }, async () => new Response())
-    const invalidTimeout = accountAuthClient({ ACCOUNT_AUTH_TIMEOUT_MS: 99 }, async () => new Response())
+    const invalidUrl = accountAuthClient(
+        { feign: { 'chat-web-account': { url: 'redis://account', timeout: 3000 } } },
+        async () => new Response()
+    )
+    const invalidTimeout = accountAuthClient(
+        { feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 99 } } },
+        async () => new Response()
+    )
 
     await assert.rejects(() => invalidUrl.authenticateToken('account-token'), /http:\/\//)
     await assert.rejects(() => invalidTimeout.authenticateToken('account-token'), /100-30000/)
 })
 
+test('shared Feign client rejects legacy environment-style configuration keys', async () => {
+    const service = accountAuthClient(
+        { ACCOUNT_SERVICE_URL: 'http://account.internal:3000', ACCOUNT_AUTH_TIMEOUT_MS: 3000 },
+        async () => new Response()
+    )
+    await assert.rejects(() => service.authenticateToken('account-token'), /Nacos 配置 feign\.chat-web-account\.url/)
+})
+
+test('shared Feign client validates required Nacos configuration during application bootstrap', () => {
+    const missing = new FeignClientFactory(config(), async () => new Response())
+    missing.create(FeignClientAccount)
+    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.chat-web-account\.url/)
+
+    const configured = new FeignClientFactory(
+        config({ feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } }),
+        async () => new Response()
+    )
+    configured.create(FeignClientAccount)
+    assert.doesNotThrow(() => configured.onApplicationBootstrap())
+})
+
 test('shared Feign finance client serializes POST body, headers and GET query', async () => {
     const requests = []
-    const factory = new FeignClientFactory(config({ FINANCE_SERVICE_URL: 'http://finance.internal:3010' }), async (url, init) => {
-        requests.push({ url: String(url), init })
-        const data = requests.length === 1 ? [{ countryKeyId: 1, upUsd: 100, downUsd: 80 }] : { currency: 'USD', rate: 1 }
-        return new Response(JSON.stringify({ data, code: 200, message: '成功' }), {
-            status: 200,
-            headers: { 'content-type': 'application/json' }
-        })
-    })
-    const service = factory.create(FinanceFeignClient)
+    const factory = new FeignClientFactory(
+        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:3010', timeout: 5000 } } }),
+        async (url, init) => {
+            requests.push({ url: String(url), init })
+            const data = requests.length === 1 ? [{ countryKeyId: 1, upUsd: 100, downUsd: 80 }] : { currency: 'USD', rate: 1 }
+            return new Response(JSON.stringify({ data, code: 200, message: '成功' }), {
+                status: 200,
+                headers: { 'content-type': 'application/json' }
+            })
+        }
+    )
+    const service = factory.create(FeignClientFinance)
 
     await runWithRequestContext('finance-request-1', () => service.batchSmsRates('Bearer account-token', { countryKeyIds: [1, 2] }))
     await service.resolveCurrencyExchange('Bearer account-token', 'USD')
@@ -271,22 +320,25 @@ test('shared Feign finance client serializes POST body, headers and GET query', 
 
 test('shared Feign finance client serializes currency exchange sync requests and responses', async () => {
     let request
-    const factory = new FeignClientFactory(config({ FINANCE_SERVICE_URL: 'http://finance.internal:3010' }), async (url, init) => {
-        request = { url: String(url), init }
-        return new Response(
-            JSON.stringify({
-                data: {
-                    date: '2026-09-02',
-                    count: 1,
-                    list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
-                },
-                code: 200,
-                message: '成功'
-            }),
-            { status: 200, headers: { 'content-type': 'application/json' } }
-        )
-    })
-    const service = factory.create(FinanceFeignClient)
+    const factory = new FeignClientFactory(
+        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:3010', timeout: 5000 } } }),
+        async (url, init) => {
+            request = { url: String(url), init }
+            return new Response(
+                JSON.stringify({
+                    data: {
+                        date: '2026-09-02',
+                        count: 1,
+                        list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
+                    },
+                    code: 200,
+                    message: '成功'
+                }),
+                { status: 200, headers: { 'content-type': 'application/json' } }
+            )
+        }
+    )
+    const service = factory.create(FeignClientFinance)
     const input = { date: '2026-09-02', rates: [{ currency: 'CNY', rate: 7.2534 }] }
 
     const result = await service.syncCurrencyExchange('Bearer finance-token', input)
@@ -304,7 +356,7 @@ test('shared Feign finance client serializes currency exchange sync requests and
 
 test('shared token service signs and verifies account access tokens', () => {
     const values = {
-        JWT_SECRET: '0123456789abcdef0123456789abcdef',
+        'security.jwt.secret': '0123456789abcdef0123456789abcdef',
         'security.jwt.issuer': 'chat-web-account-service',
         'security.jwt.audience': 'chat-web',
         'security.jwt.accessTokenTtlSeconds': 600
@@ -316,9 +368,27 @@ test('shared token service signs and verifies account access tokens', () => {
     assert.equal(issued.tokenType, 'Bearer')
     assert.equal(issued.expiresIn, 600)
     assert.throws(
-        () => new TokenService(config({ ...values, JWT_SECRET: 'abcdef0123456789abcdef0123456789' })).verifyAccessToken(issued.accessToken),
+        () =>
+            new TokenService(config({ ...values, 'security.jwt.secret': 'abcdef0123456789abcdef0123456789' })).verifyAccessToken(
+                issued.accessToken
+            ),
         /签名无效/
     )
+})
+
+test('shared token service rejects legacy JWT keys and missing Nacos fields', () => {
+    const nacosJwt = {
+        'security.jwt.secret': '0123456789abcdef0123456789abcdef',
+        'security.jwt.issuer': 'chat-web-account-service',
+        'security.jwt.audience': 'chat-web',
+        'security.jwt.accessTokenTtlSeconds': 600
+    }
+    assert.throws(() => new TokenService(config({ JWT_SECRET: nacosJwt['security.jwt.secret'] })).issueAccessToken('1'), /Nacos 配置/)
+    for (const field of Object.keys(nacosJwt)) {
+        const values = { ...nacosJwt }
+        delete values[field]
+        assert.throws(() => new TokenService(config(values)).issueAccessToken('1'), /Nacos 配置/)
+    }
 })
 
 test('shared auth session supports create, rotate and revoke', async () => {
@@ -338,7 +408,7 @@ test('shared auth session supports create, rotate and revoke', async () => {
             values.delete(key)
         }
     }
-    const service = new AuthSessionService(redis, config({ AUTH_SESSION_PREFIX: 'test:session' }))
+    const service = new AuthSessionService(redis, config({ 'security.session.prefix': 'test:session' }))
     const first = { sub: '42', iss: 'issuer', aud: 'audience', iat: 1, exp: Math.floor(Date.now() / 1000) + 60, jti: 'first' }
     const second = { ...first, jti: 'second' }
 
@@ -351,19 +421,13 @@ test('shared auth session supports create, rotate and revoke', async () => {
     await assert.rejects(() => service.assertActive(second), /会话已失效/)
 })
 
-test('shared Redis URL parser merges explicit credentials', () => {
-    const service = new RedisService(
-        config({
-            REDIS_URL: 'redis://redis.example:6379/2',
-            REDIS_USERNAME: 'account',
-            REDIS_PASSWORD: 'secret'
-        })
+test('shared auth session rejects the legacy environment-style prefix', async () => {
+    const redis = { async setEx() {} }
+    const service = new AuthSessionService(redis, config({ AUTH_SESSION_PREFIX: 'legacy:session' }))
+    await assert.rejects(
+        () => service.create({ sub: '1', iss: 'issuer', aud: 'audience', iat: 1, exp: Math.floor(Date.now() / 1000) + 60, jti: 'one' }),
+        /Nacos 配置 security\.session\.prefix/
     )
-    const url = new URL(service.getConnectionUrl())
-
-    assert.equal(url.username, 'account')
-    assert.equal(url.password, 'secret')
-    assert.equal(url.pathname, '/2')
 })
 
 test('shared Redis reads the nested Nacos redis node and enforces the service index', () => {
@@ -373,6 +437,9 @@ test('shared Redis reads the nested Nacos redis node and enforces the service in
                 host: '127.0.0.1',
                 port: 6379,
                 database: 0,
+                tls: false,
+                connectTimeoutMs: 5000,
+                username: 'account',
                 password: '123456'
             }
         }),
@@ -384,7 +451,10 @@ test('shared Redis reads the nested Nacos redis node and enforces the service in
     assert.equal(url.pathname, '/0')
     assert.equal(url.password, '123456')
     assert.throws(
-        () => new RedisService(config({ redis: { host: '127.0.0.1', port: 6379, database: 1 } }), { database: 0 }).getConnectionUrl(),
+        () =>
+            new RedisService(config({ redis: { host: '127.0.0.1', port: 6379, database: 1, tls: false, connectTimeoutMs: 5000 } }), {
+                database: 0
+            }).getConnectionUrl(),
         /本服务分配的 index：0/
     )
 })
@@ -395,36 +465,30 @@ test('RedisModule injects its runtime options through forRoot', () => {
     assert.deepEqual(provider.useValue, { database: 1 })
 })
 
-test('shared Redis defers connection option resolution until application bootstrap', () => {
-    const configService = config({ REDIS_HOST: 'before-nacos', REDIS_DATABASE: 0 })
-    const service = new RedisService(configService)
-
-    assert.equal(service.client, undefined)
-    configService.set('REDIS_HOST', 'after-nacos')
-    configService.set('REDIS_DATABASE', 1)
-
-    const url = new URL(service.getConnectionUrl())
-    assert.equal(url.hostname, 'after-nacos')
-    assert.equal(url.pathname, '/1')
-})
-
-test('explicit Redis database overrides the database embedded in REDIS_URL', () => {
-    const service = new RedisService(
-        config({
-            REDIS_URL: 'rediss://account:secret@redis.example:6379/0',
-            REDIS_DATABASE: 6
-        })
+test('shared Redis rejects missing required Nacos connection parameters', () => {
+    for (const field of ['host', 'port', 'database']) {
+        const redis = { host: '127.0.0.1', port: 6379, database: 0, tls: false, connectTimeoutMs: 5000 }
+        delete redis[field]
+        const service = new RedisService(config({ redis }), { database: 0 })
+        assert.throws(() => service.getConnectionUrl(), /Redis 配置|Nacos Redis 配置/)
+    }
+    assert.doesNotThrow(() =>
+        new RedisService(config({ redis: { host: '127.0.0.1', port: 6379, database: 0 } }), { database: 0 }).getConnectionUrl()
     )
-    const url = new URL(service.getConnectionUrl())
-
-    assert.equal(url.protocol, 'rediss:')
-    assert.equal(url.username, 'account')
-    assert.equal(url.password, 'secret')
-    assert.equal(url.pathname, '/6')
+    assert.throws(
+        () =>
+            new RedisService(config({ REDIS_HOST: 'redis.example', REDIS_PORT: 6379, REDIS_DATABASE: 0 }), {
+                database: 0
+            }).getConnectionUrl(),
+        /缺少 Nacos Redis 配置节点/
+    )
 })
 
 test('shared Redis readiness keeps the service boolean contract', async () => {
-    const service = new RedisService(config({ REDIS_URL: 'redis://redis.example:6379/0' }))
+    const service = new RedisService(
+        config({ redis: { host: 'redis.example', port: 6379, database: 0, tls: false, connectTimeoutMs: 5000 } }),
+        { database: 0 }
+    )
     service.client = {
         isReady: true,
         async ping() {
@@ -725,7 +789,7 @@ test('shared Nacos behavior resolves exclusively from runtime options', () => {
     assert.deepEqual(reads, [])
 })
 
-test('shared Nacos configuration preserves explicit environment values', () => {
+test('shared Nacos configuration always applies remote values', () => {
     const key = 'SHARED_RUNTIME_ENV_OVERRIDE'
     const previous = process.env[key]
     process.env[key] = 'environment'
@@ -734,7 +798,7 @@ test('shared Nacos configuration preserves explicit environment values', () => {
         const service = new NacosService(configService, nacosOptions())
         service.applyRemoteConfig(`${key}: remote\nremoteOnly: applied`, '已加载', 'example.yaml', 'DEFAULT_GROUP', 'public')
 
-        assert.equal(configService.get(key), undefined)
+        assert.equal(configService.get(key), 'remote')
         assert.equal(configService.get('remoteOnly'), 'applied')
     } finally {
         if (previous === undefined) delete process.env[key]
@@ -781,7 +845,7 @@ test('shared Nacos runtime rejects non-boolean registration options', () => {
     assert.throws(() => new NacosService(config(), nacosOptions({ registerRequired: 'false' })), /NacosRuntimeOptions\.registerRequired/)
 })
 
-test('shared Nacos environment adapter maps the complete flattened runtime contract', () => {
+test('shared Nacos environment adapter only maps Nacos connection settings', () => {
     assert.deepEqual(
         forRootNacosRuntimeOptions(
             nacosRuntimeEnvironment({
@@ -789,16 +853,11 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
                 NACOS_NAMESPACE: 'example-namespace',
                 NACOS_USERNAME: 'example-user',
                 NACOS_PASSWORD: 'example-password',
-                NACOS_REQUEST_TIMEOUT: '7000',
                 NACOS_CONFIG_DATA_ID: 'example.yaml',
                 NACOS_CONFIG_GROUP: 'EXAMPLE_CONFIG',
-                NACOS_REGISTER_ENABLED: 'false',
-                NACOS_REGISTER_REQUIRED: 'true',
                 NACOS_SERVICE_NAME: 'example-custom',
-                NACOS_GROUP: 'EXAMPLE_DISCOVERY',
-                NACOS_REGISTER_IP: '10.0.0.8',
-                NACOS_REGISTER_PORT: '4020',
-                NACOS_REGISTER_WEIGHT: '2.5'
+                NACOS_REGISTER_ENABLED: 'false',
+                NACOS_REGISTER_PORT: '4020'
             })
         ),
         {
@@ -806,25 +865,15 @@ test('shared Nacos environment adapter maps the complete flattened runtime contr
             namespace: 'example-namespace',
             username: 'example-user',
             password: 'example-password',
-            requestTimeout: 7000,
             configDataId: 'example.yaml',
             configGroup: 'EXAMPLE_CONFIG',
-            registerEnabled: false,
-            discoveryEnabled: undefined,
-            discoveryRequired: undefined,
-            configEnabled: undefined,
-            configRequired: undefined,
-            registerRequired: true,
             serviceName: 'example-custom',
-            discoveryGroup: 'EXAMPLE_DISCOVERY',
-            registerIp: '10.0.0.8',
-            registerPort: 4020,
-            registerWeight: 2.5
+            registerPort: 3020
         }
     )
 })
 
-test('shared Nacos environment adapter requires only PORT, service name, server and namespace', () => {
+test('shared Nacos environment adapter requires PORT, service name, server and namespace', () => {
     assert.deepEqual(
         forRootNacosRuntimeOptions({
             PORT: '3020',
@@ -837,20 +886,10 @@ test('shared Nacos environment adapter requires only PORT, service name, server 
             namespace: 'example',
             username: undefined,
             password: undefined,
-            requestTimeout: undefined,
             configDataId: undefined,
             configGroup: undefined,
-            registerEnabled: undefined,
-            discoveryEnabled: undefined,
-            discoveryRequired: undefined,
-            configEnabled: undefined,
-            configRequired: undefined,
-            registerRequired: undefined,
             serviceName: 'chat-web-example-service',
-            discoveryGroup: undefined,
-            registerIp: undefined,
-            registerPort: 3020,
-            registerWeight: undefined
+            registerPort: 3020
         }
     )
     assert.equal(
@@ -870,41 +909,12 @@ test('shared Nacos environment adapter requires only PORT, service name, server 
             ),
         /PORT/
     )
-    assert.throws(
-        () =>
-            forRootNacosRuntimeOptions(
-                nacosRuntimeEnvironment({
-                    NACOS_SERVER: 'nacos:8848',
-                    NACOS_NAMESPACE: 'example',
-                    NACOS_REGISTER_ENABLED: 'yes'
-                })
-            ),
-        /NACOS_REGISTER_ENABLED/
+    assert.equal(
+        forRootNacosRuntimeOptions(
+            nacosRuntimeEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', NACOS_REGISTER_PORT: '65536' })
+        ).registerPort,
+        3020
     )
-    assert.throws(
-        () =>
-            forRootNacosRuntimeOptions(
-                nacosRuntimeEnvironment({
-                    NACOS_SERVER: 'nacos:8848',
-                    NACOS_NAMESPACE: 'example',
-                    NACOS_REGISTER_PORT: '65536'
-                })
-            ),
-        /NACOS_REGISTER_PORT/
-    )
-    for (const NACOS_REGISTER_WEIGHT of ['0', '-1', '10001', 'NaN', 'Infinity']) {
-        assert.throws(
-            () =>
-                forRootNacosRuntimeOptions(
-                    nacosRuntimeEnvironment({
-                        NACOS_SERVER: 'nacos:8848',
-                        NACOS_NAMESPACE: 'example',
-                        NACOS_REGISTER_WEIGHT
-                    })
-                ),
-            /NACOS_REGISTER_WEIGHT/
-        )
-    }
 })
 
 test('NacosModule receives the complete runtime contract from the environment adapter', () => {
@@ -928,7 +938,7 @@ test('NacosModule accepts an explicitly complete runtime contract', () => {
     assert.equal(provider.useValue, options)
 })
 
-test('shared MySQL options apply only allowlisted environment overrides', () => {
+test('shared MySQL options read connection parameters only from Nacos', () => {
     const options = createMysqlOptions(
         config({
             'database.example': {
@@ -936,8 +946,14 @@ test('shared MySQL options apply only allowlisted environment overrides', () => 
                 port: 3306,
                 username: 'service',
                 password: 'secret',
-                name: 'example',
-                logging: false
+                database: 'example',
+                charset: 'utf8mb4',
+                timezone: '+08:00',
+                logging: false,
+                poolSize: 10,
+                connectTimeout: 10000,
+                retryAttempts: 5,
+                retryDelay: 3000
             },
             EXAMPLE_MYSQL_HOST: '127.0.0.1',
             EXAMPLE_MYSQL_USERNAME: 'ignored'
@@ -945,17 +961,88 @@ test('shared MySQL options apply only allowlisted environment overrides', () => 
         {
             configKey: 'database.example',
             entities: [],
-            environmentPrefix: 'EXAMPLE_MYSQL',
-            environmentOverrides: ['host'],
             decimalNumbers: true
         }
     )
 
-    assert.equal(options.host, '127.0.0.1')
+    assert.equal(options.host, 'mysql')
     assert.equal(options.username, 'service')
     assert.equal(options.synchronize, false)
     assert.equal(options.migrationsRun, false)
     assert.deepEqual(options.extra, { decimalNumbers: true })
+})
+
+test('shared MySQL options reject the legacy name field', () => {
+    assert.throws(
+        () =>
+            createMysqlOptions(
+                config({
+                    'database.example': {
+                        host: 'mysql',
+                        port: 3306,
+                        username: 'service',
+                        password: 'secret',
+                        name: 'example',
+                        charset: 'utf8mb4',
+                        timezone: '+08:00',
+                        logging: false,
+                        poolSize: 10,
+                        connectTimeout: 10000,
+                        retryAttempts: 5,
+                        retryDelay: 3000
+                    }
+                }),
+                { configKey: 'database.example', entities: [] }
+            ),
+        /database\.example\.database/
+    )
+})
+
+test('shared MySQL options reject missing required Nacos connection parameters', () => {
+    for (const field of ['host', 'port', 'username', 'password', 'database']) {
+        const database = {
+            host: 'mysql',
+            port: 3306,
+            username: 'service',
+            password: 'secret',
+            database: 'example',
+            charset: 'utf8mb4',
+            timezone: '+08:00',
+            logging: false,
+            poolSize: 10,
+            connectTimeout: 10000,
+            retryAttempts: 5,
+            retryDelay: 3000
+        }
+        delete database[field]
+        assert.throws(
+            () => createMysqlOptions(config({ 'database.example': database }), { configKey: 'database.example', entities: [] }),
+            /数据库配置/
+        )
+    }
+})
+
+test('shared MySQL options allow omitted optional connection tuning fields', () => {
+    const options = createMysqlOptions(
+        config({
+            'database.example': {
+                host: 'mysql',
+                port: 3306,
+                username: 'service',
+                password: 'secret',
+                database: 'example'
+            }
+        }),
+        { configKey: 'database.example', entities: [] }
+    )
+
+    assert.equal(options.charset, undefined)
+    assert.equal(options.timezone, undefined)
+    assert.equal(options.logging, undefined)
+    assert.equal(options.poolSize, undefined)
+    assert.equal(options.connectTimeout, undefined)
+    assert.equal(options.retryAttempts, undefined)
+    assert.equal(options.retryDelay, undefined)
 })
 
 test('shared MySQL grant validation only permits the service database', () => {

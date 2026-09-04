@@ -14,6 +14,9 @@ export interface SetupOptions extends Omix {
 
 /**文档挂载**/
 export async function setupSwagger(app: NestExpressApplication, options: SetupOptions) {
+    if (typeof options.NODE_ENV !== 'string' || !options.NODE_ENV.trim()) {
+        throw new Error('NODE_ENV 必须配置为非空字符串')
+    }
     /**允许跨域**/
     app.enableCors()
     /**解析body参数**/
@@ -41,8 +44,11 @@ export async function setupSwagger(app: NestExpressApplication, options: SetupOp
             docExpansion: 'none'
         }
     })
-    const port = configService.get<number>('server.port', 3000)
-    return await app.listen(['development'].includes(options.NODE_ENV) ? (options.port ?? 3000) : port).then(async () => {
+    const port = Number(options.port)
+    if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+        throw new Error('PORT 必须是 1-65535 之间的整数')
+    }
+    return await app.listen(port).then(async () => {
         return {
             vm: app,
             configService,

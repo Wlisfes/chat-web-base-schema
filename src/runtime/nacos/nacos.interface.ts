@@ -13,7 +13,7 @@ export interface NacosRuntimeOptions {
     username?: string
     /** Nacos 认证密码；不需要认证时省略。 */
     password?: string
-    /** 配置中心请求超时时间，单位毫秒。默认 `5000`。 */
+    /** 配置中心请求超时时间，单位毫秒；未显式传入时使用共享固定值 `5000`。 */
     requestTimeout?: number
     /** 订阅的配置 Data ID。默认 `${serviceName}.yaml`。 */
     configDataId?: string
@@ -37,7 +37,7 @@ export interface NacosRuntimeOptions {
     discoveryGroup?: string
     /** 注册实例 IP；省略时自动选择首个非内部 IPv4，最终回退到 `127.0.0.1`。 */
     registerIp?: string
-    /** 注册实例端口。由调用方的 `registerPort` 或 `NACOS_REGISTER_PORT` 解析，范围 `1-65535`。 */
+    /** 注册实例端口，范围 `1-65535`。通常使用 `.env` 中的 `PORT`。 */
     registerPort: number
     /** 注册实例权重。取值为大于 0 且不超过 10000 的数值；数值越大，支持加权负载的消费者分配到的请求越多；默认 `1`。 */
     registerWeight?: number

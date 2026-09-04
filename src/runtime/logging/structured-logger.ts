@@ -9,7 +9,11 @@ export class StructuredLogger implements LoggerService {
     private readonly environment: string
 
     constructor(private readonly options: StructuredLoggerOptions) {
-        this.environment = options.environment?.trim() || process.env.DEPLOYMENT_ENVIRONMENT || process.env.NODE_ENV || 'development'
+        const environment = options.environment?.trim()
+        if (!environment) {
+            throw new Error('NODE_ENV 必须配置为非空字符串')
+        }
+        this.environment = environment
     }
 
     log(message: unknown, ...optionalParams: unknown[]): void {

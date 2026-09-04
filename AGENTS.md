@@ -51,6 +51,7 @@
 - Internal source imports may use the `@/*` alias. The build must continue rewriting aliases for published output.
 - `DateWithColumn` must preserve write values and format database read values as `YYYY-MM-DD HH:mm:ss` by default.
 - Reusable Redis, Nacos, authentication, database configuration and grant-validation behavior belongs in the runtime modules here. Runtime helpers must preserve per-service Redis indexes and reject MySQL grants outside the owning database.
+- 运行时只允许从 `.env` 读取 `NODE_ENV`、`PORT` 和 Nacos 连接/订阅参数；MySQL、Redis、JWT、Feign、路由与超时等业务配置只从 Nacos 读取，缺少必需字段时直接抛出异常，不提供旧环境变量兼容或静默默认值。
 
 ## NestJS 模块编码基准
 

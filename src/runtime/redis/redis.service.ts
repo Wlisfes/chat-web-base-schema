@@ -5,14 +5,6 @@ import { NacosService } from '../nacos/nacos.service'
 import { REDIS_RUNTIME_OPTIONS, RedisConfig, RedisRuntimeOptions } from './redis.interface'
 
 const DEFAULT_REDIS_CONFIG_KEY = 'redis'
-const DEFAULT_REDIS_HOST = 'chat-web-redis'
-const DEFAULT_REDIS_PORT = 6379
-const DEFAULT_REDIS_DATABASE = 0
-const DEFAULT_REDIS_CONNECT_TIMEOUT = 5000
-
-function isConfigured(value: unknown): boolean {
-    return value !== undefined && value !== null && value !== ''
-}
 
 function optionalString(value: unknown): string | undefined {
     return typeof value === 'string' && value.trim() ? value.trim() : undefined
@@ -26,16 +18,27 @@ function requiredString(name: string, value: unknown): string {
     return normalized
 }
 
-function parseInteger(name: string, value: unknown, fallback: number, minimum: number, maximum: number): number {
-    const configured = isConfigured(value) ? Number(value) : fallback
+function optionalCredential(name: string, value: unknown): string | undefined {
+    if (value === undefined || value === null || value === '') return undefined
+    if (typeof value !== 'string') throw new Error(`${name} 必须是字符串`)
+    return value.trim() || undefined
+}
+
+function parseInteger(name: string, value: unknown, minimum: number, maximum: number): number {
+    if (value === undefined || value === null || value === '') {
+        throw new Error(`${name} 必须配置`)
+    }
+    const configured = Number(value)
     if (!Number.isInteger(configured) || configured < minimum || configured > maximum) {
         throw new Error(`${name} 必须是 ${minimum}-${maximum} 之间的整数`)
     }
     return configured
 }
 
-function parseBoolean(name: string, value: unknown, fallback: boolean): boolean {
-    if (!isConfigured(value)) return fallback
+function parseOptionalBoolean(name: string, value: unknown): boolean | undefined {
+    if (value === undefined || value === null || value === '') {
+        return undefined
+    }
     if (typeof value === 'boolean') return value
     if (value === 'true') return true
     if (value === 'false') return false
@@ -47,7 +50,7 @@ function normalizeRuntimeOptions(options: RedisRuntimeOptions | undefined): Redi
     if (!options || typeof options !== 'object') {
         throw new Error('RedisRuntimeOptions 必须是对象')
     }
-    const database = parseInteger('RedisRuntimeOptions.database', options.database, DEFAULT_REDIS_DATABASE, 0, 15)
+    const database = parseInteger('RedisRuntimeOptions.database', options.database, 0, 15)
     const configKey =
         options.configKey === undefined ? DEFAULT_REDIS_CONFIG_KEY : requiredString('RedisRuntimeOptions.configKey', options.configKey)
     return { database, configKey }
@@ -71,15 +74,16 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
         await this.nacosService?.loadConfig()
         const connectionUrl = this.getConnectionUrl()
         const parsedConnectionUrl = new URL(connectionUrl)
+        const connectTimeout = this.getConnectTimeout()
         this.logger.log(
-            `Redis连接配置已解析：source=${this.getConfigSource()}, ` +
+            'Redis连接配置已解析：source=nacos, ' +
                 `authenticated=${Boolean(parsedConnectionUrl.password)}, tls=${parsedConnectionUrl.protocol === 'rediss:'}, ` +
                 `database=${parsedConnectionUrl.pathname.slice(1) || '0'}`
         )
         const client = createClient({
             url: connectionUrl,
             socket: {
-                connectTimeout: this.getConnectTimeout(),
+                ...(connectTimeout === undefined ? {} : { connectTimeout }),
                 reconnectStrategy: retries => Math.min(retries * 200, 3000)
             }
         })
@@ -130,41 +134,18 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
 
     private getConnectionUrl(): string {
         const configured = this.getRedisConfig()
-        const configuredUrl = optionalString(this.getOverride('REDIS_URL') ?? configured.url)
         const expectedDatabase = this.options?.database
-        const configuredDatabase = this.getOverride('REDIS_DATABASE') ?? configured.database
-        const database = this.resolveDatabase(configuredDatabase, expectedDatabase, configuredUrl)
-
-        if (configuredUrl) {
-            let url: URL
-            try {
-                url = new URL(configuredUrl)
-            } catch {
-                throw new Error('Redis URL 格式无效')
-            }
-            if (!['redis:', 'rediss:'].includes(url.protocol)) {
-                throw new Error('Redis URL 必须使用 redis:// 或 rediss://')
-            }
-            const username = optionalString(this.getOverride('REDIS_USERNAME') ?? configured.username)
-            const password = optionalString(this.getOverride('REDIS_PASSWORD') ?? configured.password)
-            if (!url.username && username) url.username = username
-            if (!url.password && password) url.password = password
-            if (expectedDatabase !== undefined || isConfigured(configuredDatabase)) {
-                url.pathname = `/${database}`
-            }
-            return url.toString()
-        }
-
-        const host = requiredString('Redis 配置 host', this.getOverride('REDIS_HOST') ?? configured.host ?? DEFAULT_REDIS_HOST)
-        const port = parseInteger('Redis 配置 port', this.getOverride('REDIS_PORT') ?? configured.port, DEFAULT_REDIS_PORT, 1, 65_535)
-        const username = optionalString(this.getOverride('REDIS_USERNAME') ?? configured.username)
-        const password = optionalString(this.getOverride('REDIS_PASSWORD') ?? configured.password)
+        const database = this.resolveDatabase(configured.database, expectedDatabase)
+        const host = requiredString('Redis 配置 host', configured.host)
+        const port = parseInteger('Redis 配置 port', configured.port, 1, 65_535)
+        const username = optionalCredential('Redis 配置 username', configured.username)
+        const password = optionalCredential('Redis 配置 password', configured.password)
         const credentials = password
             ? `${username ? `${encodeURIComponent(username)}:` : ':'}${encodeURIComponent(password)}@`
             : username
               ? `${encodeURIComponent(username)}@`
               : ''
-        const tls = parseBoolean('Redis 配置 tls', this.getOverride('REDIS_TLS') ?? configured.tls, false)
+        const tls = parseOptionalBoolean('Redis 配置 tls', configured.tls)
         const protocol = tls ? 'rediss' : 'redis'
         return `${protocol}://${credentials}${host}:${port}/${database}`
     }
@@ -173,7 +154,7 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
         const key = this.options?.configKey ?? DEFAULT_REDIS_CONFIG_KEY
         const configured = this.configService.get<unknown>(key)
         if (configured === undefined || configured === null) {
-            return {}
+            throw new Error(`缺少 Nacos Redis 配置节点：${key}`)
         }
         if (typeof configured !== 'object' || Array.isArray(configured)) {
             throw new Error(`Redis 配置 ${key} 必须是 YAML 对象`)
@@ -181,37 +162,19 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
         return configured as RedisConfig
     }
 
-    private getOverride(key: string): string | number | boolean | undefined {
-        const value = this.configService.get<string | number | boolean>(key)
-        return isConfigured(value) ? value : undefined
-    }
-
-    private resolveDatabase(value: unknown, expectedDatabase: number | undefined, configuredUrl: string | undefined): number {
-        if (!isConfigured(value) && expectedDatabase === undefined && configuredUrl) {
-            try {
-                const pathname = new URL(configuredUrl).pathname.slice(1)
-                if (pathname) return parseInteger('Redis URL database', pathname, DEFAULT_REDIS_DATABASE, 0, 15)
-            } catch {
-                // URL validation and the final error are handled by getConnectionUrl().
-            }
-        }
-        const configured = parseInteger('Redis 配置 database', value, expectedDatabase ?? DEFAULT_REDIS_DATABASE, 0, 15)
+    private resolveDatabase(value: unknown, expectedDatabase: number | undefined): number {
+        const configured = parseInteger('Redis 配置 database', value, 0, 15)
         if (expectedDatabase !== undefined && configured !== expectedDatabase) {
             throw new Error(`Redis 配置 database 必须使用本服务分配的 index：${expectedDatabase}`)
         }
         return expectedDatabase ?? configured
     }
 
-    private getConnectTimeout(): number {
-        const configured = this.getOverride('REDIS_CONNECT_TIMEOUT_MS')
-        const remote = this.getRedisConfig().connectTimeoutMs
-        return parseInteger('Redis 配置 connectTimeoutMs', configured ?? remote, DEFAULT_REDIS_CONNECT_TIMEOUT, 100, 60_000)
-    }
-
-    private getConfigSource(): 'url' | 'nested' | 'host' {
-        if (this.getOverride('REDIS_URL') || optionalString(this.getRedisConfig().url)) return 'url'
-        if (this.configService.get<unknown>(this.options?.configKey ?? DEFAULT_REDIS_CONFIG_KEY)) return 'nested'
-        return 'host'
+    private getConnectTimeout(): number | undefined {
+        const configured = this.getRedisConfig().connectTimeoutMs
+        return configured === undefined || configured === null || configured === ''
+            ? undefined
+            : parseInteger('Redis 配置 connectTimeoutMs', configured, 100, 60_000)
     }
 
     private normalizeValue(value: string | Buffer | null): string | null {

@@ -10,8 +10,8 @@ used by authentication sessions. Each owning service supplies its isolated
 Redis database index through `forRoot`; the connection is then read from the
 `redis` node in that service's Nacos Data ID. Client creation is deferred until
 application bootstrap, after `NacosService` has loaded remote configuration.
-The legacy `REDIS_*` environment keys remain emergency overrides and should not
-be placed in the normal `.env` file.
+Redis connection parameters are read only from Nacos; no `REDIS_*` environment
+override is supported.
 
 ```ts
 import { RedisModule, RedisService } from '@wlisfes/chat-web-base-schema/redis'
@@ -22,16 +22,18 @@ import { RedisModule, RedisService } from '@wlisfes/chat-web-base-schema/redis'
 export class AppModule {}
 ```
 
-The Nacos node uses this shape. `database` must match the index assigned to the
-service; a URL path is always rewritten to that index. `host`, `port`, `tls`
-and `connectTimeoutMs` default to `chat-web-redis`, `6379`, `false` and `5000`.
-`url`, `username` and `password` are optional.
+The Nacos node uses this shape. `host`, `port` and `database` are required;
+`database` must match the index assigned to the service. `username`,
+`password`, `tls` and `connectTimeoutMs` are optional. Omitted optional fields
+are left to the Redis client defaults.
 
 ```yaml
 redis:
     host: '127.0.0.1'
     port: 6379
     database: 0
+    tls: false
+    connectTimeoutMs: 5000
     password: '123456'
 ```
 
@@ -47,11 +49,19 @@ import { forRootNacosRuntimeOptions, NacosModule } from '@wlisfes/chat-web-base-
 NacosModule.forRoot(forRootNacosRuntimeOptions(process.env))
 ```
 
-`forRootNacosRuntimeOptions` 负责从 `process.env` 转换和校验 Nacos 启动参数。`PORT`、`NACOS_SERVICE_NAME`、`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填，其余字段均可省略并使用共享默认值。由于 `AppModule` 装饰器会在 `ConfigModule.forRoot()` 初始化前执行，入口文件应先加载 `dotenv/config`；容器环境则直接使用注入的环境变量。`NACOS_REGISTER_PORT` 仍可作为特殊场景的显式覆盖，但通常直接使用 `PORT`。
+`forRootNacosRuntimeOptions` 负责从 `process.env` 转换和校验 Nacos 启动参数。`PORT`、`NACOS_SERVICE_NAME`、`NACOS_SERVER` 与 `NACOS_NAMESPACE` 必填；注册、发现、超时和业务配置不再从环境变量读取。由于 `AppModule` 装饰器会在 `ConfigModule.forRoot()` 初始化前执行，入口文件应先加载 `dotenv/config`；容器环境则直接使用注入的环境变量。
+
+HTTP 监听和 Nacos 实例注册统一使用 `PORT`，不再根据运行环境切换到 `server.port` 或 `NACOS_REGISTER_PORT`。
+服务 `.env` 只保留 `NODE_ENV`、`PORT` 以及 `NACOS_SERVER`、
+`NACOS_NAMESPACE`、`NACOS_USERNAME`、`NACOS_PASSWORD`、
+`NACOS_SERVICE_NAME`、`NACOS_CONFIG_DATA_ID`、`NACOS_CONFIG_GROUP` 这些
+Nacos 连接与订阅参数。
 
 `NacosService` reads every Nacos client, subscription and registration value
 from this options object. It does not resolve `NACOS_*` or `server.port`
 through `ConfigService`. Optional overrides and their defaults are:
+These are transport-level defaults for the Nacos client itself; business
+configuration loaded from the Data ID has no fallback source.
 
 - `requestTimeout`: `5000` milliseconds.
 - `configDataId`: `${serviceName}.yaml`.
@@ -69,18 +79,8 @@ through `ConfigService`. Optional overrides and their defaults are:
 - `discoveryGroup`: the resolved `configGroup`.
 - `username`, `password`: omitted.
 - `registerIp`: the first non-internal IPv4 interface, falling back to `127.0.0.1`.
-- `registerWeight`: `1`. Set `NACOS_REGISTER_WEIGHT` in the local process environment
-  to give an instance a higher or lower weight (for example, `10` for a local
-  instance and `1` for a deployed instance). Positive decimal values greater than
-  `0` and no higher than `10000` are supported; the current Node.js SDK cannot
-  register zero reliably.
-
-`NACOS_REGISTER_WEIGHT` is a startup-only override. It is parsed by
-`forRootNacosRuntimeOptions` and sent as the Nacos naming instance `weight` when
-the service registers. `NacosService.resolveService()` uses the returned
-instance weights for smooth weighted round-robin selection, while callers that
-need a different balancing policy can use `getAllInstances()` and implement
-their own selection.
+- `registerWeight`: `1`. Configure this only in the explicit runtime options
+  object when weighted registration is required.
 
 `NacosService.loadConfig()` can be awaited by asynchronous database factories
 before opening their connections. The same service owns the naming client and
@@ -88,8 +88,8 @@ exposes `resolveService()`, `refreshSubscriptions()`,
 `getHealthyInstanceCount()`, `subscribeService()` and `unsubscribeService()`
 for gateways or other infrastructure modules; consumers do not need to create
 another Nacos client. It also registers and deregisters an ephemeral Nacos
-instance. Explicit process environment values continue to override matching
-top-level keys from remote business configuration.
+instance. Remote Nacos values are the only source for business configuration;
+matching process environment variables never override them.
 
 ## Authentication
 
@@ -102,24 +102,29 @@ logic. It provides that business authenticator through
 services.
 
 Business services must not read the account Redis database or hold the account
-JWT secret. Import `AccountRemoteAuthModule` to validate Bearer tokens through
+JWT secret. Import `AuthModule` to validate Bearer tokens through
 the account service `/auth/token/introspect` endpoint and attach the returned
 principal to the request.
 
 ```ts
-import { AccountRemoteAuthModule, JwtAuthGuard } from '@wlisfes/chat-web-base-schema/auth'
+import { AuthModule, JwtAuthGuard } from '@wlisfes/chat-web-base-schema/auth'
 
 @Module({
-    imports: [AccountRemoteAuthModule],
+    imports: [AuthModule],
     providers: [{ provide: APP_GUARD, useExisting: JwtAuthGuard }]
 })
 export class AppModule {}
 ```
 
-The remote client reads `ACCOUNT_SERVICE_URL` and the optional
-`ACCOUNT_AUTH_TIMEOUT_MS` value. `SessionAuthModule` is only for an owning
+The remote client reads `feign.chat-web-account.url` and
+`feign.chat-web-account.timeout` from Nacos. `SessionAuthModule` is only for an owning
 service that is explicitly allowed to verify JWTs and access its own session
 store; it is not the downstream business-service default.
+
+The owning account service must provide `security.jwt.secret`,
+`security.jwt.issuer`, `security.jwt.audience`,
+`security.jwt.accessTokenTtlSeconds` and `security.session.prefix` in Nacos.
+Legacy `JWT_SECRET` and `AUTH_SESSION_PREFIX` keys are not read.
 
 ## Declarative Feign clients
 
@@ -128,8 +133,8 @@ Cross-service HTTP calls use the shared declarative Feign runtime. A client clas
 ```ts
 @FeignClient({
     name: '账号服务',
-    baseUrlConfigKey: 'ACCOUNT_SERVICE_URL',
-    defaultBaseUrl: 'http://chat-web-account-service:5010'
+    baseUrlConfigKey: 'feign.chat-web-account.url',
+    timeoutConfigKey: 'feign.chat-web-account.timeout'
 })
 export class AccountFeignClient {
     @FeignGet('/consumer/resolver')
@@ -145,6 +150,9 @@ export class IntegrationModule {}
 ```
 
 Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Multi-select fields remain arrays in the POST body. Business services must not create their own `fetch`, Axios or cross-database implementation for an endpoint already declared by a shared Feign client.
+Every declared Feign URL and timeout is required in the service's Nacos `feign`
+node. Environment-style `*_SERVICE_URL` and `*_TIMEOUT_MS` keys are not read,
+and the shared clients do not provide fallback addresses or timeouts.
 
 ## Readable logging and trace correlation
 
@@ -173,17 +181,18 @@ OpenTelemetry SDK.
 
 ## MySQL options
 
-`createMysqlOptions` validates the common Nacos MySQL structure, applies an
-explicit allowlist of environment overrides and always disables TypeORM schema
-synchronization and automatic migrations.
+`createMysqlOptions` validates the common Nacos MySQL structure and always
+disables TypeORM schema synchronization and automatic migrations. Connection
+parameters are read only from the configured Nacos node. `host`, `port`,
+`username`, `password` and `database` are required; optional charset, timezone,
+logging, pool and retry settings are validated when present and omitted when
+absent.
 
 ```ts
 import { createMysqlOptions } from '@wlisfes/chat-web-base-schema/database'
 
 createMysqlOptions(configService, {
     configKey: 'database.chat-web-example',
-    entities,
-    environmentPrefix: 'EXAMPLE_MYSQL',
-    environmentOverrides: ['host', 'port', 'database']
+    entities
 })
 ```

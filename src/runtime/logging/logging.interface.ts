@@ -21,10 +21,10 @@ export interface RequestLogPayload {
 
 export interface StructuredLoggerOptions {
     serviceName: string
-    environment?: string
+    environment: string
 }
 
 export interface ReadableConsoleLoggerOptions {
-    NODE_ENV?: string
+    NODE_ENV: string
     prefix?: string
 }

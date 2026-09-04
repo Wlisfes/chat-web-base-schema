@@ -1,17 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable, OnApplicationBootstrap, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { RedisService } from '../redis'
 import { AccessTokenClaims } from './auth.interface'
 
 @Injectable()
-export class AuthSessionService {
-    private readonly prefix: string
-
+export class AuthSessionService implements OnApplicationBootstrap {
     constructor(
         private readonly redisService: RedisService,
-        configService: ConfigService
-    ) {
-        this.prefix = configService.get<string>('AUTH_SESSION_PREFIX')?.trim() || 'chat-web:account:session'
+        private readonly configService: ConfigService
+    ) {}
+
+    onApplicationBootstrap(): void {
+        this.getPrefix()
     }
 
     async create(claims: AccessTokenClaims): Promise<void> {
@@ -34,7 +34,15 @@ export class AuthSessionService {
     }
 
     private getKey(sessionId: string): string {
-        return `${this.prefix}:${sessionId}`
+        return `${this.getPrefix()}:${sessionId}`
+    }
+
+    private getPrefix(): string {
+        const prefix = this.configService.get<unknown>('security.session.prefix')
+        if (typeof prefix !== 'string' || !prefix.trim()) {
+            throw new Error('Nacos 配置 security.session.prefix 必须是非空字符串')
+        }
+        return prefix.trim()
     }
 
     private getRemainingSeconds(claims: AccessTokenClaims): number {

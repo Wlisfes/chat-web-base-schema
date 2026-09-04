@@ -449,17 +449,12 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
 
         const config = parsed as Record<string, unknown>
         const appliedKeys: string[] = []
-        const environmentOverrideKeys: string[] = []
         for (const key of this.remoteConfigKeys) {
             if (!(key in config)) {
                 this.configService.set(key, undefined)
             }
         }
         for (const [key, value] of Object.entries(config)) {
-            if (Object.prototype.hasOwnProperty.call(process.env, key)) {
-                environmentOverrideKeys.push(key)
-                continue
-            }
             this.configService.set(key, value)
             appliedKeys.push(key)
         }
@@ -469,8 +464,7 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
         this.currentContent = content
         this.configError = undefined
         this.logger.log(
-            `Nacos 配置${action}：dataId=${dataId}, group=${group}, namespace=${namespace}, ` +
-                `已应用=${appliedKeys.join(',') || '无'}, 环境变量优先=${environmentOverrideKeys.join(',') || '无'}`
+            `Nacos 配置${action}：dataId=${dataId}, group=${group}, namespace=${namespace}, ` + `已应用=${appliedKeys.join(',') || '无'}`
         )
         this.configListeners.forEach(listener => {
             try {

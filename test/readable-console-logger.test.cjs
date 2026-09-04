@@ -99,3 +99,8 @@ test('异常日志头部显示实际抛错方法', () => {
 
     assert.match(plain, /执行方法:\[SheetUtilsService\.findRequired \(sheet\.utils\.service\.ts:27:19\)\]/)
 })
+
+test('日志初始化缺少 NODE_ENV 时直接抛出异常', () => {
+    assert.throws(() => new ReadableConsoleLogger({ prefix: 'chat-web-example-service' }), /NODE_ENV/)
+    assert.throws(() => new ReadableConsoleLogger({ NODE_ENV: '   ', prefix: 'chat-web-example-service' }), /NODE_ENV/)
+})

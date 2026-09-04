@@ -91,13 +91,17 @@ export class ReadableConsoleLogger extends ConsoleLogger {
     private readonly compactRequestJson: boolean
 
     constructor(options: ReadableConsoleLoggerOptions) {
+        const environment = options.NODE_ENV?.trim()
+        if (!environment) {
+            throw new Error('NODE_ENV 必须配置为非空字符串')
+        }
         super({
             colors: true,
             compact: true,
             json: false,
             prefix: options.prefix
         })
-        this.compactRequestJson = options.NODE_ENV === 'production'
+        this.compactRequestJson = environment === 'production'
     }
 
     protected override stringifyMessage(message: unknown, logLevel: LogLevel): string {

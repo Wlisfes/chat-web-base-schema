@@ -6,8 +6,7 @@ export interface MysqlConfig {
     port: number | string
     username: string
     password: string
-    database?: string
-    name?: string
+    database: string
     charset?: string
     timezone?: string
     logging?: boolean | string
@@ -17,13 +16,9 @@ export interface MysqlConfig {
     retryDelay?: number | string
 }
 
-export type MysqlEnvironmentField = 'host' | 'port' | 'username' | 'password' | 'database'
-
 export interface MysqlRuntimeOptions {
     configKey: string
     entities: NonNullable<TypeOrmModuleOptions['entities']>
-    environmentPrefix?: string
-    environmentOverrides?: readonly MysqlEnvironmentField[]
     decimalNumbers?: boolean
 }
 
@@ -35,45 +30,30 @@ export function createMysqlOptions(configService: ConfigService, options: MysqlR
         throw new Error(`缺少 Nacos 数据库配置节点：${options.configKey}`)
     }
     const config = configured as MysqlConfigRecord
-    const environmentFields = new Set(options.environmentOverrides ?? [])
-    const environment = (field: MysqlEnvironmentField): string | undefined => {
-        if (!options.environmentPrefix || !environmentFields.has(field)) {
-            return undefined
-        }
-        const key = `${options.environmentPrefix}_${field.toUpperCase()}`
-        const value = configService.get<string | number>(key)
-        if (value === undefined || value === null || value === '') {
-            return undefined
-        }
-        const normalized = String(value).trim()
-        if (!normalized) {
-            throw new Error(`环境变量 ${key} 必须是非空字符串`)
-        }
-        return normalized
-    }
-
-    const database = environment('database') ?? getDatabaseName(config, options.configKey)
-    const portOverride = environment('port')
-    const port = portOverride === undefined ? getInteger(config, 'port', 3306, 1, 65_535, options.configKey) : Number(portOverride)
-    if (!Number.isInteger(port) || port < 1 || port > 65_535) {
-        throw new Error(`环境变量 ${options.environmentPrefix}_PORT 必须是 1-65535 之间的整数`)
-    }
+    const database = getRequiredString(config, 'database', options.configKey)
+    const charset = getOptionalString(config, 'charset', options.configKey)
+    const timezone = getOptionalString(config, 'timezone', options.configKey)
+    const logging = getOptionalBoolean(config, 'logging', options.configKey)
+    const poolSize = getOptionalInteger(config, 'poolSize', 1, 1000, options.configKey)
+    const connectTimeout = getOptionalInteger(config, 'connectTimeout', 1, Number.MAX_SAFE_INTEGER, options.configKey)
+    const retryAttempts = getOptionalInteger(config, 'retryAttempts', 0, 100, options.configKey)
+    const retryDelay = getOptionalInteger(config, 'retryDelay', 0, Number.MAX_SAFE_INTEGER, options.configKey)
 
     return {
         type: 'mysql',
         connectorPackage: 'mysql2',
-        host: environment('host') ?? getRequiredString(config, 'host', options.configKey),
-        port,
-        username: environment('username') ?? getRequiredString(config, 'username', options.configKey),
-        password: environment('password') ?? getRequiredString(config, 'password', options.configKey),
+        host: getRequiredString(config, 'host', options.configKey),
+        port: getInteger(config, 'port', 1, 65_535, options.configKey),
+        username: getRequiredString(config, 'username', options.configKey),
+        password: getRequiredString(config, 'password', options.configKey, true),
         database,
-        charset: getOptionalString(config, 'charset', 'utf8mb4', options.configKey),
-        timezone: getOptionalString(config, 'timezone', '+08:00', options.configKey),
-        logging: getBoolean(config, 'logging', false, options.configKey),
-        poolSize: getInteger(config, 'poolSize', 10, 1, 1000, options.configKey),
-        connectTimeout: getInteger(config, 'connectTimeout', 10_000, 1, Number.MAX_SAFE_INTEGER, options.configKey),
-        retryAttempts: getInteger(config, 'retryAttempts', 5, 0, 100, options.configKey),
-        retryDelay: getInteger(config, 'retryDelay', 3000, 0, Number.MAX_SAFE_INTEGER, options.configKey),
+        ...(charset === undefined ? {} : { charset }),
+        ...(timezone === undefined ? {} : { timezone }),
+        ...(logging === undefined ? {} : { logging }),
+        ...(poolSize === undefined ? {} : { poolSize }),
+        ...(connectTimeout === undefined ? {} : { connectTimeout }),
+        ...(retryAttempts === undefined ? {} : { retryAttempts }),
+        ...(retryDelay === undefined ? {} : { retryDelay }),
         supportBigNumbers: true,
         bigNumberStrings: true,
         ...(options.decimalNumbers ? { extra: { decimalNumbers: true } } : {}),
@@ -83,47 +63,47 @@ export function createMysqlOptions(configService: ConfigService, options: MysqlR
     }
 }
 
-function getRequiredString(config: MysqlConfigRecord, key: keyof MysqlConfig, configKey: string): string {
+function getRequiredString(config: MysqlConfigRecord, key: keyof MysqlConfig, configKey: string, allowEmpty = false): string {
     const value = config[key]
-    if (typeof value !== 'string' || !value.trim()) {
-        throw new Error(`数据库配置 ${configKey}.${key} 必须是非空字符串`)
+    if (typeof value !== 'string' || (!allowEmpty && !value.trim())) {
+        throw new Error(`数据库配置 ${configKey}.${key} 必须是${allowEmpty ? '字符串' : '非空字符串'}`)
     }
-    return value.trim()
+    return allowEmpty ? value : value.trim()
 }
 
-function getOptionalString(config: MysqlConfigRecord, key: keyof MysqlConfig, fallback: string, configKey: string): string {
+function getOptionalString(config: MysqlConfigRecord, key: keyof MysqlConfig, configKey: string): string | undefined {
     const value = config[key]
-    return value === undefined || value === null || value === '' ? fallback : getRequiredString(config, key, configKey)
+    if (value === undefined || value === null || value === '') return undefined
+    return getRequiredString(config, key, configKey)
 }
 
-function getDatabaseName(config: MysqlConfigRecord, configKey: string): string {
-    const value = config.database ?? config.name
-    if (typeof value !== 'string' || !value.trim()) {
-        throw new Error(`数据库配置 ${configKey}.database 或 name 必须是非空字符串`)
-    }
-    return value.trim()
-}
-
-function getInteger(
-    config: MysqlConfigRecord,
-    key: keyof MysqlConfig,
-    fallback: number,
-    minimum: number,
-    maximum: number,
-    configKey: string
-): number {
+function getInteger(config: MysqlConfigRecord, key: keyof MysqlConfig, minimum: number, maximum: number, configKey: string): number {
     const configured = config[key]
-    const value = configured === undefined || configured === null || configured === '' ? fallback : Number(configured)
+    if (configured === undefined || configured === null || configured === '') {
+        throw new Error(`数据库配置 ${configKey}.${key} 必须配置`)
+    }
+    const value = Number(configured)
     if (!Number.isInteger(value) || value < minimum || value > maximum) {
         throw new Error(`数据库配置 ${configKey}.${key} 必须是 ${minimum}-${maximum} 之间的整数`)
     }
     return value
 }
 
-function getBoolean(config: MysqlConfigRecord, key: keyof MysqlConfig, fallback: boolean, configKey: string): boolean {
+function getOptionalInteger(
+    config: MysqlConfigRecord,
+    key: keyof MysqlConfig,
+    minimum: number,
+    maximum: number,
+    configKey: string
+): number | undefined {
+    const value = config[key]
+    return value === undefined || value === null || value === '' ? undefined : getInteger(config, key, minimum, maximum, configKey)
+}
+
+function getOptionalBoolean(config: MysqlConfigRecord, key: keyof MysqlConfig, configKey: string): boolean | undefined {
     const value = config[key]
     if (value === undefined || value === null || value === '') {
-        return fallback
+        return undefined
     }
     if (typeof value === 'boolean') {
         return value

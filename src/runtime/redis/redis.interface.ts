@@ -1,20 +1,18 @@
 /** Redis 客户端从 Nacos `redis` 节点读取的配置。 */
 export interface RedisConfig {
-    /** Redis 连接 URL；配置后优先于 host/port。 */
-    url?: string
-    /** Redis 服务地址，默认 `chat-web-redis`。 */
-    host?: string
-    /** Redis 服务端口，默认 `6379`。 */
-    port?: number | string
+    /** Redis 服务地址。 */
+    host: string
+    /** Redis 服务端口。 */
+    port: number | string
     /** Redis 逻辑数据库编号。服务必须使用自己的固定编号。 */
-    database?: number | string
+    database: number | string
     /** Redis 用户名，可选。 */
     username?: string
     /** Redis 密码，可选。 */
     password?: string
-    /** 是否使用 TLS，默认 `false`。 */
+    /** 是否使用 TLS；未配置时使用普通 Redis 连接。 */
     tls?: boolean | string
-    /** 建立连接的超时时间，单位毫秒，默认 `5000`。 */
+    /** 建立连接的超时时间，单位毫秒；未配置时使用 Redis 客户端行为。 */
     connectTimeoutMs?: number | string
 }
 

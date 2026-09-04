@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable, OnApplicationBootstrap, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { AccessTokenClaims } from './auth.interface'
 
@@ -9,8 +9,15 @@ type JwtHeader = {
 }
 
 @Injectable()
-export class TokenService {
+export class TokenService implements OnApplicationBootstrap {
     constructor(private readonly configService: ConfigService) {}
+
+    onApplicationBootstrap(): void {
+        this.getSecret()
+        this.getIssuer()
+        this.getAudience()
+        this.getTtlSeconds()
+    }
 
     issueAccessToken(userUid: string): { accessToken: string; tokenType: 'Bearer'; expiresIn: number; claims: AccessTokenClaims } {
         const now = Math.floor(Date.now() / 1000)
@@ -90,25 +97,37 @@ export class TokenService {
     }
 
     private getSecret(): string {
-        const secret = this.configService.get<string>('JWT_SECRET') || this.configService.get<string>('security.jwt.secret')
+        const secret = this.configService.get<unknown>('security.jwt.secret')
         if (typeof secret !== 'string' || secret.length < 32) {
-            throw new Error('JWT 密钥 security.jwt.secret 或 JWT_SECRET 必须至少32位')
+            throw new Error('Nacos 配置 security.jwt.secret 必须至少32位')
         }
         return secret
     }
 
     private getIssuer(): string {
-        return this.configService.get<string>('security.jwt.issuer')?.trim() || 'chat-web-account-service'
+        const issuer = this.configService.get<unknown>('security.jwt.issuer')
+        if (typeof issuer !== 'string' || !issuer.trim()) {
+            throw new Error('Nacos 配置 security.jwt.issuer 必须是非空字符串')
+        }
+        return issuer.trim()
     }
 
     private getAudience(): string {
-        return this.configService.get<string>('security.jwt.audience')?.trim() || 'chat-web'
+        const audience = this.configService.get<unknown>('security.jwt.audience')
+        if (typeof audience !== 'string' || !audience.trim()) {
+            throw new Error('Nacos 配置 security.jwt.audience 必须是非空字符串')
+        }
+        return audience.trim()
     }
 
     private getTtlSeconds(): number {
-        const value = Number(this.configService.get<number | string>('security.jwt.accessTokenTtlSeconds', 3600))
+        const configured = this.configService.get<unknown>('security.jwt.accessTokenTtlSeconds')
+        if (configured === undefined || configured === null || configured === '') {
+            throw new Error('Nacos 配置 security.jwt.accessTokenTtlSeconds 必须配置')
+        }
+        const value = Number(configured)
         if (!Number.isInteger(value) || value < 60 || value > 86_400) {
-            throw new Error('security.jwt.accessTokenTtlSeconds 必须是60-86400之间的整数')
+            throw new Error('Nacos 配置 security.jwt.accessTokenTtlSeconds 必须是60-86400之间的整数')
         }
         return value
     }

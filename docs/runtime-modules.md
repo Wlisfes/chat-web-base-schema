@@ -154,6 +154,25 @@ Every declared Feign URL and timeout is required in the service's Nacos `feign`
 node. Environment-style `*_SERVICE_URL` and `*_TIMEOUT_MS` keys are not read,
 and the shared clients do not provide fallback addresses or timeouts.
 
+The same client declaration can be used as the owning service's Controller contract.
+`@FeignGet`/`@FeignPost` and the parameter decorators also apply the Nest route metadata,
+so a server only inherits the client and supplies an implementation in its constructor;
+it does not repeat route, header, query or Swagger decorators:
+
+```ts
+@ApifoxController('内部 Feign 接口')
+export class FeignController extends FeignClientAccount {
+    constructor(implementation: AccountFeignImplementation) {
+        super(implementation)
+    }
+}
+```
+
+`FeignClientBase` performs the small delegation needed by an inherited server method.
+`FeignModule.register` remains the caller-side proxy factory; it is not required by the
+owning Controller. This keeps the shared client declaration as the single source of truth
+for both HTTP callers and server routes.
+
 ## Readable logging and trace correlation
 
 Use the shared readable logger during Nest application creation. Local request

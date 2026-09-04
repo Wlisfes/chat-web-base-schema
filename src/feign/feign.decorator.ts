@@ -1,3 +1,8 @@
+import { Body, Get, Headers, Post, Query, applyDecorators } from '@nestjs/common'
+import { Public } from '../runtime/auth/auth.decorator'
+import { ApiServiceDecorator } from '../decorator/api-service.decorator'
+import { PreserveHttpStatus } from '../filters/modules/preserve-http-status.decorator'
+import type { ApiServiceDecoratorOptions } from '../decorator/api-service.decorator'
 import type * as FeignTypes from './feign.interface'
 
 /** 按客户端构造函数保存服务级配置，使用 WeakMap 避免影响客户端生命周期。 */
@@ -20,12 +25,18 @@ function methodDefinition(target: object, propertyKey: string | symbol): FeignTy
     return definition
 }
 
-/** 为方法记录 HTTP 方法和服务端相对路径。 */
-function request(method: FeignTypes.FeignHttpMethod, path: string): MethodDecorator {
-    return (target, propertyKey) => {
+/** 记录 HTTP 方法和服务端相对路径，并将同一声明同步为 Nest 路由。 */
+function request(method: FeignTypes.FeignHttpMethod, path: string, api?: ApiServiceDecoratorOptions): MethodDecorator {
+    return (target, propertyKey, descriptor) => {
         const definition = methodDefinition(target, propertyKey)
         definition.method = method
         definition.path = path
+
+        // Feign 方法声明本身也是服务端路由声明。客户端代理不会读取这些 Nest 元数据，
+        // 但 Controller 继承客户端后可以直接复用路由、公开访问和统一响应处理规则。
+        const route = method === 'GET' ? Get(path) : Post(path)
+        const serverDecorator = api ? ApiServiceDecorator(route, api) : route
+        applyDecorators(Public(), PreserveHttpStatus(), serverDecorator)(target, propertyKey, descriptor)
     }
 }
 
@@ -36,6 +47,11 @@ function parameter(kind: FeignTypes.FeignParameterKind, name?: string): Paramete
         const definition = methodDefinition(target, propertyKey)
         definition.parameters = definition.parameters.filter(item => item.index !== parameterIndex)
         definition.parameters.push({ index: parameterIndex, kind, name })
+
+        // 同一份参数绑定同时服务于 Feign 客户端请求组装和 Nest Controller 入参注入。
+        if (kind === 'header') Headers(name)(target, propertyKey, parameterIndex)
+        if (kind === 'query') (name ? Query(name) : Query())(target, propertyKey, parameterIndex)
+        if (kind === 'body') Body()(target, propertyKey, parameterIndex)
     }
 }
 
@@ -47,13 +63,27 @@ export function FeignClient(options: FeignTypes.FeignClientOptions): ClassDecora
 }
 
 /** 将方法声明为 GET 请求。 */
-export function FeignGet(path: string): MethodDecorator {
-    return request('GET', path)
+export function FeignGet(path: string, api?: ApiServiceDecoratorOptions): MethodDecorator {
+    return request('GET', path, withDefaultBearerAuth(api))
 }
 
 /** 将方法声明为 POST 请求。 */
-export function FeignPost(path: string): MethodDecorator {
-    return request('POST', path)
+export function FeignPost(path: string, api?: ApiServiceDecoratorOptions): MethodDecorator {
+    return request('POST', path, withDefaultBearerAuth(api))
+}
+
+/**
+ * Feign 接口默认需要携带 Bearer Token。
+ *
+ * 这里只对 FeignGet/FeignPost 生效，不改变普通 ApiServiceDecorator 的默认行为；
+ * 调用方仍可显式传入 bearerAuth: false 标记公开的 Feign 接口。
+ */
+function withDefaultBearerAuth(api?: ApiServiceDecoratorOptions): ApiServiceDecoratorOptions | undefined {
+    if (!api) return undefined
+    return {
+        ...api,
+        bearerAuth: api.bearerAuth ?? true
+    }
 }
 
 /** 将方法参数绑定到 URL 查询字符串。 */

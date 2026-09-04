@@ -1,6 +1,7 @@
 /** Feign 公共运行时、装饰器、模块和各服务客户端统一导出入口。 */
 export * from './feign.constants'
 export * from './feign.interface'
+export * from './feign.client'
 export * from './feign.decorator'
 export * from './feign.service'
 export * from './feign.module'

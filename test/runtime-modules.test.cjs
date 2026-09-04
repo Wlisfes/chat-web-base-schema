@@ -1,10 +1,11 @@
 const assert = require('node:assert/strict')
 const test = require('node:test')
 
-const { BadGatewayException, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
+const { BadGatewayException, RequestMethod, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
 const { AuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const { FeignClientAccount, FeignClientFactory, FeignClientFinance } = require('../dist/src/feign')
+const { PATH_METADATA, METHOD_METADATA, ROUTE_ARGS_METADATA } = require('@nestjs/common/constants')
 const { forRootNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
 const { REDIS_RUNTIME_OPTIONS, RedisModule, RedisService } = require('../dist/src/runtime/redis')
 const { runWithRequestContext } = require('../dist/src/utils/modules/request-context')
@@ -224,6 +225,21 @@ test('shared Feign account auth client forwards the bearer token and returns the
     assert.equal(String(request.url), 'http://account.internal:3000/auth/token/introspect')
     assert.equal(request.init.method, 'GET')
     assert.equal(request.init.headers.get('authorization'), 'Bearer account-token')
+})
+
+test('shared Feign client can be inherited directly as a server route', async () => {
+    class AccountFeignController extends FeignClientAccount {}
+    const controller = new AccountFeignController({
+        async introspect(authorization) {
+            return { authorization }
+        }
+    })
+    const method = AccountFeignController.prototype.introspect
+    assert.equal(Reflect.getMetadata(PATH_METADATA, method), '/auth/token/introspect')
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, method), RequestMethod.GET)
+    assert.equal(Reflect.getMetadata('auth:is-public', method), true)
+    assert.equal(Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'introspect')['6:0'].data, 'authorization')
+    assert.deepEqual(await controller.introspect('Bearer account-token'), { authorization: 'Bearer account-token' })
 })
 
 test('shared account auth client preserves rejected-token semantics', async () => {

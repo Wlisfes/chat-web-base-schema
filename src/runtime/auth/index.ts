@@ -1,4 +1,5 @@
 export * from './auth.interface'
+export * from './auth.dto'
 export * from './auth.decorator'
 export * from './auth.client'
 export * from './auth.module'

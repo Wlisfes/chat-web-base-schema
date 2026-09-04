@@ -1,3 +1,12 @@
+/** 财务服务 Feign 服务端实现必须满足的接口。 */
+export interface FinanceFeignImplementation {
+    /**批量同步指定日期的币种汇率**/
+    httpSyncCurrencyExchange(
+        authorization: string,
+        _input: FinanceCurrencyExchangeSyncRequest
+    ): Promise<FinanceCurrencyExchangeSyncResponse>
+}
+
 /**财务服务短信基础价格数据，供 CRM 报价流程使用。*/
 export interface FinanceSmsRate {
     /**国家/地区主键。*/

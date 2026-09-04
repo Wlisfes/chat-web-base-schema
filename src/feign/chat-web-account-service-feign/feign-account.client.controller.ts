@@ -1,19 +1,20 @@
 import { FeignClient, FeignGet, FeignHeader } from '../feign.decorator'
+import { ConfigService } from '@nestjs/config'
 import { AuthPrincipalResponseDto } from '@/runtime/auth/auth.dto'
 import { FeignWebClient } from '../feign.web.client'
-import type { AccountFeignServiceImplementation } from './feign-account.interface'
+import type * as AccountTypes from './feign-account.interface'
 import type * as AuthTypes from '@/runtime/auth/auth.interface'
 
-/** 账号服务 Feign 客户端，统一封装跨服务鉴权调用。 */
 @FeignClient({
     name: '账号服务',
+    prefix: 'feign',
+    serviceTokenKey: 'feign.service_token',
     baseUrlConfigKey: 'feign.chat-web-account.url',
     timeoutConfigKey: 'feign.chat-web-account.timeout'
 })
-export class FeignClientAccountManager extends FeignWebClient<AccountFeignServiceImplementation> {
-    /** 调用端由 FeignModule 创建代理；服务端 Controller 可传入 FeignService 复用同一组路由元数据。 */
-    constructor(implementation?: AccountFeignServiceImplementation) {
-        super(implementation)
+export class FeignClientAccountManager extends FeignWebClient<AccountTypes.FeignClientAccountImplementation> {
+    constructor(service?: AccountTypes.FeignClientAccountImplementation, configService?: ConfigService) {
+        super(service, configService)
     }
 
     @FeignGet('/auth/token/introspect', {

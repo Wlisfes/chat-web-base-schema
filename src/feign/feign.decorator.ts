@@ -1,4 +1,5 @@
 import { Body, Get, Headers, Post, Query, applyDecorators } from '@nestjs/common'
+import { PATH_METADATA } from '@nestjs/common/constants'
 import { Public } from '../runtime/auth/auth.decorator'
 import { ApiServiceDecorator } from '../decorator/api-service.decorator'
 import { PreserveHttpStatus } from '../filters/modules/preserve-http-status.decorator'
@@ -55,11 +56,36 @@ function parameter(kind: FeignTypes.FeignParameterKind, name?: string): Paramete
     }
 }
 
-/** 声明 Feign 客户端的服务名称、地址配置键和超时配置。 */
+/** 声明 Feign 客户端的服务名称、路径前缀、地址配置键和超时配置。 */
 export function FeignClient(options: FeignTypes.FeignClientOptions): ClassDecorator {
     return target => {
-        clientDefinitions.set(target, { ...options })
+        const prefix = normalizeClientPrefix(options.prefix, target.name)
+        const definitions = methodDefinitions.get(target.prototype)
+        if (prefix && definitions) {
+            for (const [propertyKey, definition] of definitions) {
+                if (!definition.path.startsWith('/')) {
+                    throw new Error(`Feign 接口 ${target.name}.${String(propertyKey)} 的路径必须以 / 开头`)
+                }
+                const descriptor = Object.getOwnPropertyDescriptor(target.prototype, propertyKey)
+                if (!descriptor?.value) throw new Error(`Feign 接口 ${target.name}.${String(propertyKey)} 缺少方法定义`)
+                if (definition.path !== prefix && !definition.path.startsWith(`${prefix}/`)) definition.path = `${prefix}${definition.path}`
+                // 方法装饰器已经写入了 Nest 的其他路由和 Swagger 元数据，这里只覆盖路径元数据，
+                // 避免重新应用路由装饰器时丢失接口文档定义。
+                Reflect.defineMetadata(PATH_METADATA, definition.path, descriptor.value)
+            }
+        }
+        clientDefinitions.set(target, { ...options, prefix: prefix || undefined })
     }
+}
+
+/** 校验并规范化 Feign 客户端的公共路径前缀。 */
+function normalizeClientPrefix(prefix: string | undefined, clientName: string): string {
+    if (prefix === undefined) return ''
+    const normalized = prefix.trim()
+    if (!normalized) throw new Error(`Feign 客户端 ${clientName} 的路径前缀不能为空`)
+    const withSlash = normalized.startsWith('/') ? normalized : `/${normalized}`
+    if (withSlash.includes('?') || withSlash.includes('#')) throw new Error(`Feign 客户端 ${clientName} 的路径前缀不能包含查询参数或锚点`)
+    return withSlash === '/' ? '' : withSlash.replace(/\/+$/, '')
 }
 
 /** 将方法声明为 GET 请求。 */
@@ -105,7 +131,13 @@ export function FeignHeader(name: string): ParameterDecorator {
 export function getFeignClientOptions<TClient extends object>(
     client: FeignTypes.FeignClientConstructor<TClient>
 ): FeignTypes.FeignClientOptions | undefined {
-    return clientDefinitions.get(client)
+    let current: Function | undefined = client
+    while (current && current !== Function.prototype) {
+        const options = clientDefinitions.get(current)
+        if (options) return options
+        current = Object.getPrototypeOf(current)
+    }
+    return undefined
 }
 
 /** 获取客户端所有方法的 Feign 元数据定义。 */

@@ -1,10 +1,10 @@
 import { BadGatewayException, Injectable } from '@nestjs/common'
-import { FeignClientAccount } from '@/feign/chat-web-account-service-feign/feign-account.client'
+import { FeignClientAccountManager } from '@/feign/chat-web-account-service-feign/feign-account.client.controller'
 import type { AuthPrincipal, AuthTokenAuthenticator } from './auth.interface'
 
 @Injectable()
 export class AuthClient implements AuthTokenAuthenticator {
-    constructor(private readonly accountFeignClient: FeignClientAccount) {}
+    constructor(private readonly accountFeignClient: FeignClientAccountManager) {}
 
     async authenticateToken(token: string): Promise<AuthPrincipal> {
         const principal = await this.accountFeignClient.introspect(`Bearer ${token}`)

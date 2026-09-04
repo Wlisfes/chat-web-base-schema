@@ -1,4 +1,5 @@
 import { FeignClient, FeignGet, FeignHeader } from '../feign.decorator'
+import { ConfigService } from '@nestjs/config'
 import { AuthPrincipalResponseDto } from '@/runtime/auth/auth.dto'
 import { FeignWebClient } from '../feign.web.client'
 import type * as AccountTypes from './feign-account.interface'
@@ -7,12 +8,13 @@ import type * as AuthTypes from '@/runtime/auth/auth.interface'
 @FeignClient({
     name: '账号服务',
     prefix: 'feign',
+    serviceTokenKey: 'feign.service_token',
     baseUrlConfigKey: 'feign.chat-web-account.url',
     timeoutConfigKey: 'feign.chat-web-account.timeout'
 })
 export class FeignClientAccountManager extends FeignWebClient<AccountTypes.FeignClientAccountImplementation> {
-    constructor(service?: AccountTypes.FeignClientAccountImplementation) {
-        super(service)
+    constructor(service?: AccountTypes.FeignClientAccountImplementation, configService?: ConfigService) {
+        super(service, configService)
     }
 
     @FeignGet('/auth/token/introspect', {

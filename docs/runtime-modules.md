@@ -134,6 +134,7 @@ Cross-service HTTP calls use the shared declarative Feign runtime. A client clas
 @FeignClient({
     name: '账号服务',
     prefix: 'feign',
+    serviceTokenKey: 'feign.service_token',
     baseUrlConfigKey: 'feign.chat-web-account.url',
     timeoutConfigKey: 'feign.chat-web-account.timeout'
 })
@@ -164,9 +165,9 @@ it does not repeat route, header, query or Swagger decorators:
 
 ```ts
 @ApifoxController('内部 Feign 接口')
-export class FeignController extends FeignClientAccount {
-    constructor(implementation: AccountFeignImplementation) {
-        super(implementation)
+export class FeignController extends FeignClientAccountManager {
+    constructor(implementation: FeignClientAccountImplementation, configService: ConfigService) {
+        super(implementation, configService)
     }
 }
 ```

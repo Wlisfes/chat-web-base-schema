@@ -13,6 +13,8 @@ export interface FeignClientOptions {
     name: string
     /** 所有接口共用的路径前缀，例如 `feign` 或 `/feign`。 */
     prefix?: string
+    /** 服务令牌对应的 ConfigService 配置键。 */
+    serviceTokenKey: string
     /** 服务地址对应的 ConfigService 配置键。 */
     baseUrlConfigKey: string
     /** 请求超时对应的 ConfigService 配置键。 */

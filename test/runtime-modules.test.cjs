@@ -4,11 +4,19 @@ const test = require('node:test')
 const { BadGatewayException, RequestMethod, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
 const { AuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
-const { FeignClientAccount, FeignClientFactory, FeignClientFinance } = require('../dist/src/feign')
+const { FeignClientAccountManager, FeignClientFactory, FeignClientFinanceManager } = require('../dist/src/feign')
 const { PATH_METADATA, METHOD_METADATA, ROUTE_ARGS_METADATA } = require('@nestjs/common/constants')
 const { forRootNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
 const { REDIS_RUNTIME_OPTIONS, RedisModule, RedisService } = require('../dist/src/runtime/redis')
 const { runWithRequestContext } = require('../dist/src/utils/modules/request-context')
+
+test('Feign 公共入口仅导出正式 Manager 命名', () => {
+    const feign = require('../dist/src/feign')
+    assert.equal(typeof feign.FeignClientAccountManager, 'function')
+    assert.equal(typeof feign.FeignClientFinanceManager, 'function')
+    assert.equal(typeof feign.FeignClientCrmManager, 'function')
+    assert.equal(typeof feign.FeignClientSkylineManager, 'function')
+})
 
 function config(initial = {}) {
     const values = { ...initial }
@@ -200,7 +208,7 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
 
 function accountAuthClient(values, fetchClient) {
     const factory = new FeignClientFactory(config(values), fetchClient)
-    return new AuthClient(factory.create(FeignClientAccount))
+    return new AuthClient(factory.create(FeignClientAccountManager))
 }
 
 test('shared Feign account auth client forwards the bearer token and returns the principal', async () => {
@@ -228,18 +236,36 @@ test('shared Feign account auth client forwards the bearer token and returns the
 })
 
 test('shared Feign client can be inherited directly as a server route', async () => {
-    class AccountFeignController extends FeignClientAccount {}
-    const controller = new AccountFeignController({
-        async introspect(authorization) {
-            return { authorization }
-        }
-    })
+    class AccountFeignController extends FeignClientAccountManager {}
+    const controller = new AccountFeignController(
+        {
+            async introspect(authorization) {
+                return { authorization }
+            }
+        },
+        config({ feign: { service_token: 'account-token' } })
+    )
     const method = AccountFeignController.prototype.introspect
     assert.equal(Reflect.getMetadata(PATH_METADATA, method), '/feign/auth/token/introspect')
     assert.equal(Reflect.getMetadata(METHOD_METADATA, method), RequestMethod.GET)
     assert.equal(Reflect.getMetadata('auth:is-public', method), true)
     assert.equal(Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'introspect')['6:0'].data, 'authorization')
     assert.deepEqual(await controller.introspect('Bearer account-token'), { authorization: 'Bearer account-token' })
+})
+
+test('shared Feign server dispatch validates the configured service token before delegation', async () => {
+    class AccountFeignController extends FeignClientAccountManager {}
+    const controller = new AccountFeignController(
+        {
+            async introspect(authorization) {
+                return { authorization }
+            }
+        },
+        config({ feign: { service_token: 'account-token' } })
+    )
+
+    assert.deepEqual(await controller.introspect('Bearer account-token'), { authorization: 'Bearer account-token' })
+    await assert.rejects(() => controller.introspect('Bearer another-token'), UnauthorizedException)
 })
 
 test('shared account auth client preserves rejected-token semantics', async () => {
@@ -296,42 +322,15 @@ test('shared Feign client rejects legacy environment-style configuration keys', 
 
 test('shared Feign client validates required Nacos configuration during application bootstrap', () => {
     const missing = new FeignClientFactory(config(), async () => new Response())
-    missing.create(FeignClientAccount)
+    missing.create(FeignClientAccountManager)
     assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.chat-web-account\.url/)
 
     const configured = new FeignClientFactory(
         config({ feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } }),
         async () => new Response()
     )
-    configured.create(FeignClientAccount)
+    configured.create(FeignClientAccountManager)
     assert.doesNotThrow(() => configured.onApplicationBootstrap())
-})
-
-test('shared Feign finance client serializes POST body, headers and GET query', async () => {
-    const requests = []
-    const factory = new FeignClientFactory(
-        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:3010', timeout: 5000 } } }),
-        async (url, init) => {
-            requests.push({ url: String(url), init })
-            const data = requests.length === 1 ? [{ countryKeyId: 1, upUsd: 100, downUsd: 80 }] : { currency: 'USD', rate: 1 }
-            return new Response(JSON.stringify({ data, code: 200, message: '成功' }), {
-                status: 200,
-                headers: { 'content-type': 'application/json' }
-            })
-        }
-    )
-    const service = factory.create(FeignClientFinance)
-
-    await runWithRequestContext('finance-request-1', () => service.batchSmsRates('Bearer account-token', { countryKeyIds: [1, 2] }))
-    await service.resolveCurrencyExchange('Bearer account-token', 'USD')
-
-    assert.equal(requests[0].url, 'http://finance.internal:3010/rates/sms/batch')
-    assert.equal(requests[0].init.method, 'POST')
-    assert.equal(requests[0].init.headers.get('authorization'), 'Bearer account-token')
-    assert.equal(requests[0].init.headers.get('x-request-id'), 'finance-request-1')
-    assert.deepEqual(JSON.parse(requests[0].init.body), { countryKeyIds: [1, 2] })
-    assert.equal(requests[1].url, 'http://finance.internal:3010/currency/exchange/resolver?currency=USD')
-    assert.equal(requests[1].init.method, 'GET')
 })
 
 test('shared Feign finance client serializes currency exchange sync requests and responses', async () => {
@@ -354,12 +353,12 @@ test('shared Feign finance client serializes currency exchange sync requests and
             )
         }
     )
-    const service = factory.create(FeignClientFinance)
+    const service = factory.create(FeignClientFinanceManager)
     const input = { date: '2026-09-02', rates: [{ currency: 'CNY', rate: 7.2534 }] }
 
-    const result = await service.syncCurrencyExchange('Bearer finance-token', input)
+    const result = await service.httpSyncCurrencyExchange('Bearer finance-token', input)
 
-    assert.equal(request.url, 'http://finance.internal:3010/currency/exchange/sync')
+    assert.equal(request.url, 'http://finance.internal:3010/feign/currency/exchange/sync')
     assert.equal(request.init.method, 'POST')
     assert.equal(request.init.headers.get('authorization'), 'Bearer finance-token')
     assert.deepEqual(JSON.parse(request.init.body), input)

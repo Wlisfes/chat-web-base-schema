@@ -131,7 +131,13 @@ export function FeignHeader(name: string): ParameterDecorator {
 export function getFeignClientOptions<TClient extends object>(
     client: FeignTypes.FeignClientConstructor<TClient>
 ): FeignTypes.FeignClientOptions | undefined {
-    return clientDefinitions.get(client)
+    let current: Function | undefined = client
+    while (current && current !== Function.prototype) {
+        const options = clientDefinitions.get(current)
+        if (options) return options
+        current = Object.getPrototypeOf(current)
+    }
+    return undefined
 }
 
 /** 获取客户端所有方法的 Feign 元数据定义。 */

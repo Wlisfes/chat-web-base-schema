@@ -1,10 +1,11 @@
-import { FeignBody, FeignClient, FeignGet, FeignHeader, FeignPost, FeignQuery } from '../feign.decorator'
+import { FeignClient, FeignHeader, FeignPost, FeignBody } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
 import type * as CrmTypes from './feign-skyline.interface'
 
 @FeignClient({
     name: 'Skyline 服务',
     prefix: 'feign',
+    serviceTokenKey: 'feign.service_token',
     baseUrlConfigKey: 'feign.chat-web-skyline.url',
     timeoutConfigKey: 'feign.chat-web-skyline.timeout'
 })

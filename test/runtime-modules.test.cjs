@@ -16,8 +16,10 @@ const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/sr
 const {
     FeignClient,
     FeignClientAccountManager,
+    FeignClientCrmManager,
     FeignClientFactory,
     FeignClientFinanceManager,
+    FeignClientSkylineManager,
     FeignWebClient,
     getFeignClientOptions,
     resolveFeignServiceAuthorization
@@ -310,16 +312,15 @@ test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorizati
     assert.throws(() => resolveFeignServiceAuthorization(config()), ServiceUnavailableException)
 })
 
-test('业务 Feign 客户端按目标服务读取 Nacos 地址并在启动时校验配置', () => {
+test('业务 Feign 客户端统一读取 Gateway 地址并在启动时校验配置', () => {
     const missing = new FeignClientFactory(config(), async () => new Response())
     missing.create(FeignClientAccountManager)
-    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.chat-web-account\.url/)
+    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.gateway\.url/)
 
     const configured = new FeignClientFactory(
         config({
             feign: {
-                'chat-web-account': { url: 'http://account.internal:5010', timeout: 3000 },
-                'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 3000 }
+                gateway: { url: 'http://gateway.internal:5000', timeout: 3000 }
             }
         }),
         async () => new Response()
@@ -327,14 +328,16 @@ test('业务 Feign 客户端按目标服务读取 Nacos 地址并在启动时校
     configured.create(FeignClientAccountManager)
     configured.create(FeignClientFinanceManager)
     assert.doesNotThrow(() => configured.onApplicationBootstrap())
-    assert.equal(getFeignClientOptions(FeignClientAccountManager).baseUrlConfigKey, 'feign.chat-web-account.url')
-    assert.equal(getFeignClientOptions(FeignClientFinanceManager).baseUrlConfigKey, 'feign.chat-web-finance.url')
+    assert.equal(getFeignClientOptions(FeignClientAccountManager).baseUrlConfigKey, 'feign.gateway.url')
+    assert.equal(getFeignClientOptions(FeignClientFinanceManager).baseUrlConfigKey, 'feign.gateway.url')
+    assert.equal(getFeignClientOptions(FeignClientCrmManager).baseUrlConfigKey, 'feign.gateway.url')
+    assert.equal(getFeignClientOptions(FeignClientSkylineManager).baseUrlConfigKey, 'feign.gateway.url')
 })
 
 test('shared Feign finance client serializes currency exchange sync requests and responses', async () => {
     let request
     const factory = new FeignClientFactory(
-        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 5000 } } }),
+        config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
         async (url, init) => {
             request = { url: String(url), init }
             return new Response(
@@ -356,8 +359,8 @@ test('shared Feign finance client serializes currency exchange sync requests and
 
     const result = await service.syncCurrencyExchange('Bearer finance-token', input)
 
-    // 客户端直接使用 Finance 服务地址，路径前缀仍由共享契约统一约束。
-    assert.equal(request.url, 'http://finance.internal:5030/feign/finance/currency/exchange/sync')
+    // 客户端只访问 Gateway，目标服务由 `/feign/finance` 路由前缀决定。
+    assert.equal(request.url, 'http://gateway.internal:5000/feign/finance/currency/exchange/sync')
     assert.equal(request.init.method, 'POST')
     assert.equal(request.init.headers.get('authorization'), 'Bearer finance-token')
     assert.deepEqual(JSON.parse(request.init.body), input)
@@ -371,7 +374,7 @@ test('shared Feign finance client serializes currency exchange sync requests and
 test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查询', async () => {
     const requests = []
     const factory = new FeignClientFactory(
-        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 5000 } } }),
+        config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
         async (url, init) => {
             requests.push({ url: String(url), method: init.method })
             return new Response(JSON.stringify({ data: [], code: 200, message: '成功' }), {
@@ -382,12 +385,12 @@ test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查�
     )
     const service = factory.create(FeignClientFinanceManager)
 
-    await service.batchSmsRates('Bearer user-token', { countryKeyIds: [1, 2] })
-    await service.resolveCurrencyExchange('Bearer user-token', 'CNY')
+    await service.batchSmsRates('Bearer service-token', { countryKeyIds: [1, 2] })
+    await service.resolveCurrencyExchange('Bearer service-token', 'CNY')
 
     assert.deepEqual(requests, [
-        { url: 'http://finance.internal:5030/feign/finance/rates/sms/batch', method: 'POST' },
-        { url: 'http://finance.internal:5030/feign/finance/currency/exchange/resolver?currency=CNY', method: 'GET' }
+        { url: 'http://gateway.internal:5000/feign/finance/rates/sms/batch', method: 'POST' },
+        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolver?currency=CNY', method: 'GET' }
     ])
 })
 

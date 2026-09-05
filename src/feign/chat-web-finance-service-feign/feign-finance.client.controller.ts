@@ -8,14 +8,15 @@ import type * as FinanceTypes from './feign-finance.interface'
  *
  * 价格与汇率属于跨服务基础参考数据，不做用户级数据隔离，因此统一使用服务间凭据调用；
  * 面向管理端的同名业务路由仍由 FinanceAuthGuard 校验终端用户令牌，两者互不影响。
- * 客户端地址和超时从 Nacos `feign.chat-web-finance.*` 读取。
+ * 所有客户端统一通过 Gateway 的 `/feign/**` 服务间入口转发；Gateway 再按
+ * `/feign/finance` 路由把请求交给财务服务。地址和超时只读取 Nacos `feign.gateway.*`。
  */
 @FeignClient({
     name: '财务服务',
     prefix: '/feign/finance',
     serviceTokenKey: 'feign.service_token',
-    baseUrlConfigKey: 'feign.chat-web-finance.url',
-    timeoutConfigKey: 'feign.chat-web-finance.timeout'
+    baseUrlConfigKey: 'feign.gateway.url',
+    timeoutConfigKey: 'feign.gateway.timeout'
 })
 export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.FinanceFeignImplementation> {
     constructor(service?: FinanceTypes.FinanceFeignImplementation, configService?: ConfigService) {

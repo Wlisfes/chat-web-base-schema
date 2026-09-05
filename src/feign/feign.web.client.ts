@@ -45,8 +45,8 @@ export abstract class FeignWebClient<TImplementation extends object> {
         const authorizationMatch = typeof authorization === 'string' ? authorization.match(/^Bearer\s+([^\s]+)$/i) : undefined
         if (!authorizationMatch) throw new UnauthorizedException('缺少有效的 Bearer 访问令牌')
 
-        // Account 内省接口接收的是待校验的用户访问令牌，不应与固定服务令牌比较；
-        // 只有明确声明 serviceTokenKey 的服务端 Feign 接口才执行服务间凭据校验。
+        // 只有明确声明 serviceTokenKey 的服务端 Feign 接口才执行服务间凭据校验；
+        // 用户令牌内省使用 Auth 独立内部协议，不属于业务 Feign 契约。
         if (!options.serviceTokenKey) return
         if (!this.configService) throw new Error(`${this.constructor.name} 未注入 ConfigService，无法校验服务间凭据`)
 

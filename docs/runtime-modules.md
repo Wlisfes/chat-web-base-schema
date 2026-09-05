@@ -108,25 +108,26 @@ session store and therefore requires the Redis client dependency. Business
 services import only the `auth` subpath, which has no session or Redis
 dependency at all.
 
-Business services must not hold the JWT secret or read the login session store.
-Import `AuthModule` to validate Bearer tokens through the auth service internal
-introspection protocol and attach the returned principal to the request.
+Business services must not hold the JWT secret, read the login session store or
+call token introspection themselves. Gateway validates the end-user Bearer token
+through the auth service once, signs the resulting principal and forwards it in
+`X-Gateway-Principal`. Business services only verify that signed context locally.
 
 ```ts
-import { AuthModule, JwtAuthGuard } from '@wlisfes/chat-web-base-schema/auth'
+import { GatewayPrincipalGuard, GatewayPrincipalModule } from '@wlisfes/chat-web-base-schema/auth'
 
 @Module({
-    imports: [AuthModule],
-    providers: [{ provide: APP_GUARD, useExisting: JwtAuthGuard }]
+    imports: [GatewayPrincipalModule],
+    providers: [{ provide: APP_GUARD, useExisting: GatewayPrincipalGuard }]
 })
 export class AppModule {}
 ```
 
-`AuthInternalClient` reads `feign.chat-web-auth.url`,
-`feign.chat-web-auth.timeout` and `feign.service_token` from Nacos. The user
-token travels in the request body and the caller identity travels in
-`X-Service-Token`, so authentication is never registered as a business Feign
-client and the internal route is never published through the gateway.
+Gateway calls `POST /internal/auth/token/introspect` through Nacos service
+discovery. The user token travels in the request body and Gateway authenticates
+itself with `X-Service-Token` using Nacos `feign.service_token`. This protocol is
+not a business Feign client and the internal route is never published through a
+Gateway route.
 
 The owning auth service must provide `security.jwt.secret`,
 `security.jwt.issuer`, `security.jwt.audience`,
@@ -139,15 +140,18 @@ resetting passwords; both sides must use identical scrypt parameters.
 
 ## Declarative Feign clients
 
-Cross-service HTTP calls use the shared declarative Feign runtime. A client class only declares the service address, request method, path and parameter bindings; `FeignModule` supplies the HTTP proxy implementation and consistently handles timeouts, Bearer headers, response envelopes and upstream errors.
+Cross-service HTTP calls use the shared declarative Feign runtime. Every client
+connects to one Gateway address and declares a `/feign/<service>` route prefix;
+`FeignModule` supplies the HTTP proxy implementation and consistently handles
+timeouts, Bearer headers, response envelopes and upstream errors.
 
 ```ts
 @FeignClient({
     name: '账号服务',
-    prefix: 'feign',
+    prefix: '/feign/account',
     serviceTokenKey: 'feign.service_token',
-    baseUrlConfigKey: 'feign.chat-web-account.url',
-    timeoutConfigKey: 'feign.chat-web-account.timeout'
+    baseUrlConfigKey: 'feign.gateway.url',
+    timeoutConfigKey: 'feign.gateway.timeout'
 })
 export class FeignClientAccountManager extends FeignWebClient<FeignClientAccountImplementation> {
     @FeignGet('/consumer/resolver')
@@ -166,17 +170,22 @@ export class IntegrationModule {}
 ```
 
 Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Multi-select fields remain arrays in the POST body. Business services must not create their own `fetch`, Axios or cross-database implementation for an endpoint already declared by a shared Feign client.
-Every declared Feign URL and timeout is required in the service's Nacos `feign`
-node. Environment-style `*_SERVICE_URL` and `*_TIMEOUT_MS` keys are not read,
-and the shared clients do not provide fallback addresses or timeouts.
+Every Feign caller requires only `feign.gateway.url` and
+`feign.gateway.timeout` in Nacos, regardless of how many target services it
+calls. Target selection stays in Gateway `gateway.routes`; environment-style
+`*_SERVICE_URL` and `*_TIMEOUT_MS` keys are not read, and the shared clients do
+not provide fallback addresses or timeouts.
 Business Feign clients always set `serviceTokenKey`; the Authorization position
 carries the caller service credential, not an end-user token. Callers build that
 header with `resolveFeignServiceAuthorization(configService)` so cross-service
 base queries are not subject to permission codes or data-scope filtering.
 Access-token introspection is not a business Feign concern and is served by the
 auth service internal protocol instead.
-When a client exposes internal routes, set `prefix: 'feign'` to apply the same
-`/feign` prefix to outgoing requests and inherited server routes.
+When a client exposes internal routes, set `prefix: '/feign/<service>'` to apply
+the same route to outgoing requests and inherited server routes. Gateway keeps
+this prefix while proxying so the target controller receives the exact contract
+path. `/feign/**` bypasses end-user Auth introspection and must be protected by
+the Feign service credential at the target service.
 
 The same client declaration can be used as the owning service's Controller contract.
 `@FeignGet`/`@FeignPost` and the parameter decorators also apply the Nest route metadata,
@@ -192,7 +201,8 @@ export class FeignController extends FeignClientAccountManager {
 }
 ```
 
-`FeignClientBase` performs the small delegation needed by an inherited server method.
+`FeignWebClient` performs the small delegation and service-token verification
+needed by an inherited server method.
 `FeignModule.register` remains the caller-side proxy factory; it is not required by the
 owning Controller. This keeps the shared client declaration as the single source of truth
 for both HTTP callers and server routes.

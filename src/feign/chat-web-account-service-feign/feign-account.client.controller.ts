@@ -9,13 +9,16 @@ import type * as AccountTypes from './feign-account.interface'
  *
  * 只承载跨服务业务数据查询；认证与令牌内省由鉴权服务的内部协议负责，不在此声明，
  * 因此 Authorization 位固定传递 `feign.service_token` 服务间凭据。
+ *
+ * 服务间调用统一经网关按 `/feign/<服务名>` 前缀转发，网关不改写该前缀，客户端请求
+ * 路径与服务端继承路由完全一致。
  */
 @FeignClient({
     name: '账号服务',
-    prefix: 'feign',
+    prefix: '/feign/account',
     serviceTokenKey: 'feign.service_token',
-    baseUrlConfigKey: 'feign.chat-web-account.url',
-    timeoutConfigKey: 'feign.chat-web-account.timeout'
+    baseUrlConfigKey: 'feign.gateway.url',
+    timeoutConfigKey: 'feign.gateway.timeout'
 })
 export class FeignClientAccountManager extends FeignWebClient<AccountTypes.FeignClientAccountImplementation> {
     constructor(service?: AccountTypes.FeignClientAccountImplementation, configService?: ConfigService) {

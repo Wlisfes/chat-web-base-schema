@@ -1,22 +1,24 @@
+import { ConfigService } from '@nestjs/config'
 import { FeignBody, FeignClient, FeignGet, FeignHeader, FeignPost, FeignQuery } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
 import type * as FinanceTypes from './feign-finance.interface'
 
 /**
- * 财务服务 Feign 客户端。
+ * 财务服务业务 Feign 客户端。
  *
- * 财务服务通过常规业务 Controller 暴露这些接口，并由自身的 FinanceAuthGuard 完成鉴权：
- * 报价查询类接口需要终端用户令牌，汇率同步接口另行声明允许服务间凭据。因此这里不声明
- * `feign` 路径前缀，也不在客户端侧强制服务凭据。
+ * 价格与汇率属于跨服务基础参考数据，不做用户级数据隔离，因此统一使用服务间凭据调用；
+ * 面向管理端的同名业务路由仍由 FinanceAuthGuard 校验终端用户令牌，两者互不影响。
  */
 @FeignClient({
     name: '财务服务',
-    baseUrlConfigKey: 'feign.chat-web-finance.url',
-    timeoutConfigKey: 'feign.chat-web-finance.timeout'
+    prefix: '/feign/finance',
+    serviceTokenKey: 'feign.service_token',
+    baseUrlConfigKey: 'feign.gateway.url',
+    timeoutConfigKey: 'feign.gateway.timeout'
 })
 export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.FinanceFeignImplementation> {
-    constructor(service?: FinanceTypes.FinanceFeignImplementation) {
-        super(service)
+    constructor(service?: FinanceTypes.FinanceFeignImplementation, configService?: ConfigService) {
+        super(service, configService)
     }
 
     /**按国家/地区主键批量获取短信基础价格**/

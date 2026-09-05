@@ -2,7 +2,15 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 
 const { BadGatewayException, RequestMethod, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
-const { AuthInternalClient, TokenService } = require('../dist/src/runtime/auth')
+const {
+    GATEWAY_PRINCIPAL_HEADER,
+    GATEWAY_STRIPPED_HEADERS,
+    getGatewayPrincipalMaxAge,
+    getGatewayPrincipalSecret,
+    signGatewayPrincipal,
+    TokenService,
+    verifyGatewayPrincipal
+} = require('../dist/src/runtime/auth')
 const { AuthSessionService } = require('../dist/src/runtime/auth-session')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
@@ -214,69 +222,50 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
     }
 }
 
-/** 鉴权服务内部认证客户端直接使用全局 fetch，测试通过替换 global.fetch 观察请求。 */
-function authInternalClient(values, fetchClient) {
-    const client = new AuthInternalClient(config(values))
-    const originalFetch = global.fetch
-    global.fetch = fetchClient
-    return {
-        client,
-        restore() {
-            global.fetch = originalFetch
-        }
-    }
-}
+/** 网关身份上下文测试使用的固定密钥。 */
+const PRINCIPAL_SECRET = '0123456789abcdef0123456789abcdef'
 
-/** 内部认证协议的默认可用配置。 */
-function authInternalConfig(overrides = {}) {
-    return {
-        feign: {
-            'chat-web-auth': { url: 'http://auth.internal:5050', timeout: 3000 },
-            service_token: 'service-token',
-            ...overrides
-        }
-    }
-}
-
-test('内部认证客户端使用请求体传递用户令牌并单独携带服务凭据', async () => {
-    let request
-    const { client, restore } = authInternalClient(authInternalConfig(), async (url, init) => {
-        request = { url, init }
-        return new Response(
-            JSON.stringify({ data: { uid: '2149446185344106496', sessionId: 'shared-auth-session' }, code: 200, message: '成功' }),
-            { status: 200, headers: { 'content-type': 'application/json' } }
-        )
+test('网关签发的身份上下文可被业务服务验签还原', () => {
+    const signed = signGatewayPrincipal({ uid: '2149446185344106496', sessionId: 'session-id' }, PRINCIPAL_SECRET)
+    assert.deepEqual(verifyGatewayPrincipal(signed, PRINCIPAL_SECRET, 60), {
+        uid: '2149446185344106496',
+        sessionId: 'session-id'
     })
-
-    try {
-        assert.deepEqual(await client.authenticateToken('account-token'), {
-            uid: '2149446185344106496',
-            sessionId: 'shared-auth-session'
-        })
-        assert.equal(String(request.url), 'http://auth.internal:5050/internal/auth/token/introspect')
-        assert.equal(request.init.method, 'POST')
-        assert.equal(request.init.headers['x-service-token'], 'service-token')
-        assert.equal(request.init.headers.authorization, undefined)
-        assert.deepEqual(JSON.parse(request.init.body), { token: 'account-token' })
-    } finally {
-        restore()
-    }
 })
 
-test('内部认证客户端在启动时校验鉴权服务连接配置', () => {
-    assert.throws(() => new AuthInternalClient(config()).onApplicationBootstrap(), /Nacos 配置 feign\.chat-web-auth\.url/)
-    assert.throws(
-        () => new AuthInternalClient(config({ feign: { 'chat-web-auth': { url: 'http://auth.internal:5050' } } })).onApplicationBootstrap(),
-        /Nacos 配置 feign\.chat-web-auth\.timeout/
-    )
-    assert.throws(
-        () =>
-            new AuthInternalClient(
-                config({ feign: { 'chat-web-auth': { url: 'http://auth.internal:5050', timeout: 3000 } } })
-            ).onApplicationBootstrap(),
-        /Nacos 配置 feign\.service_token/
-    )
-    assert.doesNotThrow(() => new AuthInternalClient(config(authInternalConfig())).onApplicationBootstrap())
+test('身份上下文拒绝篡改、错误密钥和过期签发时间', () => {
+    const principal = { uid: '2149446185344106496', sessionId: 'session-id' }
+    const signed = signGatewayPrincipal(principal, PRINCIPAL_SECRET)
+    const [payload, signature] = signed.split('.')
+
+    assert.equal(verifyGatewayPrincipal(`${payload}x.${signature}`, PRINCIPAL_SECRET, 60), undefined)
+    assert.equal(verifyGatewayPrincipal(`${payload}.${signature.slice(0, -1)}A`, PRINCIPAL_SECRET, 60), undefined)
+    assert.equal(verifyGatewayPrincipal(signed, 'abcdef0123456789abcdef0123456789', 60), undefined)
+    assert.equal(verifyGatewayPrincipal(undefined, PRINCIPAL_SECRET, 60), undefined)
+    assert.equal(verifyGatewayPrincipal('not-a-context', PRINCIPAL_SECRET, 60), undefined)
+
+    // 超出有效期的上下文必须被拒绝，避免被抓取后重放。
+    const expired = signGatewayPrincipal(principal, PRINCIPAL_SECRET, Math.floor(Date.now() / 1000) - 120)
+    assert.equal(verifyGatewayPrincipal(expired, PRINCIPAL_SECRET, 60), undefined)
+
+    // 明显超前的签发时间同样拒绝。
+    const future = signGatewayPrincipal(principal, PRINCIPAL_SECRET, Math.floor(Date.now() / 1000) + 600)
+    assert.equal(verifyGatewayPrincipal(future, PRINCIPAL_SECRET, 60), undefined)
+})
+
+test('身份上下文配置缺失或过短时拒绝启动', () => {
+    assert.throws(() => getGatewayPrincipalSecret(config()), /gateway\.principal\.secret/)
+    assert.throws(() => getGatewayPrincipalSecret(config({ gateway: { principal: { secret: 'short' } } })), /至少32位/)
+    assert.equal(getGatewayPrincipalSecret(config({ gateway: { principal: { secret: PRINCIPAL_SECRET } } })), PRINCIPAL_SECRET)
+
+    assert.equal(getGatewayPrincipalMaxAge(config()), 60)
+    assert.equal(getGatewayPrincipalMaxAge(config({ gateway: { principal: { maxAgeSeconds: 120 } } })), 120)
+    assert.throws(() => getGatewayPrincipalMaxAge(config({ gateway: { principal: { maxAgeSeconds: 1 } } })), /5-600/)
+})
+
+test('网关必须剥离的入站头部覆盖身份上下文', () => {
+    assert.equal(GATEWAY_PRINCIPAL_HEADER, 'x-gateway-principal')
+    assert.equal(GATEWAY_STRIPPED_HEADERS.includes(GATEWAY_PRINCIPAL_HEADER), true)
 })
 
 test('账号业务 Feign 客户端可被直接继承为服务端路由且不再暴露内省接口', async () => {
@@ -295,8 +284,9 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
 
     assert.equal(AccountFeignController.prototype.introspect, undefined)
 
+    // 服务间路由带 /feign/<服务名> 前缀，网关不改写，因此不会与公开业务路由冲突。
     const resolveConsumer = AccountFeignController.prototype.resolveConsumer
-    assert.equal(Reflect.getMetadata(PATH_METADATA, resolveConsumer), '/feign/consumer/resolver')
+    assert.equal(Reflect.getMetadata(PATH_METADATA, resolveConsumer), '/feign/account/consumer/resolver')
     assert.equal(Reflect.getMetadata(METHOD_METADATA, resolveConsumer), RequestMethod.GET)
     assert.equal(Reflect.getMetadata('auth:is-public', resolveConsumer), true)
     assert.equal(Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'resolveConsumer')['6:0'].data, 'authorization')
@@ -306,7 +296,7 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
     })
 
     const batchResolveUsers = AccountFeignController.prototype.batchResolveUsers
-    assert.equal(Reflect.getMetadata(PATH_METADATA, batchResolveUsers), '/feign/user/batch/resolver')
+    assert.equal(Reflect.getMetadata(PATH_METADATA, batchResolveUsers), '/feign/account/user/batch/resolver')
     assert.equal(Reflect.getMetadata(METHOD_METADATA, batchResolveUsers), RequestMethod.POST)
 
     /** 业务 Feign 的 Authorization 位承载服务凭据，凭据不匹配必须拒绝。 */
@@ -319,131 +309,24 @@ test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorizati
     assert.throws(() => resolveFeignServiceAuthorization(config()), ServiceUnavailableException)
 })
 
-test('shared Feign server dispatch validates a configured service token when declared', async () => {
-    class ServiceTokenController extends FeignWebClient {
-        invoke(authorization) {
-            return this.dispatch('invoke', authorization)
-        }
-    }
-    FeignClient({
-        name: '服务令牌测试服务',
-        serviceTokenKey: 'feign.service_token',
-        baseUrlConfigKey: 'feign.test.url',
-        timeoutConfigKey: 'feign.test.timeout'
-    })(ServiceTokenController)
-    const controller = new ServiceTokenController(
-        {
-            async invoke(authorization) {
-                return { authorization }
-            }
-        },
-        config({ feign: { service_token: 'service-token' } })
-    )
-
-    assert.deepEqual(await controller.invoke('Bearer service-token'), { authorization: 'Bearer service-token' })
-    assert.throws(() => controller.invoke('Bearer another-token'), UnauthorizedException)
-})
-
-test('内部认证客户端保留令牌被拒绝的语义', async () => {
-    const { client, restore } = authInternalClient(
-        authInternalConfig(),
-        async () =>
-            new Response(JSON.stringify({ data: null, code: 401, message: '登录会话已失效' }), {
-                status: 401,
-                headers: { 'content-type': 'application/json' }
-            })
-    )
-
-    try {
-        await assert.rejects(() => client.authenticateToken('expired-token'), UnauthorizedException)
-    } finally {
-        restore()
-    }
-})
-
-test('内部认证客户端区分上游不可用与无效响应', async () => {
-    const unavailable = authInternalClient(authInternalConfig(), async () => {
-        throw new Error('connect failed')
-    })
-    try {
-        await assert.rejects(() => unavailable.client.authenticateToken('account-token'), ServiceUnavailableException)
-    } finally {
-        unavailable.restore()
-    }
-
-    const invalid = authInternalClient(authInternalConfig(), async () => new Response('not-json', { status: 200 }))
-    try {
-        await assert.rejects(() => invalid.client.authenticateToken('account-token'), BadGatewayException)
-    } finally {
-        invalid.restore()
-    }
-
-    const malformed = authInternalClient(
-        authInternalConfig(),
-        async () =>
-            new Response(JSON.stringify({ data: { uid: '' }, code: 200, message: '成功' }), {
-                status: 200,
-                headers: { 'content-type': 'application/json' }
-            })
-    )
-    try {
-        await assert.rejects(() => malformed.client.authenticateToken('account-token'), BadGatewayException)
-    } finally {
-        malformed.restore()
-    }
-})
-
-test('内部认证客户端校验鉴权服务地址协议与超时范围', async () => {
-    const invalidUrl = authInternalClient(
-        { feign: { 'chat-web-auth': { url: 'redis://auth', timeout: 3000 }, service_token: 'service-token' } },
-        async () => new Response()
-    )
-    try {
-        await assert.rejects(() => invalidUrl.client.authenticateToken('account-token'), /http:\/\//)
-    } finally {
-        invalidUrl.restore()
-    }
-
-    const invalidTimeout = authInternalClient(
-        { feign: { 'chat-web-auth': { url: 'http://auth.internal:5050', timeout: 99 }, service_token: 'service-token' } },
-        async () => new Response()
-    )
-    try {
-        await assert.rejects(() => invalidTimeout.client.authenticateToken('account-token'), /100-30000/)
-    } finally {
-        invalidTimeout.restore()
-    }
-})
-
-test('内部认证客户端拒绝历史环境变量风格的配置键', async () => {
-    const { client, restore } = authInternalClient(
-        { ACCOUNT_SERVICE_URL: 'http://account.internal:3000', ACCOUNT_AUTH_TIMEOUT_MS: 3000 },
-        async () => new Response()
-    )
-    try {
-        await assert.rejects(() => client.authenticateToken('account-token'), /Nacos 配置 feign\.chat-web-auth\.url/)
-    } finally {
-        restore()
-    }
-})
-
-test('shared Feign client validates required Nacos configuration during application bootstrap', () => {
+test('业务 Feign 客户端统一使用网关地址并在启动时校验配置', () => {
     const missing = new FeignClientFactory(config(), async () => new Response())
     missing.create(FeignClientAccountManager)
-    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.chat-web-account\.url/)
+    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.gateway\.url/)
 
     const configured = new FeignClientFactory(
-        config({ feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } }),
+        config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 3000 } } }),
         async () => new Response()
     )
     configured.create(FeignClientAccountManager)
+    configured.create(FeignClientFinanceManager)
     assert.doesNotThrow(() => configured.onApplicationBootstrap())
 })
 
 test('shared Feign finance client serializes currency exchange sync requests and responses', async () => {
     let request
     const factory = new FeignClientFactory(
-        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:3010', timeout: 5000 } } }),
+        config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
         async (url, init) => {
             request = { url: String(url), init }
             return new Response(
@@ -465,8 +348,8 @@ test('shared Feign finance client serializes currency exchange sync requests and
 
     const result = await service.syncCurrencyExchange('Bearer finance-token', input)
 
-    // 财务服务通过常规业务路由暴露该接口，客户端不得添加 /feign 前缀。
-    assert.equal(request.url, 'http://finance.internal:3010/currency/exchange/sync')
+    // 服务间调用统一经网关按 /feign/<服务名> 前缀转发。
+    assert.equal(request.url, 'http://gateway.internal:5000/feign/finance/currency/exchange/sync')
     assert.equal(request.init.method, 'POST')
     assert.equal(request.init.headers.get('authorization'), 'Bearer finance-token')
     assert.deepEqual(JSON.parse(request.init.body), input)
@@ -480,7 +363,7 @@ test('shared Feign finance client serializes currency exchange sync requests and
 test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查询', async () => {
     const requests = []
     const factory = new FeignClientFactory(
-        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:3010', timeout: 5000 } } }),
+        config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
         async (url, init) => {
             requests.push({ url: String(url), method: init.method })
             return new Response(JSON.stringify({ data: [], code: 200, message: '成功' }), {
@@ -495,8 +378,8 @@ test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查�
     await service.resolveCurrencyExchange('Bearer user-token', 'CNY')
 
     assert.deepEqual(requests, [
-        { url: 'http://finance.internal:3010/rates/sms/batch', method: 'POST' },
-        { url: 'http://finance.internal:3010/currency/exchange/resolver?currency=CNY', method: 'GET' }
+        { url: 'http://gateway.internal:5000/feign/finance/rates/sms/batch', method: 'POST' },
+        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolver?currency=CNY', method: 'GET' }
     ])
 })
 

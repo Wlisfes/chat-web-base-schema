@@ -2,14 +2,15 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 
 const { BadGatewayException, RequestMethod, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
-const { AuthClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
+const { AuthInternalClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
     FeignClient,
     FeignClientAccountManager,
     FeignClientFactory,
     FeignClientFinanceManager,
-    FeignWebClient
+    FeignWebClient,
+    resolveFeignServiceAuthorization
 } = require('../dist/src/feign')
 const { PATH_METADATA, METHOD_METADATA, ROUTE_ARGS_METADATA } = require('@nestjs/common/constants')
 const { forRootNacosRuntimeOptions, NACOS_RUNTIME_OPTIONS, NacosModule, NacosService } = require('../dist/src/runtime/nacos')
@@ -212,51 +213,109 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
     }
 }
 
-function accountAuthClient(values, fetchClient) {
-    const factory = new FeignClientFactory(config(values), fetchClient)
-    return new AuthClient(factory.create(FeignClientAccountManager))
+/** 鉴权服务内部认证客户端直接使用全局 fetch，测试通过替换 global.fetch 观察请求。 */
+function authInternalClient(values, fetchClient) {
+    const client = new AuthInternalClient(config(values))
+    const originalFetch = global.fetch
+    global.fetch = fetchClient
+    return {
+        client,
+        restore() {
+            global.fetch = originalFetch
+        }
+    }
 }
 
-test('shared Feign account auth client forwards the bearer token and returns the principal', async () => {
-    let request
-    const service = accountAuthClient(
-        {
-            feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } }
-        },
-        async (url, init) => {
-            request = { url, init }
-            return new Response(
-                JSON.stringify({ data: { uid: '2149446185344106496', sessionId: 'shared-auth-session' }, code: 200, message: '成功' }),
-                { status: 200, headers: { 'content-type': 'application/json' } }
-            )
+/** 内部认证协议的默认可用配置。 */
+function authInternalConfig(overrides = {}) {
+    return {
+        feign: {
+            'chat-web-auth': { url: 'http://auth.internal:5050', timeout: 3000 },
+            service_token: 'service-token',
+            ...overrides
         }
-    )
+    }
+}
 
-    assert.deepEqual(await service.authenticateToken('account-token'), {
-        uid: '2149446185344106496',
-        sessionId: 'shared-auth-session'
+test('内部认证客户端使用请求体传递用户令牌并单独携带服务凭据', async () => {
+    let request
+    const { client, restore } = authInternalClient(authInternalConfig(), async (url, init) => {
+        request = { url, init }
+        return new Response(
+            JSON.stringify({ data: { uid: '2149446185344106496', sessionId: 'shared-auth-session' }, code: 200, message: '成功' }),
+            { status: 200, headers: { 'content-type': 'application/json' } }
+        )
     })
-    assert.equal(String(request.url), 'http://account.internal:3000/feign/auth/token/introspect')
-    assert.equal(request.init.method, 'GET')
-    assert.equal(request.init.headers.get('authorization'), 'Bearer account-token')
+
+    try {
+        assert.deepEqual(await client.authenticateToken('account-token'), {
+            uid: '2149446185344106496',
+            sessionId: 'shared-auth-session'
+        })
+        assert.equal(String(request.url), 'http://auth.internal:5050/internal/auth/token/introspect')
+        assert.equal(request.init.method, 'POST')
+        assert.equal(request.init.headers['x-service-token'], 'service-token')
+        assert.equal(request.init.headers.authorization, undefined)
+        assert.deepEqual(JSON.parse(request.init.body), { token: 'account-token' })
+    } finally {
+        restore()
+    }
 })
 
-test('shared Feign client can be inherited directly as a server route', async () => {
+test('内部认证客户端在启动时校验鉴权服务连接配置', () => {
+    assert.throws(() => new AuthInternalClient(config()).onApplicationBootstrap(), /Nacos 配置 feign\.chat-web-auth\.url/)
+    assert.throws(
+        () => new AuthInternalClient(config({ feign: { 'chat-web-auth': { url: 'http://auth.internal:5050' } } })).onApplicationBootstrap(),
+        /Nacos 配置 feign\.chat-web-auth\.timeout/
+    )
+    assert.throws(
+        () =>
+            new AuthInternalClient(
+                config({ feign: { 'chat-web-auth': { url: 'http://auth.internal:5050', timeout: 3000 } } })
+            ).onApplicationBootstrap(),
+        /Nacos 配置 feign\.service_token/
+    )
+    assert.doesNotThrow(() => new AuthInternalClient(config(authInternalConfig())).onApplicationBootstrap())
+})
+
+test('账号业务 Feign 客户端可被直接继承为服务端路由且不再暴露内省接口', async () => {
     class AccountFeignController extends FeignClientAccountManager {}
     const controller = new AccountFeignController(
         {
-            async introspect(authorization) {
-                return { authorization }
+            async resolveConsumer(authorization, keyId) {
+                return { authorization, keyId }
+            },
+            async batchResolveUsers(authorization, input) {
+                return { authorization, input }
             }
         },
         config({ feign: { service_token: 'service-token' } })
     )
-    const method = AccountFeignController.prototype.introspect
-    assert.equal(Reflect.getMetadata(PATH_METADATA, method), '/feign/auth/token/introspect')
-    assert.equal(Reflect.getMetadata(METHOD_METADATA, method), RequestMethod.GET)
-    assert.equal(Reflect.getMetadata('auth:is-public', method), true)
-    assert.equal(Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'introspect')['6:0'].data, 'authorization')
-    assert.deepEqual(await controller.introspect('Bearer account-token'), { authorization: 'Bearer account-token' })
+
+    assert.equal(AccountFeignController.prototype.introspect, undefined)
+
+    const resolveConsumer = AccountFeignController.prototype.resolveConsumer
+    assert.equal(Reflect.getMetadata(PATH_METADATA, resolveConsumer), '/feign/consumer/resolver')
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, resolveConsumer), RequestMethod.GET)
+    assert.equal(Reflect.getMetadata('auth:is-public', resolveConsumer), true)
+    assert.equal(Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'resolveConsumer')['6:0'].data, 'authorization')
+    assert.deepEqual(await controller.resolveConsumer('Bearer service-token', 12), {
+        authorization: 'Bearer service-token',
+        keyId: 12
+    })
+
+    const batchResolveUsers = AccountFeignController.prototype.batchResolveUsers
+    assert.equal(Reflect.getMetadata(PATH_METADATA, batchResolveUsers), '/feign/user/batch/resolver')
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, batchResolveUsers), RequestMethod.POST)
+
+    /** 业务 Feign 的 Authorization 位承载服务凭据，凭据不匹配必须拒绝。 */
+    await assert.rejects(() => controller.resolveConsumer('Bearer user-token', 12), UnauthorizedException)
+})
+
+test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorization', () => {
+    assert.equal(resolveFeignServiceAuthorization(config({ feign: { service_token: 'service-token' } })), 'Bearer service-token')
+    assert.equal(resolveFeignServiceAuthorization(config({ feign: { service_token: 'Bearer service-token' } })), 'Bearer service-token')
+    assert.throws(() => resolveFeignServiceAuthorization(config()), ServiceUnavailableException)
 })
 
 test('shared Feign server dispatch validates a configured service token when declared', async () => {
@@ -284,56 +343,87 @@ test('shared Feign server dispatch validates a configured service token when dec
     assert.throws(() => controller.invoke('Bearer another-token'), UnauthorizedException)
 })
 
-test('shared account auth client preserves rejected-token semantics', async () => {
-    const service = accountAuthClient(
-        { feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } },
-        async () => {
-            return new Response(JSON.stringify({ data: null, code: 401, message: '登录会话已失效' }), {
+test('内部认证客户端保留令牌被拒绝的语义', async () => {
+    const { client, restore } = authInternalClient(
+        authInternalConfig(),
+        async () =>
+            new Response(JSON.stringify({ data: null, code: 401, message: '登录会话已失效' }), {
                 status: 401,
                 headers: { 'content-type': 'application/json' }
             })
-        }
     )
 
-    await assert.rejects(() => service.authenticateToken('expired-token'), UnauthorizedException)
+    try {
+        await assert.rejects(() => client.authenticateToken('expired-token'), UnauthorizedException)
+    } finally {
+        restore()
+    }
 })
 
-test('shared account auth client distinguishes unavailable and invalid upstream responses', async () => {
-    const unavailable = accountAuthClient(
-        { feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } },
-        async () => {
-            throw new Error('connect failed')
-        }
-    )
-    const invalid = accountAuthClient(
-        { feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 3000 } } },
-        async () => new Response('not-json', { status: 200 })
-    )
+test('内部认证客户端区分上游不可用与无效响应', async () => {
+    const unavailable = authInternalClient(authInternalConfig(), async () => {
+        throw new Error('connect failed')
+    })
+    try {
+        await assert.rejects(() => unavailable.client.authenticateToken('account-token'), ServiceUnavailableException)
+    } finally {
+        unavailable.restore()
+    }
 
-    await assert.rejects(() => unavailable.authenticateToken('account-token'), ServiceUnavailableException)
-    await assert.rejects(() => invalid.authenticateToken('account-token'), BadGatewayException)
+    const invalid = authInternalClient(authInternalConfig(), async () => new Response('not-json', { status: 200 }))
+    try {
+        await assert.rejects(() => invalid.client.authenticateToken('account-token'), BadGatewayException)
+    } finally {
+        invalid.restore()
+    }
+
+    const malformed = authInternalClient(
+        authInternalConfig(),
+        async () =>
+            new Response(JSON.stringify({ data: { uid: '' }, code: 200, message: '成功' }), {
+                status: 200,
+                headers: { 'content-type': 'application/json' }
+            })
+    )
+    try {
+        await assert.rejects(() => malformed.client.authenticateToken('account-token'), BadGatewayException)
+    } finally {
+        malformed.restore()
+    }
 })
 
-test('shared Feign client validates service URL and timeout settings', async () => {
-    const invalidUrl = accountAuthClient(
-        { feign: { 'chat-web-account': { url: 'redis://account', timeout: 3000 } } },
+test('内部认证客户端校验鉴权服务地址协议与超时范围', async () => {
+    const invalidUrl = authInternalClient(
+        { feign: { 'chat-web-auth': { url: 'redis://auth', timeout: 3000 }, service_token: 'service-token' } },
         async () => new Response()
     )
-    const invalidTimeout = accountAuthClient(
-        { feign: { 'chat-web-account': { url: 'http://account.internal:3000', timeout: 99 } } },
+    try {
+        await assert.rejects(() => invalidUrl.client.authenticateToken('account-token'), /http:\/\//)
+    } finally {
+        invalidUrl.restore()
+    }
+
+    const invalidTimeout = authInternalClient(
+        { feign: { 'chat-web-auth': { url: 'http://auth.internal:5050', timeout: 99 }, service_token: 'service-token' } },
         async () => new Response()
     )
-
-    await assert.rejects(() => invalidUrl.authenticateToken('account-token'), /http:\/\//)
-    await assert.rejects(() => invalidTimeout.authenticateToken('account-token'), /100-30000/)
+    try {
+        await assert.rejects(() => invalidTimeout.client.authenticateToken('account-token'), /100-30000/)
+    } finally {
+        invalidTimeout.restore()
+    }
 })
 
-test('shared Feign client rejects legacy environment-style configuration keys', async () => {
-    const service = accountAuthClient(
+test('内部认证客户端拒绝历史环境变量风格的配置键', async () => {
+    const { client, restore } = authInternalClient(
         { ACCOUNT_SERVICE_URL: 'http://account.internal:3000', ACCOUNT_AUTH_TIMEOUT_MS: 3000 },
         async () => new Response()
     )
-    await assert.rejects(() => service.authenticateToken('account-token'), /Nacos 配置 feign\.chat-web-account\.url/)
+    try {
+        await assert.rejects(() => client.authenticateToken('account-token'), /Nacos 配置 feign\.chat-web-auth\.url/)
+    } finally {
+        restore()
+    }
 })
 
 test('shared Feign client validates required Nacos configuration during application bootstrap', () => {

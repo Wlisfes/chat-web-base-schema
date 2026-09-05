@@ -1,10 +1,15 @@
-import { FeignClient, FeignGet, FeignHeader } from '../feign.decorator'
 import { ConfigService } from '@nestjs/config'
-import { AuthPrincipalResponseDto } from '@/runtime/auth/auth.dto'
+import { FeignBody, FeignClient, FeignGet, FeignHeader, FeignPost, FeignQuery } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
+import { AccountConsumerResponseDto, AccountUserSummaryResponseDto, AccountUserBatchDto } from './feign-account.dto'
 import type * as AccountTypes from './feign-account.interface'
-import type * as AuthTypes from '@/runtime/auth/auth.interface'
 
+/**
+ * 账号服务业务 Feign 客户端。
+ *
+ * 只承载跨服务业务数据查询；认证与令牌内省由鉴权服务的内部协议负责，不在此声明，
+ * 因此 Authorization 位固定传递 `feign.service_token` 服务间凭据。
+ */
 @FeignClient({
     name: '账号服务',
     prefix: 'feign',
@@ -17,11 +22,37 @@ export class FeignClientAccountManager extends FeignWebClient<AccountTypes.Feign
         super(service, configService)
     }
 
-    @FeignGet('/auth/token/introspect', {
-        operation: { summary: '供内部服务校验访问令牌并获取身份主体' },
-        response: { type: AuthPrincipalResponseDto, description: '令牌对应的身份主体' }
+    @FeignGet('/consumer/resolver', {
+        operation: { summary: '供内部服务按客户主键获取客户详情' },
+        response: { type: AccountConsumerResponseDto, description: '客户详情' }
     })
-    async introspect(@FeignHeader('authorization') _authorization: string): Promise<AuthTypes.AuthPrincipal> {
-        return this.dispatch('introspect', _authorization)
+    async resolveConsumer(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignQuery('keyId') _keyId: number
+    ): Promise<AccountTypes.AccountConsumer> {
+        return this.dispatch('resolveConsumer', _authorization, _keyId)
+    }
+
+    @FeignGet('/consumer/select', {
+        operation: { summary: '供内部服务筛选客户下拉数据' },
+        response: { type: AccountConsumerResponseDto, isArray: true, description: '客户下拉列表' }
+    })
+    async selectConsumers(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignQuery('name') _name?: string
+    ): Promise<AccountTypes.AccountConsumer[]> {
+        return this.dispatch('selectConsumers', _authorization, _name)
+    }
+
+    @FeignPost('/user/batch/resolver', {
+        operation: { summary: '供内部服务批量把账号 UID 还原为展示摘要' },
+        request: { source: 'body', type: AccountUserBatchDto },
+        response: { type: AccountUserSummaryResponseDto, isArray: true, description: '账号展示摘要列表' }
+    })
+    async batchResolveUsers(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: AccountUserBatchDto
+    ): Promise<AccountTypes.AccountUserSummary[]> {
+        return this.dispatch('batchResolveUsers', _authorization, _input)
     }
 }

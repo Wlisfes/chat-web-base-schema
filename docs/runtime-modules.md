@@ -94,17 +94,17 @@ matching process environment variables never override them.
 ## Authentication
 
 The auth subpath exports the HS256 token codec, Redis session lifecycle,
-Bearer guard, request principal types and decorators.
+Bearer guard, password digest service, internal-credential guard, request
+principal types and decorators.
 
-The account service keeps its own login, captcha, password and user-status
-logic. It provides that business authenticator through
-`AUTH_TOKEN_AUTHENTICATOR` while reusing the shared guard and token/session
-services.
+`chat-web-auth-service` owns authentication. It imports `SessionAuthModule` to
+verify JWTs and access the login session store, adds login, captcha and
+user-status logic on top, and exposes the internal introspection endpoint
+`POST /internal/auth/token/introspect` guarded by `InternalAuthGuard`.
 
-Business services must not read the account Redis database or hold the account
-JWT secret. Import `AuthModule` to validate Bearer tokens through
-the account service `/feign/auth/token/introspect` endpoint and attach the returned
-principal to the request.
+Business services must not hold the JWT secret or read the login session store.
+Import `AuthModule` to validate Bearer tokens through the auth service internal
+introspection protocol and attach the returned principal to the request.
 
 ```ts
 import { AuthModule, JwtAuthGuard } from '@wlisfes/chat-web-base-schema/auth'
@@ -116,15 +116,20 @@ import { AuthModule, JwtAuthGuard } from '@wlisfes/chat-web-base-schema/auth'
 export class AppModule {}
 ```
 
-The remote client reads `feign.chat-web-account.url` and
-`feign.chat-web-account.timeout` from Nacos. `SessionAuthModule` is only for an owning
-service that is explicitly allowed to verify JWTs and access its own session
-store; it is not the downstream business-service default.
+`AuthInternalClient` reads `feign.chat-web-auth.url`,
+`feign.chat-web-auth.timeout` and `feign.service_token` from Nacos. The user
+token travels in the request body and the caller identity travels in
+`X-Service-Token`, so authentication is never registered as a business Feign
+client and the internal route is never published through the gateway.
 
-The owning account service must provide `security.jwt.secret`,
+The owning auth service must provide `security.jwt.secret`,
 `security.jwt.issuer`, `security.jwt.audience`,
 `security.jwt.accessTokenTtlSeconds` and `security.session.prefix` in Nacos.
 Legacy `JWT_SECRET` and `AUTH_SESSION_PREFIX` keys are not read.
+
+`PasswordService` is shared because the auth service verifies password digests
+during login while the account service generates them when creating accounts and
+resetting passwords; both sides must use identical scrypt parameters.
 
 ## Declarative Feign clients
 
@@ -138,15 +143,18 @@ Cross-service HTTP calls use the shared declarative Feign runtime. A client clas
     baseUrlConfigKey: 'feign.chat-web-account.url',
     timeoutConfigKey: 'feign.chat-web-account.timeout'
 })
-export class AccountFeignClient {
+export class FeignClientAccountManager extends FeignWebClient<FeignClientAccountImplementation> {
     @FeignGet('/consumer/resolver')
-    resolveConsumer(@FeignHeader('authorization') authorization: string, @FeignQuery('keyId') keyId: number): Promise<AccountConsumer> {
-        throw new Error('AccountFeignClient must be injected by FeignModule')
+    async resolveConsumer(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignQuery('keyId') _keyId: number
+    ): Promise<AccountConsumer> {
+        return this.dispatch('resolveConsumer', _authorization, _keyId)
     }
 }
 
 @Module({
-    imports: [FeignModule.register([AccountFeignClient])]
+    imports: [FeignModule.register([FeignClientAccountManager])]
 })
 export class IntegrationModule {}
 ```
@@ -155,6 +163,12 @@ Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Mu
 Every declared Feign URL and timeout is required in the service's Nacos `feign`
 node. Environment-style `*_SERVICE_URL` and `*_TIMEOUT_MS` keys are not read,
 and the shared clients do not provide fallback addresses or timeouts.
+Business Feign clients always set `serviceTokenKey`; the Authorization position
+carries the caller service credential, not an end-user token. Callers build that
+header with `resolveFeignServiceAuthorization(configService)` so cross-service
+base queries are not subject to permission codes or data-scope filtering.
+Access-token introspection is not a business Feign concern and is served by the
+auth service internal protocol instead.
 When a client exposes internal routes, set `prefix: 'feign'` to apply the same
 `/feign` prefix to outgoing requests and inherited server routes.
 

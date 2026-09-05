@@ -28,7 +28,7 @@ export abstract class FeignWebClient<TImplementation extends object> {
         ...args: TImplementation[TMethod] extends (...parameters: infer TParameters) => unknown ? TParameters : never
     ): TImplementation[TMethod] extends (...parameters: any[]) => infer TResult ? TResult : never {
         if (!this.implementation) throw new Error(`${this.constructor.name} 必须由 FeignModule 注入或提供服务实现`)
-        this.assertServiceAuthorization(args)
+        this.assertAuthorization(args)
         const handler = this.implementation[method]
         if (typeof handler !== 'function') throw new Error(`Feign 服务实现缺少 ${String(method)} 方法`)
         return handler.apply(this.implementation, args) as TImplementation[TMethod] extends (...parameters: any[]) => infer TResult
@@ -36,15 +36,19 @@ export abstract class FeignWebClient<TImplementation extends object> {
             : never
     }
 
-    /** 校验服务端 Feign 请求携带的 Bearer 凭据，再委托给真实实现。 */
-    private assertServiceAuthorization(args: unknown[]): void {
+    /** 校验服务端 Feign 请求携带的 Bearer 凭据，并按客户端配置校验服务间令牌。 */
+    private assertAuthorization(args: unknown[]): void {
         const options = getFeignClientOptions(this.constructor as FeignTypes.FeignClientConstructor)
-        if (!options?.serviceTokenKey) throw new Error(`${this.constructor.name} 缺少 Feign serviceTokenKey 配置`)
-        if (!this.configService) throw new Error(`${this.constructor.name} 未注入 ConfigService，无法校验服务间凭据`)
+        if (!options) throw new Error(`${this.constructor.name} 缺少 FeignClient 配置`)
 
         const authorization = args[0]
         const authorizationMatch = typeof authorization === 'string' ? authorization.match(/^Bearer\s+([^\s]+)$/i) : undefined
-        if (!authorizationMatch) throw new UnauthorizedException('缺少有效的access_token凭据')
+        if (!authorizationMatch) throw new UnauthorizedException('缺少有效的 Bearer 访问令牌')
+
+        // Account 内省接口接收的是待校验的用户访问令牌，不应与固定服务令牌比较；
+        // 只有明确声明 serviceTokenKey 的服务端 Feign 接口才执行服务间凭据校验。
+        if (!options.serviceTokenKey) return
+        if (!this.configService) throw new Error(`${this.constructor.name} 未注入 ConfigService，无法校验服务间凭据`)
 
         const configured = this.configService.get<unknown>(options.serviceTokenKey)
         if (typeof configured !== 'string' || !configured.trim()) {
@@ -52,7 +56,7 @@ export abstract class FeignWebClient<TImplementation extends object> {
         }
         const configuredToken = configured.trim().replace(/^Bearer\s+/i, '')
         if (!configuredToken || !this.secureEquals(authorizationMatch[1], configuredToken)) {
-            throw new UnauthorizedException('access_token凭据无效')
+            throw new UnauthorizedException('服务间 Bearer 凭据无效')
         }
     }
 

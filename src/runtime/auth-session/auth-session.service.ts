@@ -1,7 +1,7 @@
 import { Injectable, OnApplicationBootstrap, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { RedisService } from '../redis'
-import { AccessTokenClaims } from './auth.interface'
+import { AccessTokenClaims } from '../auth/auth.interface'
 
 @Injectable()
 export class AuthSessionService implements OnApplicationBootstrap {

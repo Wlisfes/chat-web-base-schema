@@ -97,10 +97,16 @@ The auth subpath exports the HS256 token codec, Redis session lifecycle,
 Bearer guard, password digest service, internal-credential guard, request
 principal types and decorators.
 
-`chat-web-auth-service` owns authentication. It imports `SessionAuthModule` to
-verify JWTs and access the login session store, adds login, captcha and
-user-status logic on top, and exposes the internal introspection endpoint
-`POST /internal/auth/token/introspect` guarded by `InternalAuthGuard`.
+`chat-web-auth-service` owns authentication. It imports `SessionAuthModule` from
+the `auth-session` subpath to verify JWTs and access the login session store,
+adds login, captcha and user-status logic on top, and exposes the internal
+introspection endpoint `POST /internal/auth/token/introspect` guarded by
+`InternalAuthGuard`.
+
+The `auth-session` subpath is reserved for that owning service: it touches the
+session store and therefore requires the Redis client dependency. Business
+services import only the `auth` subpath, which has no session or Redis
+dependency at all.
 
 Business services must not hold the JWT secret or read the login session store.
 Import `AuthModule` to validate Bearer tokens through the auth service internal

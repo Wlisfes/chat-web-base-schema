@@ -2,7 +2,8 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 
 const { BadGatewayException, RequestMethod, ServiceUnavailableException, UnauthorizedException } = require('@nestjs/common')
-const { AuthInternalClient, AuthSessionService, TokenService } = require('../dist/src/runtime/auth')
+const { AuthInternalClient, TokenService } = require('../dist/src/runtime/auth')
+const { AuthSessionService } = require('../dist/src/runtime/auth-session')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
     FeignClient,

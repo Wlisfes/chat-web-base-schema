@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { AuthSessionService } from './auth-session.service'
-import { AuthPrincipal, AuthTokenAuthenticator } from './auth.interface'
-import { TokenService } from './token.service'
+import { AuthPrincipal, AuthTokenAuthenticator } from '../auth/auth.interface'
+import { TokenService } from '../auth/token.service'
 
 @Injectable()
 export class SessionAuthenticator implements AuthTokenAuthenticator {

@@ -6,7 +6,7 @@ import type * as CrmTypes from './feign-crm.interface'
     name: 'CRM服务',
     prefix: '/feign/crm',
     serviceTokenKey: 'feign.service_token',
-    baseUrlConfigKey: 'feign.gateway.url',
-    timeoutConfigKey: 'feign.gateway.timeout'
+    baseUrlConfigKey: 'feign.chat-web-crm.url',
+    timeoutConfigKey: 'feign.chat-web-crm.timeout'
 })
 export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCrmImplementation> {}

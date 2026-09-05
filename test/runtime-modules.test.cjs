@@ -463,9 +463,10 @@ test('shared Feign finance client serializes currency exchange sync requests and
     const service = factory.create(FeignClientFinanceManager)
     const input = { date: '2026-09-02', rates: [{ currency: 'CNY', rate: 7.2534 }] }
 
-    const result = await service.httpSyncCurrencyExchange('Bearer finance-token', input)
+    const result = await service.syncCurrencyExchange('Bearer finance-token', input)
 
-    assert.equal(request.url, 'http://finance.internal:3010/feign/currency/exchange/sync')
+    // 财务服务通过常规业务路由暴露该接口，客户端不得添加 /feign 前缀。
+    assert.equal(request.url, 'http://finance.internal:3010/currency/exchange/sync')
     assert.equal(request.init.method, 'POST')
     assert.equal(request.init.headers.get('authorization'), 'Bearer finance-token')
     assert.deepEqual(JSON.parse(request.init.body), input)
@@ -474,6 +475,29 @@ test('shared Feign finance client serializes currency exchange sync requests and
         count: 1,
         list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
     })
+})
+
+test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查询', async () => {
+    const requests = []
+    const factory = new FeignClientFactory(
+        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:3010', timeout: 5000 } } }),
+        async (url, init) => {
+            requests.push({ url: String(url), method: init.method })
+            return new Response(JSON.stringify({ data: [], code: 200, message: '成功' }), {
+                status: 200,
+                headers: { 'content-type': 'application/json' }
+            })
+        }
+    )
+    const service = factory.create(FeignClientFinanceManager)
+
+    await service.batchSmsRates('Bearer user-token', { countryKeyIds: [1, 2] })
+    await service.resolveCurrencyExchange('Bearer user-token', 'CNY')
+
+    assert.deepEqual(requests, [
+        { url: 'http://finance.internal:3010/rates/sms/batch', method: 'POST' },
+        { url: 'http://finance.internal:3010/currency/exchange/resolver?currency=CNY', method: 'GET' }
+    ])
 })
 
 test('shared token service signs and verifies account access tokens', () => {

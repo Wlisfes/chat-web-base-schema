@@ -19,6 +19,7 @@ const {
     FeignClientFactory,
     FeignClientFinanceManager,
     FeignWebClient,
+    getFeignClientOptions,
     resolveFeignServiceAuthorization
 } = require('../dist/src/feign')
 const { PATH_METADATA, METHOD_METADATA, ROUTE_ARGS_METADATA } = require('@nestjs/common/constants')
@@ -309,24 +310,31 @@ test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorizati
     assert.throws(() => resolveFeignServiceAuthorization(config()), ServiceUnavailableException)
 })
 
-test('业务 Feign 客户端统一使用网关地址并在启动时校验配置', () => {
+test('业务 Feign 客户端按目标服务读取 Nacos 地址并在启动时校验配置', () => {
     const missing = new FeignClientFactory(config(), async () => new Response())
     missing.create(FeignClientAccountManager)
-    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.gateway\.url/)
+    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.chat-web-account\.url/)
 
     const configured = new FeignClientFactory(
-        config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 3000 } } }),
+        config({
+            feign: {
+                'chat-web-account': { url: 'http://account.internal:5010', timeout: 3000 },
+                'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 3000 }
+            }
+        }),
         async () => new Response()
     )
     configured.create(FeignClientAccountManager)
     configured.create(FeignClientFinanceManager)
     assert.doesNotThrow(() => configured.onApplicationBootstrap())
+    assert.equal(getFeignClientOptions(FeignClientAccountManager).baseUrlConfigKey, 'feign.chat-web-account.url')
+    assert.equal(getFeignClientOptions(FeignClientFinanceManager).baseUrlConfigKey, 'feign.chat-web-finance.url')
 })
 
 test('shared Feign finance client serializes currency exchange sync requests and responses', async () => {
     let request
     const factory = new FeignClientFactory(
-        config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
+        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 5000 } } }),
         async (url, init) => {
             request = { url: String(url), init }
             return new Response(
@@ -348,8 +356,8 @@ test('shared Feign finance client serializes currency exchange sync requests and
 
     const result = await service.syncCurrencyExchange('Bearer finance-token', input)
 
-    // 服务间调用统一经网关按 /feign/<服务名> 前缀转发。
-    assert.equal(request.url, 'http://gateway.internal:5000/feign/finance/currency/exchange/sync')
+    // 客户端直接使用 Finance 服务地址，路径前缀仍由共享契约统一约束。
+    assert.equal(request.url, 'http://finance.internal:5030/feign/finance/currency/exchange/sync')
     assert.equal(request.init.method, 'POST')
     assert.equal(request.init.headers.get('authorization'), 'Bearer finance-token')
     assert.deepEqual(JSON.parse(request.init.body), input)
@@ -363,7 +371,7 @@ test('shared Feign finance client serializes currency exchange sync requests and
 test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查询', async () => {
     const requests = []
     const factory = new FeignClientFactory(
-        config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
+        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 5000 } } }),
         async (url, init) => {
             requests.push({ url: String(url), method: init.method })
             return new Response(JSON.stringify({ data: [], code: 200, message: '成功' }), {
@@ -378,8 +386,8 @@ test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查�
     await service.resolveCurrencyExchange('Bearer user-token', 'CNY')
 
     assert.deepEqual(requests, [
-        { url: 'http://gateway.internal:5000/feign/finance/rates/sms/batch', method: 'POST' },
-        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolver?currency=CNY', method: 'GET' }
+        { url: 'http://finance.internal:5030/feign/finance/rates/sms/batch', method: 'POST' },
+        { url: 'http://finance.internal:5030/feign/finance/currency/exchange/resolver?currency=CNY', method: 'GET' }
     ])
 })
 

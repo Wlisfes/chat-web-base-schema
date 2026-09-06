@@ -41,12 +41,11 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
         return this.dispatch('resolveCurrencyExchange', _authorization, _currency)
     }
 
-    /**批量同步指定日期的币种汇率**/
+    /**触发财务服务拉取并同步最新币种汇率**/
     @FeignPost('/currency/exchange/sync')
     async syncCurrencyExchange(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: FinanceTypes.FinanceCurrencyExchangeSyncRequest
+        @FeignHeader('authorization') _authorization: string
     ): Promise<FinanceTypes.FinanceCurrencyExchangeSyncResponse> {
-        return this.dispatch('syncCurrencyExchange', _authorization, _input)
+        return this.dispatch('syncCurrencyExchange', _authorization)
     }
 }

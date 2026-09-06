@@ -334,7 +334,7 @@ test('业务 Feign 客户端统一读取 Gateway 地址并在启动时校验配�
     assert.equal(getFeignClientOptions(FeignClientSkylineManager).baseUrlConfigKey, 'feign.gateway.url')
 })
 
-test('shared Feign finance client serializes currency exchange sync requests and responses', async () => {
+test('shared Feign finance client triggers server-owned currency exchange synchronization', async () => {
     let request
     const factory = new FeignClientFactory(
         config({ feign: { gateway: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
@@ -355,15 +355,13 @@ test('shared Feign finance client serializes currency exchange sync requests and
         }
     )
     const service = factory.create(FeignClientFinanceManager)
-    const input = { date: '2026-09-02', rates: [{ currency: 'CNY', rate: 7.2534 }] }
-
-    const result = await service.syncCurrencyExchange('Bearer finance-token', input)
+    const result = await service.syncCurrencyExchange('Bearer finance-token')
 
     // 客户端只访问 Gateway，目标服务由 `/feign/finance` 路由前缀决定。
     assert.equal(request.url, 'http://gateway.internal:5000/feign/finance/currency/exchange/sync')
     assert.equal(request.init.method, 'POST')
     assert.equal(request.init.headers.get('authorization'), 'Bearer finance-token')
-    assert.deepEqual(JSON.parse(request.init.body), input)
+    assert.equal(request.init.body, undefined)
     assert.deepEqual(result, {
         date: '2026-09-02',
         count: 1,

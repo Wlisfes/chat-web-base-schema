@@ -4,8 +4,8 @@ export interface FinanceFeignImplementation {
     batchSmsRates(authorization: string, input: FinanceSmsRateBatchRequest): Promise<FinanceSmsRate[]>
     /**按币种获取最新汇率**/
     resolveCurrencyExchange(authorization: string, currency: string): Promise<FinanceCurrencyExchange>
-    /**批量同步指定日期的币种汇率**/
-    syncCurrencyExchange(authorization: string, input: FinanceCurrencyExchangeSyncRequest): Promise<FinanceCurrencyExchangeSyncResponse>
+    /**触发财务服务拉取并同步最新币种汇率**/
+    syncCurrencyExchange(authorization: string): Promise<FinanceCurrencyExchangeSyncResponse>
 }
 
 /**财务服务短信基础价格数据，供 CRM 报价流程使用。*/
@@ -34,22 +34,6 @@ export interface FinanceCurrencyExchange {
     rate: number
     /**汇率日期。*/
     rateDate: string
-}
-
-/**单项汇率同步请求。*/
-export interface FinanceCurrencyExchangeSyncRate {
-    /**币种编码。*/
-    currency: string
-    /**基于 USD 的汇率。*/
-    rate: number
-}
-
-/**批量汇率同步请求。*/
-export interface FinanceCurrencyExchangeSyncRequest {
-    /**汇率日期。*/
-    date: string
-    /**待同步的币种汇率列表。*/
-    rates: FinanceCurrencyExchangeSyncRate[]
 }
 
 /**汇率同步结果项。*/

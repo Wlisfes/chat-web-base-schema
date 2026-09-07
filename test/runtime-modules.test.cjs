@@ -306,56 +306,50 @@ test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorizati
     assert.throws(() => resolveFeignServiceAuthorization(config()), ServiceUnavailableException)
 })
 
-test('业务 Feign 客户端分别读取目标服务地址并在启动时校验配置', () => {
+test('业务 Feign 客户端统一读取 Gateway 地址和超时并在启动时校验配置', () => {
     const missing = new FeignClientFactory(config(), async () => new Response())
     missing.create(FeignClientAccountManager)
-    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.chat-web-account\.url/)
+    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.url/)
 
     const configured = new FeignClientFactory(
         config({
-            feign: {
-                'chat-web-account': { url: 'http://account.internal:5010', timeout: 3000 },
-                'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 3000 },
-                'chat-web-crm': { url: 'http://crm.internal:5020', timeout: 3000 },
-                'chat-web-skyline': { url: 'http://skyline.internal:5040', timeout: 3000 }
-            }
+            feign: { url: 'http://gateway.internal:5000', timeout: 3000 }
         }),
         async () => new Response()
     )
     configured.create(FeignClientAccountManager)
     configured.create(FeignClientFinanceManager)
     assert.doesNotThrow(() => configured.onApplicationBootstrap())
-    assert.equal(getFeignClientOptions(FeignClientAccountManager).baseUrlConfigKey, 'feign.chat-web-account.url')
-    assert.equal(getFeignClientOptions(FeignClientFinanceManager).baseUrlConfigKey, 'feign.chat-web-finance.url')
-    assert.equal(getFeignClientOptions(FeignClientCrmManager).baseUrlConfigKey, 'feign.chat-web-crm.url')
-    assert.equal(getFeignClientOptions(FeignClientSkylineManager).baseUrlConfigKey, 'feign.chat-web-skyline.url')
+    assert.equal(getFeignClientOptions(FeignClientAccountManager).baseUrlConfigKey, 'feign.url')
+    assert.equal(getFeignClientOptions(FeignClientFinanceManager).baseUrlConfigKey, 'feign.url')
+    assert.equal(getFeignClientOptions(FeignClientCrmManager).baseUrlConfigKey, 'feign.url')
+    assert.equal(getFeignClientOptions(FeignClientSkylineManager).baseUrlConfigKey, 'feign.url')
+    assert.equal(getFeignClientOptions(FeignClientAccountManager).timeoutConfigKey, 'feign.timeout')
+    assert.equal(getFeignClientOptions(FeignClientFinanceManager).timeoutConfigKey, 'feign.timeout')
 })
 
 test('shared Feign finance client triggers server-owned currency exchange synchronization', async () => {
     let request
-    const factory = new FeignClientFactory(
-        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 5000 } } }),
-        async (url, init) => {
-            request = { url: String(url), init }
-            return new Response(
-                JSON.stringify({
-                    data: {
-                        date: '2026-09-02',
-                        count: 1,
-                        list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
-                    },
-                    code: 200,
-                    message: '成功'
-                }),
-                { status: 200, headers: { 'content-type': 'application/json' } }
-            )
-        }
-    )
+    const factory = new FeignClientFactory(config({ feign: { url: 'http://gateway.internal:5000', timeout: 5000 } }), async (url, init) => {
+        request = { url: String(url), init }
+        return new Response(
+            JSON.stringify({
+                data: {
+                    date: '2026-09-02',
+                    count: 1,
+                    list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
+                },
+                code: 200,
+                message: '成功'
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+    })
     const service = factory.create(FeignClientFinanceManager)
     const result = await service.syncCurrencyExchange('Bearer finance-token')
 
-    // 客户端直接访问 Finance，保留服务端 Feign 路径前缀。
-    assert.equal(request.url, 'http://finance.internal:5030/feign/finance/currency/exchange/sync')
+    // 客户端访问 Gateway，保留目标服务的 Feign 路径前缀。
+    assert.equal(request.url, 'http://gateway.internal:5000/feign/finance/currency/exchange/sync')
     assert.equal(request.init.method, 'POST')
     assert.equal(request.init.headers.get('authorization'), 'Bearer finance-token')
     assert.equal(request.init.body, undefined)
@@ -368,24 +362,21 @@ test('shared Feign finance client triggers server-owned currency exchange synchr
 
 test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查询', async () => {
     const requests = []
-    const factory = new FeignClientFactory(
-        config({ feign: { 'chat-web-finance': { url: 'http://finance.internal:5030', timeout: 5000 } } }),
-        async (url, init) => {
-            requests.push({ url: String(url), method: init.method })
-            return new Response(JSON.stringify({ data: [], code: 200, message: '成功' }), {
-                status: 200,
-                headers: { 'content-type': 'application/json' }
-            })
-        }
-    )
+    const factory = new FeignClientFactory(config({ feign: { url: 'http://gateway.internal:5000', timeout: 5000 } }), async (url, init) => {
+        requests.push({ url: String(url), method: init.method })
+        return new Response(JSON.stringify({ data: [], code: 200, message: '成功' }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+        })
+    })
     const service = factory.create(FeignClientFinanceManager)
 
     await service.batchSmsRates('Bearer service-token', { countryKeyIds: [1, 2] })
     await service.resolveCurrencyExchange('Bearer service-token', 'CNY')
 
     assert.deepEqual(requests, [
-        { url: 'http://finance.internal:5030/feign/finance/rates/sms/batch', method: 'POST' },
-        { url: 'http://finance.internal:5030/feign/finance/currency/exchange/resolver?currency=CNY', method: 'GET' }
+        { url: 'http://gateway.internal:5000/feign/finance/rates/sms/batch', method: 'POST' },
+        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolver?currency=CNY', method: 'GET' }
     ])
 })
 

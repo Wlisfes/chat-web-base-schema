@@ -150,8 +150,8 @@ timeouts, Bearer headers, response envelopes and upstream errors.
     name: '账号服务',
     prefix: '/feign/account',
     serviceTokenKey: 'feign.service_token',
-    baseUrlConfigKey: 'feign.chat-web-account.url',
-    timeoutConfigKey: 'feign.chat-web-account.timeout'
+    baseUrlConfigKey: 'feign.url',
+    timeoutConfigKey: 'feign.timeout'
 })
 export class FeignClientAccountManager extends FeignWebClient<FeignClientAccountImplementation> {
     @FeignPost('/user/batch/resolver')
@@ -170,12 +170,11 @@ export class IntegrationModule {}
 ```
 
 Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Multi-select fields remain arrays in the POST body. Business services must not create their own `fetch`, Axios or cross-database implementation for an endpoint already declared by a shared Feign client.
-Each Feign client reads the address and timeout of its own target service from
-Nacos, for example `feign.chat-web-account.url/timeout`. A caller only needs
-to configure the target services it actually uses; do not add unused target
-nodes or a shared `feign.gateway` node. Environment-style `*_SERVICE_URL` and
-`*_TIMEOUT_MS` keys are not read, and the shared clients do not provide
-fallback addresses or timeouts.
+All Feign clients send requests through the Gateway and read the shared Gateway
+address and timeout from `feign.url` and `feign.timeout`. The target service is
+selected by the client's `/feign/<service>` path prefix, so no per-target URL
+nodes are needed. Environment-style `*_SERVICE_URL` and `*_TIMEOUT_MS` keys are
+not read, and the shared clients do not provide fallback addresses or timeouts.
 Business Feign clients always set `serviceTokenKey`; the Authorization position
 carries the caller service credential, not an end-user token. Callers build that
 header with `resolveFeignServiceAuthorization(configService)` so cross-service

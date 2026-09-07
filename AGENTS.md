@@ -22,13 +22,13 @@
 - 通用入口固定为 `src/main.ts` 和 `src/app.module.ts`。
 - 业务或基础设施模块放在 `src/modules/<module-name>/`。
 - 文件名使用小写 kebab-case，并使用职责后缀：
-  - `*.module.ts`
-  - `*.controller.ts`
-  - `*.service.ts`
-  - `*.middleware.ts`
-  - `*.interface.ts`
-  - `*.constants.ts`
-  - `*.options.ts`
+    - `*.module.ts`
+    - `*.controller.ts`
+    - `*.service.ts`
+    - `*.middleware.ts`
+    - `*.interface.ts`
+    - `*.constants.ts`
+    - `*.options.ts`
 - 一个模块的接口、常量和配置构造分别放入对应后缀文件，不与实现类混放。
 - 测试文件与被测文件同名并使用 `*.spec.ts`；禁止提交生成目录、依赖目录和真实 `.env`。
 

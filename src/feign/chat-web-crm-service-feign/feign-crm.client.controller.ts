@@ -17,15 +17,15 @@ import { ConfigService } from '@nestjs/config'
 /**
  * CRM 服务业务 Feign 客户端。
  *
- * 请求统一发送到 Nacos `feign.gateway.*` 配置的 Gateway，由 `/feign/crm`
- * 路由选择 CRM 服务；服务端在分发实现方法前校验 `feign.service_token`。
+ * 请求直接发送到 CRM 服务的 `/feign/crm` 服务间入口；地址和超时读取
+ * Nacos `feign.chat-web-crm.*`，服务端在分发实现方法前校验 `feign.service_token`。
  */
 @FeignClient({
     name: 'CRM服务',
     prefix: '/feign/crm',
     serviceTokenKey: 'feign.service_token',
-    baseUrlConfigKey: 'feign.gateway.url',
-    timeoutConfigKey: 'feign.gateway.timeout'
+    baseUrlConfigKey: 'feign.chat-web-crm.url',
+    timeoutConfigKey: 'feign.chat-web-crm.timeout'
 })
 export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCrmImplementation> {
     constructor(service?: CrmTypes.FeignClientCrmImplementation, configService?: ConfigService) {

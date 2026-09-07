@@ -2,7 +2,7 @@ import { ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
 /** 服务间共享凭据配置键。 */
-const FEIGN_SERVICE_TOKEN_CONFIG_KEY = 'feign.service_token'
+const FEIGN_SERVICE_TOKEN_CONFIG_KEY = 'gateway.feign.service_token'
 
 /**
  * 读取服务间共享凭据并组装业务 Feign 调用使用的 Authorization 头部。

@@ -8,17 +8,17 @@ import type * as AccountTypes from './feign-account.interface'
  * 账号服务业务 Feign 客户端。
  *
  * 只承载跨服务业务数据查询；认证与令牌内省由鉴权服务的内部协议负责，不在此声明，
- * 因此 Authorization 位固定传递 `feign.service_token` 服务间凭据。
+ * 因此 Authorization 位固定传递 `gateway.feign.service_token` 服务间凭据。
  *
  * 客户端通过 Gateway 访问账号服务的 `/feign/account` 服务间入口；Gateway 地址和超时读取
- * Nacos `feign.url` 与 `feign.timeout`。
+ * Nacos `gateway.feign.url` 与 `gateway.feign.timeout`。
  */
 @FeignClient({
     name: '账号服务',
     prefix: '/feign/account',
-    serviceTokenKey: 'feign.service_token',
-    baseUrlConfigKey: 'feign.url',
-    timeoutConfigKey: 'feign.timeout'
+    serviceTokenKey: 'gateway.feign.service_token',
+    baseUrlConfigKey: 'gateway.feign.url',
+    timeoutConfigKey: 'gateway.feign.timeout'
 })
 export class FeignClientAccountManager extends FeignWebClient<AccountTypes.FeignClientAccountImplementation> {
     constructor(service?: AccountTypes.FeignClientAccountImplementation, configService?: ConfigService) {

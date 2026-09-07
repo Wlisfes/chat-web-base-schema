@@ -279,7 +279,7 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
                 return { authorization, input }
             }
         },
-        config({ feign: { service_token: 'service-token' } })
+        config({ gateway: { feign: { service_token: 'service-token' } } })
     )
 
     assert.equal(AccountFeignController.prototype.introspect, undefined)
@@ -301,50 +301,59 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
 })
 
 test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorization', () => {
-    assert.equal(resolveFeignServiceAuthorization(config({ feign: { service_token: 'service-token' } })), 'Bearer service-token')
-    assert.equal(resolveFeignServiceAuthorization(config({ feign: { service_token: 'Bearer service-token' } })), 'Bearer service-token')
+    assert.equal(
+        resolveFeignServiceAuthorization(config({ gateway: { feign: { service_token: 'service-token' } } })),
+        'Bearer service-token'
+    )
+    assert.equal(
+        resolveFeignServiceAuthorization(config({ gateway: { feign: { service_token: 'Bearer service-token' } } })),
+        'Bearer service-token'
+    )
     assert.throws(() => resolveFeignServiceAuthorization(config()), ServiceUnavailableException)
 })
 
 test('业务 Feign 客户端统一读取 Gateway 地址和超时并在启动时校验配置', () => {
     const missing = new FeignClientFactory(config(), async () => new Response())
     missing.create(FeignClientAccountManager)
-    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 feign\.url/)
+    assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 gateway\.feign\.url/)
 
     const configured = new FeignClientFactory(
         config({
-            feign: { url: 'http://gateway.internal:5000', timeout: 3000 }
+            gateway: { feign: { url: 'http://gateway.internal:5000', timeout: 3000 } }
         }),
         async () => new Response()
     )
     configured.create(FeignClientAccountManager)
     configured.create(FeignClientFinanceManager)
     assert.doesNotThrow(() => configured.onApplicationBootstrap())
-    assert.equal(getFeignClientOptions(FeignClientAccountManager).baseUrlConfigKey, 'feign.url')
-    assert.equal(getFeignClientOptions(FeignClientFinanceManager).baseUrlConfigKey, 'feign.url')
-    assert.equal(getFeignClientOptions(FeignClientCrmManager).baseUrlConfigKey, 'feign.url')
-    assert.equal(getFeignClientOptions(FeignClientSkylineManager).baseUrlConfigKey, 'feign.url')
-    assert.equal(getFeignClientOptions(FeignClientAccountManager).timeoutConfigKey, 'feign.timeout')
-    assert.equal(getFeignClientOptions(FeignClientFinanceManager).timeoutConfigKey, 'feign.timeout')
+    assert.equal(getFeignClientOptions(FeignClientAccountManager).baseUrlConfigKey, 'gateway.feign.url')
+    assert.equal(getFeignClientOptions(FeignClientFinanceManager).baseUrlConfigKey, 'gateway.feign.url')
+    assert.equal(getFeignClientOptions(FeignClientCrmManager).baseUrlConfigKey, 'gateway.feign.url')
+    assert.equal(getFeignClientOptions(FeignClientSkylineManager).baseUrlConfigKey, 'gateway.feign.url')
+    assert.equal(getFeignClientOptions(FeignClientAccountManager).timeoutConfigKey, 'gateway.feign.timeout')
+    assert.equal(getFeignClientOptions(FeignClientFinanceManager).timeoutConfigKey, 'gateway.feign.timeout')
 })
 
 test('shared Feign finance client triggers server-owned currency exchange synchronization', async () => {
     let request
-    const factory = new FeignClientFactory(config({ feign: { url: 'http://gateway.internal:5000', timeout: 5000 } }), async (url, init) => {
-        request = { url: String(url), init }
-        return new Response(
-            JSON.stringify({
-                data: {
-                    date: '2026-09-02',
-                    count: 1,
-                    list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
-                },
-                code: 200,
-                message: '成功'
-            }),
-            { status: 200, headers: { 'content-type': 'application/json' } }
-        )
-    })
+    const factory = new FeignClientFactory(
+        config({ gateway: { feign: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
+        async (url, init) => {
+            request = { url: String(url), init }
+            return new Response(
+                JSON.stringify({
+                    data: {
+                        date: '2026-09-02',
+                        count: 1,
+                        list: [{ currency: 'CNY', rate: 7.2534, date: '2026-09-02' }]
+                    },
+                    code: 200,
+                    message: '成功'
+                }),
+                { status: 200, headers: { 'content-type': 'application/json' } }
+            )
+        }
+    )
     const service = factory.create(FeignClientFinanceManager)
     const result = await service.syncCurrencyExchange('Bearer finance-token')
 
@@ -362,13 +371,16 @@ test('shared Feign finance client triggers server-owned currency exchange synchr
 
 test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查询', async () => {
     const requests = []
-    const factory = new FeignClientFactory(config({ feign: { url: 'http://gateway.internal:5000', timeout: 5000 } }), async (url, init) => {
-        requests.push({ url: String(url), method: init.method })
-        return new Response(JSON.stringify({ data: [], code: 200, message: '成功' }), {
-            status: 200,
-            headers: { 'content-type': 'application/json' }
-        })
-    })
+    const factory = new FeignClientFactory(
+        config({ gateway: { feign: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
+        async (url, init) => {
+            requests.push({ url: String(url), method: init.method })
+            return new Response(JSON.stringify({ data: [], code: 200, message: '成功' }), {
+                status: 200,
+                headers: { 'content-type': 'application/json' }
+            })
+        }
+    )
     const service = factory.create(FeignClientFinanceManager)
 
     await service.batchSmsRates('Bearer service-token', { countryKeyIds: [1, 2] })

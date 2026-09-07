@@ -23,7 +23,7 @@ export class InternalAuthGuard implements CanActivate, OnApplicationBootstrap {
     /** 内部认证是网关入口认证的必要依赖，配置缺失时阻止服务启动。 */
     public onApplicationBootstrap(): void {
         if (!this.resolveConfiguredToken()) {
-            throw new Error('Nacos 配置 feign.service_token 未配置，无法提供内部认证服务')
+            throw new Error('Nacos 配置 gateway.feign.service_token 未配置，无法提供内部认证服务')
         }
     }
 
@@ -32,7 +32,7 @@ export class InternalAuthGuard implements CanActivate, OnApplicationBootstrap {
         const provided = request.header('x-service-token')
         const configured = this.resolveConfiguredToken()
         if (!configured) {
-            throw new ServiceUnavailableException('Nacos 配置 feign.service_token 未配置，无法提供内部认证服务')
+            throw new ServiceUnavailableException('Nacos 配置 gateway.feign.service_token 未配置，无法提供内部认证服务')
         }
         if (!provided || !this.secureEquals(this.normalizeToken(provided), configured)) {
             throw new UnauthorizedException('内部认证服务凭据无效')
@@ -41,7 +41,7 @@ export class InternalAuthGuard implements CanActivate, OnApplicationBootstrap {
     }
 
     private resolveConfiguredToken(): string | undefined {
-        const configured = this.configService.get<unknown>('feign.service_token')
+        const configured = this.configService.get<unknown>('gateway.feign.service_token')
         if (typeof configured !== 'string' || !configured.trim()) return undefined
         return this.normalizeToken(configured)
     }

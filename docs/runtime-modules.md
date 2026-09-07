@@ -125,7 +125,7 @@ export class AppModule {}
 
 Gateway calls `POST /internal/auth/token/introspect` through Nacos service
 discovery. The user token travels in the request body and Gateway authenticates
-itself with `X-Service-Token` using Nacos `feign.service_token`. This protocol is
+itself with `X-Service-Token` using Nacos `gateway.feign.service_token`. This protocol is
 not a business Feign client and the internal route is never published through a
 Gateway route.
 
@@ -149,9 +149,9 @@ timeouts, Bearer headers, response envelopes and upstream errors.
 @FeignClient({
     name: '账号服务',
     prefix: '/feign/account',
-    serviceTokenKey: 'feign.service_token',
-    baseUrlConfigKey: 'feign.url',
-    timeoutConfigKey: 'feign.timeout'
+    serviceTokenKey: 'gateway.feign.service_token',
+    baseUrlConfigKey: 'gateway.feign.url',
+    timeoutConfigKey: 'gateway.feign.timeout'
 })
 export class FeignClientAccountManager extends FeignWebClient<FeignClientAccountImplementation> {
     @FeignPost('/user/batch/resolver')
@@ -171,7 +171,7 @@ export class IntegrationModule {}
 
 Use `@FeignGet` with query parameters and `@FeignPost` with one `@FeignBody`. Multi-select fields remain arrays in the POST body. Business services must not create their own `fetch`, Axios or cross-database implementation for an endpoint already declared by a shared Feign client.
 All Feign clients send requests through the Gateway and read the shared Gateway
-address and timeout from `feign.url` and `feign.timeout`. The target service is
+address and timeout from `gateway.feign.url` and `gateway.feign.timeout`. The target service is
 selected by the client's `/feign/<service>` path prefix, so no per-target URL
 nodes are needed. Environment-style `*_SERVICE_URL` and `*_TIMEOUT_MS` keys are
 not read, and the shared clients do not provide fallback addresses or timeouts.

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `tb_account_consumer` (
+CREATE TABLE IF NOT EXISTS `tb_crm_consumer` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `uid` varchar(19) NOT NULL COMMENT '客户UID',
     `owner_user_uid` varchar(19) NOT NULL COMMENT '归属账号UID',
@@ -23,9 +23,11 @@ CREATE TABLE IF NOT EXISTS `tb_account_consumer` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
-    UNIQUE KEY `uk_tb_account_consumer_uid` (`uid`),
-    KEY `idx_tb_account_consumer_owner_user_uid` (`owner_user_uid`),
-    KEY `idx_tb_account_consumer_brand_key_id` (`brand_key_id`),
-    KEY `idx_tb_account_consumer_status` (`status`),
-    KEY `idx_tb_account_consumer_currency` (`currency`)
+    UNIQUE KEY `uk_tb_crm_consumer_uid` (`uid`),
+    KEY `idx_tb_crm_consumer_owner_user_uid` (`owner_user_uid`),
+    KEY `idx_tb_crm_consumer_brand_key_id` (`brand_key_id`),
+    KEY `idx_tb_crm_consumer_status` (`status`),
+    KEY `idx_tb_crm_consumer_currency` (`currency`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 5181000 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '外部客户账号表';
+
+

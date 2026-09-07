@@ -154,12 +154,12 @@ timeouts, Bearer headers, response envelopes and upstream errors.
     timeoutConfigKey: 'feign.gateway.timeout'
 })
 export class FeignClientAccountManager extends FeignWebClient<FeignClientAccountImplementation> {
-    @FeignGet('/consumer/resolver')
-    async resolveConsumer(
+    @FeignPost('/user/batch/resolver')
+    async batchResolveUsers(
         @FeignHeader('authorization') _authorization: string,
-        @FeignQuery('keyId') _keyId: number
-    ): Promise<AccountConsumer> {
-        return this.dispatch('resolveConsumer', _authorization, _keyId)
+        @FeignBody() _input: AccountUserBatchDto
+    ): Promise<AccountUserSummary[]> {
+        return this.dispatch('batchResolveUsers', _authorization, _input)
     }
 }
 

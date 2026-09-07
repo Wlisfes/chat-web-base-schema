@@ -61,7 +61,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @IsUUID('4', { message: '草稿批次ID格式错误' })
     draftBatchId: string
 
-    @ApiProperty({ description: 'Account 客户主键', example: 5181000 })
+    @ApiProperty({ description: 'CRM 客户主键', example: 5181000 })
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })
     consumerKeyId: number
@@ -175,7 +175,7 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     @Column({ name: TbCrmSmsQuoteDraftColumn.DRAFT_BATCH_ID, type: 'varchar', length: 36, nullable: false, comment: '草稿批次ID' })
     draftBatchId: string
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.CONSUMER_KEY_ID, type: 'int', nullable: false, comment: 'Account 客户主键' })
+    @Column({ name: TbCrmSmsQuoteDraftColumn.CONSUMER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
     consumerKeyId: number
 
     @Column({ name: TbCrmSmsQuoteDraftColumn.APPLICATION_KEY_ID, type: 'int', nullable: false, comment: 'CRM 短信应用主键' })

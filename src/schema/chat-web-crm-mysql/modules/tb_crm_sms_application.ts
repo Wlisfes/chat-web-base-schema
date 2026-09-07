@@ -49,7 +49,7 @@ export const { comment: TbCrmSmsApplicationStatusComment } = TbCrmSmsApplication
 export const { comment: TbCrmSmsApplicationTypeComment } = TbCrmSmsApplicationTypeDefinition
 
 export class TbCrmSmsApplicationDto extends DataBaseByDto {
-    @ApiProperty({ description: 'Account 客户主键', example: 5181000 })
+    @ApiProperty({ description: 'CRM 客户主键', example: 5181000 })
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })
     consumerKeyId: number
@@ -115,7 +115,7 @@ export class TbCrmSmsApplicationDto extends DataBaseByDto {
 @Index('idx_tb_crm_sms_application_status', ['status'])
 @Entity({ name: 'tb_crm_sms_application', comment: 'CRM 客户短信应用表' })
 export class TbCrmSmsApplication extends DataBaseByAdapter {
-    @Column({ name: TbCrmSmsApplicationColumn.CONSUMER_KEY_ID, type: 'int', nullable: false, comment: 'Account 客户主键' })
+    @Column({ name: TbCrmSmsApplicationColumn.CONSUMER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
     consumerKeyId: number
 
     @Column({ name: TbCrmSmsApplicationColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '归属账号UID' })

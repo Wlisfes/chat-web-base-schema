@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config'
-import { FeignBody, FeignClient, FeignGet, FeignHeader, FeignPost, FeignQuery } from '../feign.decorator'
+import { FeignBody, FeignClient, FeignHeader, FeignPost } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
-import { AccountConsumerResponseDto, AccountUserSummaryResponseDto, AccountUserBatchDto } from './feign-account.dto'
+import { AccountUserSummaryResponseDto, AccountUserBatchDto } from './feign-account.dto'
 import type * as AccountTypes from './feign-account.interface'
 
 /**
@@ -23,28 +23,6 @@ import type * as AccountTypes from './feign-account.interface'
 export class FeignClientAccountManager extends FeignWebClient<AccountTypes.FeignClientAccountImplementation> {
     constructor(service?: AccountTypes.FeignClientAccountImplementation, configService?: ConfigService) {
         super(service, configService)
-    }
-
-    @FeignGet('/consumer/resolver', {
-        operation: { summary: '供内部服务按客户主键获取客户详情' },
-        response: { type: AccountConsumerResponseDto, description: '客户详情' }
-    })
-    async resolveConsumer(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignQuery('keyId') _keyId: number
-    ): Promise<AccountTypes.AccountConsumer> {
-        return this.dispatch('resolveConsumer', _authorization, _keyId)
-    }
-
-    @FeignGet('/consumer/select', {
-        operation: { summary: '供内部服务筛选客户下拉数据' },
-        response: { type: AccountConsumerResponseDto, isArray: true, description: '客户下拉列表' }
-    })
-    async selectConsumers(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignQuery('name') _name?: string
-    ): Promise<AccountTypes.AccountConsumer[]> {
-        return this.dispatch('selectConsumers', _authorization, _name)
     }
 
     @FeignPost('/user/batch/resolver', {

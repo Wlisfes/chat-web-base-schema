@@ -11,7 +11,7 @@ external SQL deployment scripts. It does not contain a DataSource or migrations.
 Import the account table definitions from the account schema subpath:
 
 ```ts
-import { TbAccountConsumer, TbAccountUser, TbAccountUserDto } from '@wlisfes/chat-web-base-schema/chat-web-account-mysql'
+import { TbAccountUser, TbAccountUserDto } from '@wlisfes/chat-web-base-schema/chat-web-account-mysql'
 ```
 
 Applications consuming this package must keep TypeORM `synchronize` and

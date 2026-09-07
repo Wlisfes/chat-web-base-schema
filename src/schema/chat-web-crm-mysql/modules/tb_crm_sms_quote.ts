@@ -52,7 +52,7 @@ export const {
 } = TbCrmSmsQuoteStatusDefinition
 
 export class TbCrmSmsQuoteDto extends DataBaseByDto {
-    @ApiProperty({ description: 'Account 客户主键', example: 5181000 })
+    @ApiProperty({ description: 'CRM 客户主键', example: 5181000 })
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })
     consumerKeyId: number
@@ -162,7 +162,7 @@ export class TbCrmSmsQuoteDto extends DataBaseByDto {
 @Index('idx_tb_crm_sms_quote_published_time', ['publishedTime'])
 @Entity({ name: 'tb_crm_sms_quote', comment: 'CRM 短信正式报价表' })
 export class TbCrmSmsQuote extends DataBaseByAdapter {
-    @Column({ name: TbCrmSmsQuoteColumn.CONSUMER_KEY_ID, type: 'int', nullable: false, comment: 'Account 客户主键' })
+    @Column({ name: TbCrmSmsQuoteColumn.CONSUMER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
     consumerKeyId: number
 
     @Column({ name: TbCrmSmsQuoteColumn.APPLICATION_KEY_ID, type: 'int', nullable: false, comment: 'CRM 短信应用主键' })

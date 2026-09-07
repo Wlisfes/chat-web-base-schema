@@ -1,39 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsString } from 'class-validator'
 
-/** 账号服务客户详情的 Feign 响应文档模型。 */
-export class AccountConsumerResponseDto {
-    @ApiProperty({ description: '客户主键', example: 1 })
-    keyId: number
-
-    @ApiProperty({ description: '客户 UID', example: '2149446185344106496' })
-    uid: string
-
-    @ApiProperty({ description: '客户所属业务员 UID', example: '2149446185344106497' })
-    ownerUserUid: string
-
-    @ApiProperty({ description: '客户名称', example: '示例客户' })
-    name: string
-
-    @ApiProperty({ description: '客户别名', required: false, example: 'demo' })
-    alias?: string
-
-    @ApiProperty({ description: '客户所属品牌主键', example: 1 })
-    brandId: number
-
-    @ApiProperty({ description: '客户结算币种', example: 'USD' })
-    currency: string
-
-    @ApiProperty({ description: '客户邮箱', example: 'demo@example.com' })
-    email: string
-
-    @ApiProperty({ description: '客户手机号', required: false, example: '13000000000' })
-    phone?: string
-
-    @ApiProperty({ description: '客户状态', example: 'enabled' })
-    status: string
-}
-
 /** 账号展示摘要的 Feign 响应文档模型。 */
 export class AccountUserSummaryResponseDto {
     @ApiProperty({ description: '账号 UID', example: '2149446185344106496' })

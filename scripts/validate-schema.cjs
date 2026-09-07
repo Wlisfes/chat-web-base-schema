@@ -95,21 +95,6 @@ validateTable({
 })
 
 validateTable({
-    entity: accountSchema.TbAccountConsumer,
-    dto: accountSchema.TbAccountConsumerDto,
-    columns: accountSchema.TbAccountConsumerColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_consumer.sql'),
-    enumComments: [
-        accountSchema.TbAccountConsumerStatusComment,
-        accountSchema.TbAccountConsumerPayModeComment,
-        accountSchema.TbAccountConsumerClassTypeComment,
-        accountSchema.TbAccountConsumerStageComment,
-        accountSchema.TbAccountConsumerAuthStatusComment,
-        accountSchema.TbAccountConsumerSourceComment
-    ]
-})
-
-validateTable({
     entity: financeSchema.TbFinanceBrand,
     dto: financeSchema.TbFinanceBrandDto,
     columns: financeSchema.TbFinanceBrandColumn,
@@ -145,6 +130,21 @@ validateTable({
     dto: financeSchema.TbFinanceBasicSmsRateDto,
     columns: financeSchema.TbFinanceBasicSmsRateColumn,
     sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_basic_sms_rate.sql')
+})
+
+validateTable({
+    entity: crmSchema.TbCrmConsumer,
+    dto: crmSchema.TbCrmConsumerDto,
+    columns: crmSchema.TbCrmConsumerColumn,
+    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_consumer.sql'),
+    enumComments: [
+        crmSchema.TbCrmConsumerStatusComment,
+        crmSchema.TbCrmConsumerPayModeComment,
+        crmSchema.TbCrmConsumerClassTypeComment,
+        crmSchema.TbCrmConsumerStageComment,
+        crmSchema.TbCrmConsumerAuthStatusComment,
+        crmSchema.TbCrmConsumerSourceComment
+    ]
 })
 
 validateTable({

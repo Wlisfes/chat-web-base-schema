@@ -35,13 +35,13 @@ export const TbSkylineChunkModuleDefinition = defineEnumMetadata(TbSkylineChunkM
 
 /** 枚举项启用状态。 */
 export enum TbSkylineChunkStatus {
-    DISABLE = 'disable',
-    ENABLE = 'enable'
+    CHUNK_DISABLE = 'disable',
+    CHUNK_ENABLE = 'enable'
 }
 
 export const TbSkylineChunkStatusDefinition = defineEnumMetadata(TbSkylineChunkStatus, '枚举项状态', {
-    [TbSkylineChunkStatus.DISABLE]: { label: '禁用', description: '枚举项不可用于业务选择' },
-    [TbSkylineChunkStatus.ENABLE]: { label: '启用', description: '枚举项可正常用于业务选择' }
+    [TbSkylineChunkStatus.CHUNK_DISABLE]: { label: '禁用', description: '枚举项不可用于业务选择' },
+    [TbSkylineChunkStatus.CHUNK_ENABLE]: { label: '启用', description: '枚举项可正常用于业务选择' }
 })
 
 /** 枚举项完整字段 DTO；后端状态和其他下拉枚举统一通过此表持久化。 */
@@ -93,7 +93,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
         description: TbSkylineChunkStatusDefinition.comment,
         enum: TbSkylineChunkStatus,
         enumName: 'TbSkylineChunkStatus',
-        example: TbSkylineChunkStatus.ENABLE
+        example: TbSkylineChunkStatus.CHUNK_ENABLE
     })
     @IsEnum(TbSkylineChunkStatus, { message: '枚举项状态格式错误' })
     status: TbSkylineChunkStatus
@@ -146,7 +146,7 @@ export class TbSkylineChunk extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        default: TbSkylineChunkStatus.ENABLE,
+        default: TbSkylineChunkStatus.CHUNK_ENABLE,
         comment: TbSkylineChunkStatusDefinition.comment
     })
     status: TbSkylineChunkStatus

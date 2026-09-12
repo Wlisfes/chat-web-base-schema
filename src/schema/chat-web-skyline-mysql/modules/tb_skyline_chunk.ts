@@ -22,15 +22,15 @@ export enum TbSkylineChunkColumn {
 
 /** 枚举项所属业务模块，用于管理端按模块展示字典数据。 */
 export enum TbSkylineChunkModule {
-    SYSTEM = 'system',
-    SALES = 'sales',
-    PURCHASE = 'purchase'
+    CHUNK_SYSTEM = 'CHUNK_SYSTEM',
+    CHUNK_CRM = 'CHUNK_CRM',
+    CHUNK_SRM = 'CHUNK_SRM'
 }
 
 export const TbSkylineChunkModuleDefinition = defineEnumMetadata(TbSkylineChunkModule, '枚举所属模块', {
-    [TbSkylineChunkModule.SYSTEM]: { label: '系统', description: '系统管理模块使用的枚举项' },
-    [TbSkylineChunkModule.SALES]: { label: '销售', description: '销售管理模块使用的枚举项' },
-    [TbSkylineChunkModule.PURCHASE]: { label: '采购', description: '采购管理模块使用的枚举项' }
+    [TbSkylineChunkModule.CHUNK_SYSTEM]: { label: '系统', description: '系统管理模块使用的枚举项' },
+    [TbSkylineChunkModule.CHUNK_CRM]: { label: 'CRM', description: 'CRM 客户关系管理模块使用的枚举项' },
+    [TbSkylineChunkModule.CHUNK_SRM]: { label: 'SRM', description: 'SRM 供应商关系管理模块使用的枚举项' }
 })
 
 export const {
@@ -70,7 +70,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
         description: TbSkylineChunkModuleComment,
         enum: TbSkylineChunkModule,
         enumName: 'TbSkylineChunkModule',
-        example: TbSkylineChunkModule.SYSTEM
+        example: TbSkylineChunkModule.CHUNK_SYSTEM
     })
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module: TbSkylineChunkModule
@@ -135,7 +135,7 @@ export class TbSkylineChunk extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        default: TbSkylineChunkModule.SYSTEM,
+        default: TbSkylineChunkModule.CHUNK_SYSTEM,
         comment: TbSkylineChunkModuleComment
     })
     module: TbSkylineChunkModule

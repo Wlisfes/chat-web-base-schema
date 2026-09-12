@@ -33,13 +33,6 @@ export const TbSkylineChunkModuleDefinition = defineEnumMetadata(TbSkylineChunkM
     [TbSkylineChunkModule.CHUNK_SRM]: { label: 'SRM', description: 'SRM 供应商关系管理模块使用的枚举项' }
 })
 
-export const {
-    metadata: TbSkylineChunkModuleMetadata,
-    options: TbSkylineChunkModuleOptions,
-    count: TbSkylineChunkModuleCount,
-    comment: TbSkylineChunkModuleComment
-} = TbSkylineChunkModuleDefinition
-
 /** 枚举项启用状态。 */
 export enum TbSkylineChunkStatus {
     DISABLE = 'disable',
@@ -51,13 +44,6 @@ export const TbSkylineChunkStatusDefinition = defineEnumMetadata(TbSkylineChunkS
     [TbSkylineChunkStatus.ENABLE]: { label: '启用', description: '枚举项可正常用于业务选择' }
 })
 
-export const {
-    metadata: TbSkylineChunkStatusMetadata,
-    options: TbSkylineChunkStatusOptions,
-    count: TbSkylineChunkStatusCount,
-    comment: TbSkylineChunkStatusComment
-} = TbSkylineChunkStatusDefinition
-
 /** 枚举项完整字段 DTO；后端状态和其他下拉枚举统一通过此表持久化。 */
 export class TbSkylineChunkDto extends DataBaseDto {
     @ApiProperty({ description: '父枚举项主键；根节点为空', example: 1, required: false, nullable: true })
@@ -67,7 +53,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
     pid: number
 
     @ApiProperty({
-        description: TbSkylineChunkModuleComment,
+        description: TbSkylineChunkModuleDefinition.comment,
         enum: TbSkylineChunkModule,
         enumName: 'TbSkylineChunkModule',
         example: TbSkylineChunkModule.CHUNK_SYSTEM
@@ -104,7 +90,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
     sort: number
 
     @ApiProperty({
-        description: TbSkylineChunkStatusComment,
+        description: TbSkylineChunkStatusDefinition.comment,
         enum: TbSkylineChunkStatus,
         enumName: 'TbSkylineChunkStatus',
         example: TbSkylineChunkStatus.ENABLE
@@ -136,7 +122,7 @@ export class TbSkylineChunk extends DataBaseAdapter {
         length: 32,
         nullable: false,
         default: TbSkylineChunkModule.CHUNK_SYSTEM,
-        comment: TbSkylineChunkModuleComment
+        comment: TbSkylineChunkModuleDefinition.comment
     })
     module: TbSkylineChunkModule
 
@@ -161,7 +147,7 @@ export class TbSkylineChunk extends DataBaseAdapter {
         length: 32,
         nullable: false,
         default: TbSkylineChunkStatus.ENABLE,
-        comment: TbSkylineChunkStatusComment
+        comment: TbSkylineChunkStatusDefinition.comment
     })
     status: TbSkylineChunkStatus
 

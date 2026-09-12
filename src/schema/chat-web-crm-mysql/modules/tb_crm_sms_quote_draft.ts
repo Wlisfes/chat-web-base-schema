@@ -53,9 +53,6 @@ export const TbCrmSmsQuoteDraftStatusDefinition = defineEnumMetadata(TbCrmSmsQuo
     [TbCrmSmsQuoteDraftStatus.DELETED]: { label: '已删除', description: '草稿已被移除' }
 })
 
-export const { comment: TbCrmSmsQuoteDraftSourceComment } = TbCrmSmsQuoteDraftSourceDefinition
-export const { comment: TbCrmSmsQuoteDraftStatusComment } = TbCrmSmsQuoteDraftStatusDefinition
-
 export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @ApiProperty({ description: '草稿批次ID', example: '4b5be331-04bc-494b-9192-e7f62a377f52' })
     @IsUUID('4', { message: '草稿批次ID格式错误' })
@@ -151,11 +148,19 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @IsDateString({}, { message: '失效时间格式错误' })
     expiryTime: Date
 
-    @ApiProperty({ description: TbCrmSmsQuoteDraftSourceComment, enum: TbCrmSmsQuoteDraftSource, enumName: 'TbCrmSmsQuoteDraftSource' })
+    @ApiProperty({
+        description: TbCrmSmsQuoteDraftSourceDefinition.comment,
+        enum: TbCrmSmsQuoteDraftSource,
+        enumName: 'TbCrmSmsQuoteDraftSource'
+    })
     @IsEnum(TbCrmSmsQuoteDraftSource, { message: '报价来源格式错误' })
     source: TbCrmSmsQuoteDraftSource
 
-    @ApiProperty({ description: TbCrmSmsQuoteDraftStatusComment, enum: TbCrmSmsQuoteDraftStatus, enumName: 'TbCrmSmsQuoteDraftStatus' })
+    @ApiProperty({
+        description: TbCrmSmsQuoteDraftStatusDefinition.comment,
+        enum: TbCrmSmsQuoteDraftStatus,
+        enumName: 'TbCrmSmsQuoteDraftStatus'
+    })
     @IsEnum(TbCrmSmsQuoteDraftStatus, { message: '报价草稿状态格式错误' })
     status: TbCrmSmsQuoteDraftStatus
 
@@ -250,7 +255,7 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbCrmSmsQuoteDraftSourceComment
+        comment: TbCrmSmsQuoteDraftSourceDefinition.comment
     })
     source: TbCrmSmsQuoteDraftSource
 
@@ -259,7 +264,7 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbCrmSmsQuoteDraftStatusComment
+        comment: TbCrmSmsQuoteDraftStatusDefinition.comment
     })
     status: TbCrmSmsQuoteDraftStatus
 

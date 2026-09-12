@@ -36,13 +36,6 @@ export const TbAccountMenuTypeDefinition = defineEnumMetadata(TbAccountMenuType,
     [TbAccountMenuType.BUTTON]: { label: '按钮', description: '不参与导航、用于绑定后端权限码的操作节点' }
 })
 
-export const {
-    metadata: TbAccountMenuTypeMetadata,
-    options: TbAccountMenuTypeOptions,
-    count: TbAccountMenuTypeCount,
-    comment: TbAccountMenuTypeComment
-} = TbAccountMenuTypeDefinition
-
 /** 菜单节点状态。 */
 export enum TbAccountMenuStatus {
     DISABLED = 'disabled',
@@ -54,13 +47,6 @@ export const TbAccountMenuStatusDefinition = defineEnumMetadata(TbAccountMenuSta
     [TbAccountMenuStatus.ENABLED]: { label: '启用', description: '菜单及权限码正常参与授权计算' }
 })
 
-export const {
-    metadata: TbAccountMenuStatusMetadata,
-    options: TbAccountMenuStatusOptions,
-    count: TbAccountMenuStatusCount,
-    comment: TbAccountMenuStatusComment
-} = TbAccountMenuStatusDefinition
-
 /** 系统菜单、页面和按钮的完整字段 DTO。 */
 export class TbAccountMenuDto extends DataBaseDto {
     @ApiProperty({ description: '父菜单主键；根节点为空', example: 1, required: false })
@@ -70,7 +56,7 @@ export class TbAccountMenuDto extends DataBaseDto {
     parentKeyId: number
 
     @ApiProperty({
-        description: TbAccountMenuTypeComment,
+        description: TbAccountMenuTypeDefinition.comment,
         enum: TbAccountMenuType,
         enumName: 'TbAccountMenuType',
         example: TbAccountMenuType.MENU
@@ -134,7 +120,7 @@ export class TbAccountMenuDto extends DataBaseDto {
     keepAlive: boolean
 
     @ApiProperty({
-        description: TbAccountMenuStatusComment,
+        description: TbAccountMenuStatusDefinition.comment,
         enum: TbAccountMenuStatus,
         enumName: 'TbAccountMenuStatus',
         example: TbAccountMenuStatus.ENABLED
@@ -150,7 +136,7 @@ export class TbAccountMenu extends DataBaseAdapter {
     @Column({ name: TbAccountMenuColumn.PARENT_KEY_ID, type: 'int', nullable: true, comment: '父菜单主键' })
     parentKeyId: number
 
-    @Column({ name: TbAccountMenuColumn.TYPE, type: 'varchar', length: 32, nullable: false, comment: TbAccountMenuTypeComment })
+    @Column({ name: TbAccountMenuColumn.TYPE, type: 'varchar', length: 32, nullable: false, comment: TbAccountMenuTypeDefinition.comment })
     type: TbAccountMenuType
 
     @Column({ name: TbAccountMenuColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '菜单名称' })
@@ -183,6 +169,12 @@ export class TbAccountMenu extends DataBaseAdapter {
     @Column({ name: TbAccountMenuColumn.KEEP_ALIVE, type: 'boolean', nullable: false, default: false, comment: '页面是否保持缓存' })
     keepAlive: boolean
 
-    @Column({ name: TbAccountMenuColumn.STATUS, type: 'varchar', length: 32, nullable: false, comment: TbAccountMenuStatusComment })
+    @Column({
+        name: TbAccountMenuColumn.STATUS,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        comment: TbAccountMenuStatusDefinition.comment
+    })
     status: TbAccountMenuStatus
 }

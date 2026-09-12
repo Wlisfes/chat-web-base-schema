@@ -31,13 +31,6 @@ export const TbAccountRoleDataScopeTypeDefinition = defineEnumMetadata(TbAccount
     [TbAccountRoleDataScopeType.CUSTOM]: { label: '自定义组织', description: '允许访问显式授权的组织，可逐项包含下级组织' }
 })
 
-export const {
-    metadata: TbAccountRoleDataScopeTypeMetadata,
-    options: TbAccountRoleDataScopeTypeOptions,
-    count: TbAccountRoleDataScopeTypeCount,
-    comment: TbAccountRoleDataScopeTypeComment
-} = TbAccountRoleDataScopeTypeDefinition
-
 /** 数据范围规则状态。 */
 export enum TbAccountRoleDataScopeStatus {
     DISABLED = 'disabled',
@@ -48,13 +41,6 @@ export const TbAccountRoleDataScopeStatusDefinition = defineEnumMetadata(TbAccou
     [TbAccountRoleDataScopeStatus.DISABLED]: { label: '禁用', description: '规则不参与数据权限计算' },
     [TbAccountRoleDataScopeStatus.ENABLED]: { label: '启用', description: '规则正常参与数据权限计算' }
 })
-
-export const {
-    metadata: TbAccountRoleDataScopeStatusMetadata,
-    options: TbAccountRoleDataScopeStatusOptions,
-    count: TbAccountRoleDataScopeStatusCount,
-    comment: TbAccountRoleDataScopeStatusComment
-} = TbAccountRoleDataScopeStatusDefinition
 
 /** 角色针对业务资源的数据范围规则完整字段 DTO。 */
 export class TbAccountRoleDataScopeDto extends DataBaseDto {
@@ -70,7 +56,7 @@ export class TbAccountRoleDataScopeDto extends DataBaseDto {
     resourceCode: string
 
     @ApiProperty({
-        description: TbAccountRoleDataScopeTypeComment,
+        description: TbAccountRoleDataScopeTypeDefinition.comment,
         enum: TbAccountRoleDataScopeType,
         enumName: 'TbAccountRoleDataScopeType',
         example: TbAccountRoleDataScopeType.ORGANIZATION_TREE
@@ -79,7 +65,7 @@ export class TbAccountRoleDataScopeDto extends DataBaseDto {
     scopeType: TbAccountRoleDataScopeType
 
     @ApiProperty({
-        description: TbAccountRoleDataScopeStatusComment,
+        description: TbAccountRoleDataScopeStatusDefinition.comment,
         enum: TbAccountRoleDataScopeStatus,
         enumName: 'TbAccountRoleDataScopeStatus',
         example: TbAccountRoleDataScopeStatus.ENABLED
@@ -109,7 +95,7 @@ export class TbAccountRoleDataScope extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbAccountRoleDataScopeTypeComment
+        comment: TbAccountRoleDataScopeTypeDefinition.comment
     })
     scopeType: TbAccountRoleDataScopeType
 
@@ -118,7 +104,7 @@ export class TbAccountRoleDataScope extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbAccountRoleDataScopeStatusComment
+        comment: TbAccountRoleDataScopeStatusDefinition.comment
     })
     status: TbAccountRoleDataScopeStatus
 }

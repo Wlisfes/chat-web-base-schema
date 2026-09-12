@@ -26,13 +26,6 @@ export const TbAccountUserOrganizationStatusDefinition = defineEnumMetadata(TbAc
     [TbAccountUserOrganizationStatus.ENABLED]: { label: '启用', description: '成员关系正常参与组织和权限计算' }
 })
 
-export const {
-    metadata: TbAccountUserOrganizationStatusMetadata,
-    options: TbAccountUserOrganizationStatusOptions,
-    count: TbAccountUserOrganizationStatusCount,
-    comment: TbAccountUserOrganizationStatusComment
-} = TbAccountUserOrganizationStatusDefinition
-
 /** 用户与组织成员关系的完整字段 DTO。 */
 export class TbAccountUserOrganizationDto extends DataBaseDto {
     @ApiProperty({ description: '账号UID', example: '2149446185344106496' })
@@ -57,7 +50,7 @@ export class TbAccountUserOrganizationDto extends DataBaseDto {
     positionName: string
 
     @ApiProperty({
-        description: TbAccountUserOrganizationStatusComment,
+        description: TbAccountUserOrganizationStatusDefinition.comment,
         enum: TbAccountUserOrganizationStatus,
         enumName: 'TbAccountUserOrganizationStatus',
         example: TbAccountUserOrganizationStatus.ENABLED
@@ -99,7 +92,7 @@ export class TbAccountUserOrganization extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbAccountUserOrganizationStatusComment
+        comment: TbAccountUserOrganizationStatusDefinition.comment
     })
     status: TbAccountUserOrganizationStatus
 }

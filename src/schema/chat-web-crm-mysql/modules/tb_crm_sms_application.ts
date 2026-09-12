@@ -45,9 +45,6 @@ export const TbCrmSmsApplicationTypeDefinition = defineEnumMetadata(TbCrmSmsAppl
     [TbCrmSmsApplicationType.OTP]: { label: '验证码', description: '用于一次性验证码' }
 })
 
-export const { comment: TbCrmSmsApplicationStatusComment } = TbCrmSmsApplicationStatusDefinition
-export const { comment: TbCrmSmsApplicationTypeComment } = TbCrmSmsApplicationTypeDefinition
-
 export class TbCrmSmsApplicationDto extends DataBaseByDto {
     @ApiProperty({ description: 'CRM 客户主键', example: 5181000 })
     @IsInt({ message: '客户主键必须是整数' })
@@ -84,14 +81,18 @@ export class TbCrmSmsApplicationDto extends DataBaseByDto {
     appAlias: string
 
     @ApiProperty({
-        description: TbCrmSmsApplicationStatusComment,
+        description: TbCrmSmsApplicationStatusDefinition.comment,
         enum: TbCrmSmsApplicationStatus,
         enumName: 'TbCrmSmsApplicationStatus'
     })
     @IsEnum(TbCrmSmsApplicationStatus, { message: '短信应用状态格式错误' })
     status: TbCrmSmsApplicationStatus
 
-    @ApiProperty({ description: TbCrmSmsApplicationTypeComment, enum: TbCrmSmsApplicationType, enumName: 'TbCrmSmsApplicationType' })
+    @ApiProperty({
+        description: TbCrmSmsApplicationTypeDefinition.comment,
+        enum: TbCrmSmsApplicationType,
+        enumName: 'TbCrmSmsApplicationType'
+    })
     @IsEnum(TbCrmSmsApplicationType, { message: '短信应用类型格式错误' })
     type: TbCrmSmsApplicationType
 
@@ -138,7 +139,7 @@ export class TbCrmSmsApplication extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbCrmSmsApplicationStatusComment
+        comment: TbCrmSmsApplicationStatusDefinition.comment
     })
     status: TbCrmSmsApplicationStatus
 
@@ -147,7 +148,7 @@ export class TbCrmSmsApplication extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbCrmSmsApplicationTypeComment
+        comment: TbCrmSmsApplicationTypeDefinition.comment
     })
     type: TbCrmSmsApplicationType
 

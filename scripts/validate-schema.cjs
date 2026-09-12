@@ -91,7 +91,7 @@ validateTable({
     dto: accountSchema.TbAccountUserDto,
     columns: accountSchema.TbAccountUserColumn,
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user.sql'),
-    enumComments: [accountSchema.TbAccountUserStatusComment, accountSchema.TbAccountUserEmploymentStatusComment]
+    enumComments: [accountSchema.TbAccountUserStatusDefinition.comment, accountSchema.TbAccountUserEmploymentStatusDefinition.comment]
 })
 
 validateTable({
@@ -99,7 +99,7 @@ validateTable({
     dto: financeSchema.TbFinanceBrandDto,
     columns: financeSchema.TbFinanceBrandColumn,
     sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_brand.sql'),
-    enumComments: [financeSchema.TbFinanceBrandStatusComment]
+    enumComments: [financeSchema.TbFinanceBrandStatusDefinition.comment]
 })
 
 validateTable({
@@ -107,7 +107,7 @@ validateTable({
     dto: financeSchema.TbFinanceCurrencyDto,
     columns: financeSchema.TbFinanceCurrencyColumn,
     sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_currency.sql'),
-    enumComments: [financeSchema.TbFinanceCurrencyStatusComment]
+    enumComments: [financeSchema.TbFinanceCurrencyStatusDefinition.comment]
 })
 
 validateTable({
@@ -122,7 +122,7 @@ validateTable({
     dto: financeSchema.TbFinanceCountryDto,
     columns: financeSchema.TbFinanceCountryColumn,
     sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_country.sql'),
-    enumComments: [financeSchema.TbFinanceCountryStatusComment]
+    enumComments: [financeSchema.TbFinanceCountryStatusDefinition.comment]
 })
 
 validateTable({
@@ -138,12 +138,12 @@ validateTable({
     columns: crmSchema.TbCrmConsumerColumn,
     sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_consumer.sql'),
     enumComments: [
-        crmSchema.TbCrmConsumerStatusComment,
-        crmSchema.TbCrmConsumerPayModeComment,
-        crmSchema.TbCrmConsumerClassTypeComment,
-        crmSchema.TbCrmConsumerStageComment,
-        crmSchema.TbCrmConsumerAuthStatusComment,
-        crmSchema.TbCrmConsumerSourceComment
+        crmSchema.TbCrmConsumerStatusDefinition.comment,
+        crmSchema.TbCrmConsumerPayModeDefinition.comment,
+        crmSchema.TbCrmConsumerClassTypeDefinition.comment,
+        crmSchema.TbCrmConsumerStageDefinition.comment,
+        crmSchema.TbCrmConsumerAuthStatusDefinition.comment,
+        crmSchema.TbCrmConsumerSourceDefinition.comment
     ]
 })
 
@@ -152,7 +152,7 @@ validateTable({
     dto: crmSchema.TbCrmSmsApplicationDto,
     columns: crmSchema.TbCrmSmsApplicationColumn,
     sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_application.sql'),
-    enumComments: [crmSchema.TbCrmSmsApplicationStatusComment, crmSchema.TbCrmSmsApplicationTypeComment]
+    enumComments: [crmSchema.TbCrmSmsApplicationStatusDefinition.comment, crmSchema.TbCrmSmsApplicationTypeDefinition.comment]
 })
 
 validateTable({
@@ -160,7 +160,7 @@ validateTable({
     dto: crmSchema.TbCrmSmsQuoteDraftDto,
     columns: crmSchema.TbCrmSmsQuoteDraftColumn,
     sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_quote_draft.sql'),
-    enumComments: [crmSchema.TbCrmSmsQuoteDraftSourceComment, crmSchema.TbCrmSmsQuoteDraftStatusComment]
+    enumComments: [crmSchema.TbCrmSmsQuoteDraftSourceDefinition.comment, crmSchema.TbCrmSmsQuoteDraftStatusDefinition.comment]
 })
 
 validateTable({
@@ -168,7 +168,7 @@ validateTable({
     dto: crmSchema.TbCrmSmsQuoteDto,
     columns: crmSchema.TbCrmSmsQuoteColumn,
     sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_quote.sql'),
-    enumComments: [crmSchema.TbCrmSmsQuoteStatusComment]
+    enumComments: [crmSchema.TbCrmSmsQuoteStatusDefinition.comment]
 })
 
 validateTable({
@@ -176,7 +176,10 @@ validateTable({
     dto: skylineSchema.TbSkylineDatetaskSystemDto,
     columns: skylineSchema.TbSkylineDatetaskSystemColumn,
     sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_datetask_system.sql'),
-    enumComments: [skylineSchema.TbSkylineDatetaskSystemTypeComment, skylineSchema.TbSkylineDatetaskSystemStatusComment]
+    enumComments: [
+        skylineSchema.TbSkylineDatetaskSystemTypeDefinition.comment,
+        skylineSchema.TbSkylineDatetaskSystemStatusDefinition.comment
+    ]
 })
 
 validateTable({
@@ -184,7 +187,7 @@ validateTable({
     dto: accountSchema.TbAccountOrganizationDto,
     columns: accountSchema.TbAccountOrganizationColumn,
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_organization.sql'),
-    enumComments: [accountSchema.TbAccountOrganizationTypeComment, accountSchema.TbAccountOrganizationStatusComment]
+    enumComments: [accountSchema.TbAccountOrganizationTypeDefinition.comment, accountSchema.TbAccountOrganizationStatusDefinition.comment]
 })
 
 validateTable({
@@ -199,7 +202,7 @@ validateTable({
     dto: accountSchema.TbAccountUserOrganizationDto,
     columns: accountSchema.TbAccountUserOrganizationColumn,
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user_organization.sql'),
-    enumComments: [accountSchema.TbAccountUserOrganizationStatusComment]
+    enumComments: [accountSchema.TbAccountUserOrganizationStatusDefinition.comment]
 })
 
 validateTable({
@@ -221,7 +224,7 @@ validateTable({
     dto: accountSchema.TbAccountMenuDto,
     columns: accountSchema.TbAccountMenuColumn,
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_menu.sql'),
-    enumComments: [accountSchema.TbAccountMenuTypeComment, accountSchema.TbAccountMenuStatusComment]
+    enumComments: [accountSchema.TbAccountMenuTypeDefinition.comment, accountSchema.TbAccountMenuStatusDefinition.comment]
 })
 
 validateTable({
@@ -229,7 +232,7 @@ validateTable({
     dto: accountSchema.TbAccountRoleDto,
     columns: accountSchema.TbAccountRoleColumn,
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role.sql'),
-    enumComments: [accountSchema.TbAccountRoleStatusComment]
+    enumComments: [accountSchema.TbAccountRoleStatusDefinition.comment]
 })
 
 validateTable({
@@ -251,7 +254,7 @@ validateTable({
     dto: accountSchema.TbAccountRoleDataScopeDto,
     columns: accountSchema.TbAccountRoleDataScopeColumn,
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_data_scope.sql'),
-    enumComments: [accountSchema.TbAccountRoleDataScopeTypeComment, accountSchema.TbAccountRoleDataScopeStatusComment]
+    enumComments: [accountSchema.TbAccountRoleDataScopeTypeDefinition.comment, accountSchema.TbAccountRoleDataScopeStatusDefinition.comment]
 })
 
 validateTable({

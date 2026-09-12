@@ -25,13 +25,6 @@ export const TbFinanceBrandStatusDefinition = defineEnumMetadata(TbFinanceBrandS
     [TbFinanceBrandStatus.ENABLE]: { label: '启用', description: '品牌可正常使用' }
 })
 
-export const {
-    metadata: TbFinanceBrandStatusMetadata,
-    options: TbFinanceBrandStatusOptions,
-    count: TbFinanceBrandStatusCount,
-    comment: TbFinanceBrandStatusComment
-} = TbFinanceBrandStatusDefinition
-
 export class TbFinanceBrandDto extends DataBaseByDto {
     @ApiProperty({ description: '品牌名称', example: 'LYNKS' })
     @IsString({ message: '品牌名称必须是字符串' })
@@ -46,7 +39,7 @@ export class TbFinanceBrandDto extends DataBaseByDto {
     document: string
 
     @ApiProperty({
-        description: TbFinanceBrandStatusComment,
+        description: TbFinanceBrandStatusDefinition.comment,
         enum: TbFinanceBrandStatus,
         enumName: 'TbFinanceBrandStatus',
         example: TbFinanceBrandStatus.ENABLE
@@ -70,7 +63,7 @@ export class TbFinanceBrand extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbFinanceBrandStatusComment
+        comment: TbFinanceBrandStatusDefinition.comment
     })
     status: TbFinanceBrandStatus
 }

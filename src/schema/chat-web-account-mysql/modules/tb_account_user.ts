@@ -41,13 +41,6 @@ export const TbAccountUserStatusDefinition = defineEnumMetadata(TbAccountUserSta
     }
 })
 
-export const {
-    metadata: TbAccountUserStatusMetadata,
-    options: TbAccountUserStatusOptions,
-    count: TbAccountUserStatusCount,
-    comment: TbAccountUserStatusComment
-} = TbAccountUserStatusDefinition
-
 /** 员工在职状态；与账号能否登录的状态相互独立。 */
 export enum TbAccountUserEmploymentStatus {
     EMPLOYED = 'employed',
@@ -65,13 +58,6 @@ export const TbAccountUserEmploymentStatusDefinition = defineEnumMetadata(TbAcco
         description: '员工已经离职'
     }
 })
-
-export const {
-    metadata: TbAccountUserEmploymentStatusMetadata,
-    options: TbAccountUserEmploymentStatusOptions,
-    count: TbAccountUserEmploymentStatusCount,
-    comment: TbAccountUserEmploymentStatusComment
-} = TbAccountUserEmploymentStatusDefinition
 
 /**
  * tb_account_user 的完整字段 DTO。
@@ -115,7 +101,7 @@ export class TbAccountUserDto extends DataBaseDto {
     avatar: string
 
     @ApiProperty({
-        description: TbAccountUserStatusComment,
+        description: TbAccountUserStatusDefinition.comment,
         enum: TbAccountUserStatus,
         enumName: 'TbAccountUserStatus',
         example: TbAccountUserStatus.ENABLED
@@ -125,7 +111,7 @@ export class TbAccountUserDto extends DataBaseDto {
     status: TbAccountUserStatus
 
     @ApiProperty({
-        description: TbAccountUserEmploymentStatusComment,
+        description: TbAccountUserEmploymentStatusDefinition.comment,
         enum: TbAccountUserEmploymentStatus,
         enumName: 'TbAccountUserEmploymentStatus',
         example: TbAccountUserEmploymentStatus.EMPLOYED
@@ -222,7 +208,7 @@ export class TbAccountUser extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbAccountUserStatusComment
+        comment: TbAccountUserStatusDefinition.comment
     })
     status: TbAccountUserStatus
 
@@ -231,7 +217,7 @@ export class TbAccountUser extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbAccountUserEmploymentStatusComment
+        comment: TbAccountUserEmploymentStatusDefinition.comment
     })
     employmentStatus: TbAccountUserEmploymentStatus
 

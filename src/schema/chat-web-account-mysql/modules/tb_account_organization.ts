@@ -30,13 +30,6 @@ export const TbAccountOrganizationTypeDefinition = defineEnumMetadata(TbAccountO
     [TbAccountOrganizationType.TEAM]: { label: '团队', description: '项目组等非正式团队节点' }
 })
 
-export const {
-    metadata: TbAccountOrganizationTypeMetadata,
-    options: TbAccountOrganizationTypeOptions,
-    count: TbAccountOrganizationTypeCount,
-    comment: TbAccountOrganizationTypeComment
-} = TbAccountOrganizationTypeDefinition
-
 /** 组织节点状态。 */
 export enum TbAccountOrganizationStatus {
     DISABLED = 'disabled',
@@ -47,13 +40,6 @@ export const TbAccountOrganizationStatusDefinition = defineEnumMetadata(TbAccoun
     [TbAccountOrganizationStatus.DISABLED]: { label: '禁用', description: '组织节点不可再用于新增授权或成员关系' },
     [TbAccountOrganizationStatus.ENABLED]: { label: '启用', description: '组织节点正常使用' }
 })
-
-export const {
-    metadata: TbAccountOrganizationStatusMetadata,
-    options: TbAccountOrganizationStatusOptions,
-    count: TbAccountOrganizationStatusCount,
-    comment: TbAccountOrganizationStatusComment
-} = TbAccountOrganizationStatusDefinition
 
 /** 组织架构节点的完整字段 DTO。 */
 export class TbAccountOrganizationDto extends DataBaseDto {
@@ -76,7 +62,7 @@ export class TbAccountOrganizationDto extends DataBaseDto {
     name: string
 
     @ApiProperty({
-        description: TbAccountOrganizationTypeComment,
+        description: TbAccountOrganizationTypeDefinition.comment,
         enum: TbAccountOrganizationType,
         enumName: 'TbAccountOrganizationType',
         example: TbAccountOrganizationType.DEPARTMENT
@@ -96,7 +82,7 @@ export class TbAccountOrganizationDto extends DataBaseDto {
     sort: number
 
     @ApiProperty({
-        description: TbAccountOrganizationStatusComment,
+        description: TbAccountOrganizationStatusDefinition.comment,
         enum: TbAccountOrganizationStatus,
         enumName: 'TbAccountOrganizationStatus',
         example: TbAccountOrganizationStatus.ENABLED
@@ -123,7 +109,7 @@ export class TbAccountOrganization extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbAccountOrganizationTypeComment
+        comment: TbAccountOrganizationTypeDefinition.comment
     })
     type: TbAccountOrganizationType
 
@@ -138,7 +124,7 @@ export class TbAccountOrganization extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbAccountOrganizationStatusComment
+        comment: TbAccountOrganizationStatusDefinition.comment
     })
     status: TbAccountOrganizationStatus
 }

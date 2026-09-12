@@ -23,13 +23,6 @@ export const TbFinanceCurrencyStatusDefinition = defineEnumMetadata(TbFinanceCur
     [TbFinanceCurrencyStatus.ENABLE]: { label: '启用', description: '币种可正常使用' }
 })
 
-export const {
-    metadata: TbFinanceCurrencyStatusMetadata,
-    options: TbFinanceCurrencyStatusOptions,
-    count: TbFinanceCurrencyStatusCount,
-    comment: TbFinanceCurrencyStatusComment
-} = TbFinanceCurrencyStatusDefinition
-
 export class TbFinanceCurrencyDto extends DataBaseDto {
     @ApiProperty({ description: '币种编码', example: 'USD' })
     @IsString({ message: '币种编码必须是字符串' })
@@ -50,7 +43,7 @@ export class TbFinanceCurrencyDto extends DataBaseDto {
     symbol: string
 
     @ApiProperty({
-        description: TbFinanceCurrencyStatusComment,
+        description: TbFinanceCurrencyStatusDefinition.comment,
         enum: TbFinanceCurrencyStatus,
         enumName: 'TbFinanceCurrencyStatus',
         example: TbFinanceCurrencyStatus.ENABLE
@@ -77,7 +70,7 @@ export class TbFinanceCurrency extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbFinanceCurrencyStatusComment
+        comment: TbFinanceCurrencyStatusDefinition.comment
     })
     status: TbFinanceCurrencyStatus
 }

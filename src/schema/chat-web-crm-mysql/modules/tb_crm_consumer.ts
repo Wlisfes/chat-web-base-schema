@@ -103,13 +103,6 @@ export const TbCrmConsumerSourceDefinition = defineEnumMetadata(TbCrmConsumerSou
     [TbCrmConsumerSource.PLATFORM]: { label: '平台注册', description: '客户从平台注册' }
 })
 
-export const { comment: TbCrmConsumerStatusComment } = TbCrmConsumerStatusDefinition
-export const { comment: TbCrmConsumerPayModeComment } = TbCrmConsumerPayModeDefinition
-export const { comment: TbCrmConsumerClassTypeComment } = TbCrmConsumerClassTypeDefinition
-export const { comment: TbCrmConsumerStageComment } = TbCrmConsumerStageDefinition
-export const { comment: TbCrmConsumerAuthStatusComment } = TbCrmConsumerAuthStatusDefinition
-export const { comment: TbCrmConsumerSourceComment } = TbCrmConsumerSourceDefinition
-
 export class TbCrmConsumerDto extends DataBaseDto {
     @ApiProperty({ description: '客户UID', example: '2149446185344106496' })
     @IsString({ message: '客户UID必须是字符串' })
@@ -154,16 +147,16 @@ export class TbCrmConsumerDto extends DataBaseDto {
     @MaxLength(32, { message: '电话号码长度不能超过32位' })
     phone: string
 
-    @ApiProperty({ description: TbCrmConsumerStatusComment, enum: TbCrmConsumerStatus, enumName: 'TbCrmConsumerStatus' })
+    @ApiProperty({ description: TbCrmConsumerStatusDefinition.comment, enum: TbCrmConsumerStatus, enumName: 'TbCrmConsumerStatus' })
     @IsEnum(TbCrmConsumerStatus, { message: '客户状态格式错误' })
     status: TbCrmConsumerStatus
 
-    @ApiProperty({ description: TbCrmConsumerPayModeComment, enum: TbCrmConsumerPayMode, enumName: 'TbCrmConsumerPayMode' })
+    @ApiProperty({ description: TbCrmConsumerPayModeDefinition.comment, enum: TbCrmConsumerPayMode, enumName: 'TbCrmConsumerPayMode' })
     @IsEnum(TbCrmConsumerPayMode, { message: '付款模式格式错误' })
     payMode: TbCrmConsumerPayMode
 
     @ApiProperty({
-        description: TbCrmConsumerClassTypeComment,
+        description: TbCrmConsumerClassTypeDefinition.comment,
         enum: TbCrmConsumerClassType,
         enumName: 'TbCrmConsumerClassType'
     })
@@ -187,19 +180,19 @@ export class TbCrmConsumerDto extends DataBaseDto {
     @Min(1, { message: '客户等级不能小于1' })
     level: number
 
-    @ApiProperty({ description: TbCrmConsumerStageComment, enum: TbCrmConsumerStage, enumName: 'TbCrmConsumerStage' })
+    @ApiProperty({ description: TbCrmConsumerStageDefinition.comment, enum: TbCrmConsumerStage, enumName: 'TbCrmConsumerStage' })
     @IsEnum(TbCrmConsumerStage, { message: '客户阶段格式错误' })
     stage: TbCrmConsumerStage
 
     @ApiProperty({
-        description: TbCrmConsumerAuthStatusComment,
+        description: TbCrmConsumerAuthStatusDefinition.comment,
         enum: TbCrmConsumerAuthStatus,
         enumName: 'TbCrmConsumerAuthStatus'
     })
     @IsEnum(TbCrmConsumerAuthStatus, { message: '认证状态格式错误' })
     authStatus: TbCrmConsumerAuthStatus
 
-    @ApiProperty({ description: TbCrmConsumerSourceComment, enum: TbCrmConsumerSource, enumName: 'TbCrmConsumerSource' })
+    @ApiProperty({ description: TbCrmConsumerSourceDefinition.comment, enum: TbCrmConsumerSource, enumName: 'TbCrmConsumerSource' })
     @IsEnum(TbCrmConsumerSource, { message: '注册来源格式错误' })
     source: TbCrmConsumerSource
 
@@ -241,7 +234,13 @@ export class TbCrmConsumer extends DataBaseAdapter {
     @Column({ name: TbCrmConsumerColumn.PHONE, type: 'varchar', length: 32, nullable: true, comment: '电话号码' })
     phone: string
 
-    @Column({ name: TbCrmConsumerColumn.STATUS, type: 'varchar', length: 32, nullable: false, comment: TbCrmConsumerStatusComment })
+    @Column({
+        name: TbCrmConsumerColumn.STATUS,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        comment: TbCrmConsumerStatusDefinition.comment
+    })
     status: TbCrmConsumerStatus
 
     @Column({
@@ -249,7 +248,7 @@ export class TbCrmConsumer extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbCrmConsumerPayModeComment
+        comment: TbCrmConsumerPayModeDefinition.comment
     })
     payMode: TbCrmConsumerPayMode
 
@@ -259,7 +258,7 @@ export class TbCrmConsumer extends DataBaseAdapter {
         length: 32,
         nullable: false,
         default: TbCrmConsumerClassType.COMMON,
-        comment: TbCrmConsumerClassTypeComment
+        comment: TbCrmConsumerClassTypeDefinition.comment
     })
     classType: TbCrmConsumerClassType
 
@@ -296,7 +295,7 @@ export class TbCrmConsumer extends DataBaseAdapter {
         length: 32,
         nullable: false,
         default: TbCrmConsumerStage.CLUETRAIL,
-        comment: TbCrmConsumerStageComment
+        comment: TbCrmConsumerStageDefinition.comment
     })
     stage: TbCrmConsumerStage
 
@@ -306,7 +305,7 @@ export class TbCrmConsumer extends DataBaseAdapter {
         length: 32,
         nullable: false,
         default: TbCrmConsumerAuthStatus.UNVERIFIED,
-        comment: TbCrmConsumerAuthStatusComment
+        comment: TbCrmConsumerAuthStatusDefinition.comment
     })
     authStatus: TbCrmConsumerAuthStatus
 
@@ -316,7 +315,7 @@ export class TbCrmConsumer extends DataBaseAdapter {
         length: 32,
         nullable: false,
         default: TbCrmConsumerSource.MANUAL,
-        comment: TbCrmConsumerSourceComment
+        comment: TbCrmConsumerSourceDefinition.comment
     })
     source: TbCrmConsumerSource
 

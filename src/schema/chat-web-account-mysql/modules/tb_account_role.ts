@@ -27,13 +27,6 @@ export const TbAccountRoleStatusDefinition = defineEnumMetadata(TbAccountRoleSta
     [TbAccountRoleStatus.ENABLED]: { label: '启用', description: '角色正常参与菜单和数据权限计算' }
 })
 
-export const {
-    metadata: TbAccountRoleStatusMetadata,
-    options: TbAccountRoleStatusOptions,
-    count: TbAccountRoleStatusCount,
-    comment: TbAccountRoleStatusComment
-} = TbAccountRoleStatusDefinition
-
 /** 系统角色的完整字段 DTO。 */
 export class TbAccountRoleDto extends DataBaseDto {
     @ApiProperty({ description: '角色编码', example: 'department_manager' })
@@ -64,7 +57,7 @@ export class TbAccountRoleDto extends DataBaseDto {
     builtin: boolean
 
     @ApiProperty({
-        description: TbAccountRoleStatusComment,
+        description: TbAccountRoleStatusDefinition.comment,
         enum: TbAccountRoleStatus,
         enumName: 'TbAccountRoleStatus',
         example: TbAccountRoleStatus.ENABLED
@@ -92,6 +85,12 @@ export class TbAccountRole extends DataBaseAdapter {
     @Column({ name: TbAccountRoleColumn.BUILTIN, type: 'boolean', nullable: false, default: false, comment: '是否为系统内置角色' })
     builtin: boolean
 
-    @Column({ name: TbAccountRoleColumn.STATUS, type: 'varchar', length: 32, nullable: false, comment: TbAccountRoleStatusComment })
+    @Column({
+        name: TbAccountRoleColumn.STATUS,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        comment: TbAccountRoleStatusDefinition.comment
+    })
     status: TbAccountRoleStatus
 }

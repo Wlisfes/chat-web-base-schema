@@ -44,13 +44,6 @@ export const TbCrmSmsQuoteStatusDefinition = defineEnumMetadata(TbCrmSmsQuoteSta
     [TbCrmSmsQuoteStatus.PENDING]: { label: '待生效', description: '报价等待生效时间' }
 })
 
-export const {
-    metadata: TbCrmSmsQuoteStatusMetadata,
-    options: TbCrmSmsQuoteStatusOptions,
-    count: TbCrmSmsQuoteStatusCount,
-    comment: TbCrmSmsQuoteStatusComment
-} = TbCrmSmsQuoteStatusDefinition
-
 export class TbCrmSmsQuoteDto extends DataBaseByDto {
     @ApiProperty({ description: 'CRM 客户主键', example: 5181000 })
     @IsInt({ message: '客户主键必须是整数' })
@@ -141,7 +134,7 @@ export class TbCrmSmsQuoteDto extends DataBaseByDto {
     @IsDateString({}, { message: '失效时间格式错误' })
     expiryTime: Date
 
-    @ApiProperty({ description: TbCrmSmsQuoteStatusComment, enum: TbCrmSmsQuoteStatus, enumName: 'TbCrmSmsQuoteStatus' })
+    @ApiProperty({ description: TbCrmSmsQuoteStatusDefinition.comment, enum: TbCrmSmsQuoteStatus, enumName: 'TbCrmSmsQuoteStatus' })
     @IsEnum(TbCrmSmsQuoteStatus, { message: '短信报价状态格式错误' })
     status: TbCrmSmsQuoteStatus
 
@@ -232,7 +225,13 @@ export class TbCrmSmsQuote extends DataBaseByAdapter {
     })
     expiryTime: Date
 
-    @Column({ name: TbCrmSmsQuoteColumn.STATUS, type: 'varchar', length: 32, nullable: false, comment: TbCrmSmsQuoteStatusComment })
+    @Column({
+        name: TbCrmSmsQuoteColumn.STATUS,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        comment: TbCrmSmsQuoteStatusDefinition.comment
+    })
     status: TbCrmSmsQuoteStatus
 
     @DateWithColumn(Column, {

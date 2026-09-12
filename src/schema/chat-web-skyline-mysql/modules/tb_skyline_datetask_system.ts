@@ -33,13 +33,6 @@ export const TbSkylineDatetaskSystemTypeDefinition = defineEnumMetadata(TbSkylin
     [TbSkylineDatetaskSystemType.SYSTEM]: { label: '系统任务', description: '系统内置且不可删除的任务' }
 })
 
-export const {
-    metadata: TbSkylineDatetaskSystemTypeMetadata,
-    options: TbSkylineDatetaskSystemTypeOptions,
-    count: TbSkylineDatetaskSystemTypeCount,
-    comment: TbSkylineDatetaskSystemTypeComment
-} = TbSkylineDatetaskSystemTypeDefinition
-
 /** 系统任务状态。 */
 export enum TbSkylineDatetaskSystemStatus {
     STOP = 'stop',
@@ -54,13 +47,6 @@ export const TbSkylineDatetaskSystemStatusDefinition = defineEnumMetadata(TbSkyl
     [TbSkylineDatetaskSystemStatus.RUNNING]: { label: '运行中', description: '任务已启用并参与调度' },
     [TbSkylineDatetaskSystemStatus.FINISH]: { label: '已完成', description: '任务已执行完成' }
 })
-
-export const {
-    metadata: TbSkylineDatetaskSystemStatusMetadata,
-    options: TbSkylineDatetaskSystemStatusOptions,
-    count: TbSkylineDatetaskSystemStatusCount,
-    comment: TbSkylineDatetaskSystemStatusComment
-} = TbSkylineDatetaskSystemStatusDefinition
 
 /** 系统任务完整字段 DTO。 */
 export class TbSkylineDatetaskSystemDto extends DataBaseDto {
@@ -96,7 +82,7 @@ export class TbSkylineDatetaskSystemDto extends DataBaseDto {
     cron: string
 
     @ApiProperty({
-        description: TbSkylineDatetaskSystemTypeComment,
+        description: TbSkylineDatetaskSystemTypeDefinition.comment,
         enum: TbSkylineDatetaskSystemType,
         enumName: 'TbSkylineDatetaskSystemType',
         example: TbSkylineDatetaskSystemType.SYSTEM
@@ -105,7 +91,7 @@ export class TbSkylineDatetaskSystemDto extends DataBaseDto {
     type: TbSkylineDatetaskSystemType
 
     @ApiProperty({
-        description: TbSkylineDatetaskSystemStatusComment,
+        description: TbSkylineDatetaskSystemStatusDefinition.comment,
         enum: TbSkylineDatetaskSystemStatus,
         enumName: 'TbSkylineDatetaskSystemStatus',
         example: TbSkylineDatetaskSystemStatus.RUNNING
@@ -152,7 +138,7 @@ export class TbSkylineDatetaskSystem extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbSkylineDatetaskSystemTypeComment
+        comment: TbSkylineDatetaskSystemTypeDefinition.comment
     })
     type: TbSkylineDatetaskSystemType
 
@@ -161,7 +147,7 @@ export class TbSkylineDatetaskSystem extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbSkylineDatetaskSystemStatusComment
+        comment: TbSkylineDatetaskSystemStatusDefinition.comment
     })
     status: TbSkylineDatetaskSystemStatus
 

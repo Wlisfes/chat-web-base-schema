@@ -24,13 +24,6 @@ export const TbFinanceCountryStatusDefinition = defineEnumMetadata(TbFinanceCoun
     [TbFinanceCountryStatus.ENABLE]: { label: '启用', description: '国家/地区可正常使用' }
 })
 
-export const {
-    metadata: TbFinanceCountryStatusMetadata,
-    options: TbFinanceCountryStatusOptions,
-    count: TbFinanceCountryStatusCount,
-    comment: TbFinanceCountryStatusComment
-} = TbFinanceCountryStatusDefinition
-
 export class TbFinanceCountryDto extends DataBaseDto {
     @ApiProperty({ description: '国家/地区国际区号', example: '86' })
     @IsString({ message: '国家/地区编码必须是字符串' })
@@ -57,7 +50,7 @@ export class TbFinanceCountryDto extends DataBaseDto {
     enName: string
 
     @ApiProperty({
-        description: TbFinanceCountryStatusComment,
+        description: TbFinanceCountryStatusDefinition.comment,
         enum: TbFinanceCountryStatus,
         enumName: 'TbFinanceCountryStatus',
         example: TbFinanceCountryStatus.ENABLE
@@ -87,7 +80,7 @@ export class TbFinanceCountry extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbFinanceCountryStatusComment
+        comment: TbFinanceCountryStatusDefinition.comment
     })
     status: TbFinanceCountryStatus
 }

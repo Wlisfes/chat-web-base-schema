@@ -25,7 +25,7 @@ export class FeignClientAccountManager extends FeignWebClient<AccountTypes.Feign
         super(service, configService)
     }
 
-    @FeignPost('/user/batch/resolver', {
+    @FeignPost('/user/batch/resolve', {
         operation: { summary: '供内部服务批量把账号 UID 还原为展示摘要' },
         request: { source: 'body', type: AccountUserBatchDto },
         response: { type: AccountUserSummaryResponseDto, isArray: true, description: '账号展示摘要列表' }

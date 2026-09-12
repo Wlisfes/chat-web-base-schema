@@ -33,7 +33,7 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
     }
 
     /**按币种获取最新汇率**/
-    @FeignGet('/currency/exchange/resolver')
+    @FeignGet('/currency/exchange/resolve')
     async resolveCurrencyExchange(
         @FeignHeader('authorization') _authorization: string,
         @FeignQuery('currency') _currency: string

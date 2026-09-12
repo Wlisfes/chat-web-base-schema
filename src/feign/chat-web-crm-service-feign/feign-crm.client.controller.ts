@@ -31,7 +31,7 @@ export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCr
     constructor(service?: CrmTypes.FeignClientCrmImplementation, configService?: ConfigService) {
         super(service, configService)
     }
-    @FeignGet('/consumer/resolver', {
+    @FeignGet('/consumer/resolve', {
         operation: { summary: '供内部服务按客户主键获取客户详情' },
         request: { source: 'query', type: CrmResolveConsumerRequestDto },
         response: { type: CrmConsumerResponseDto, description: '客户详情' }

@@ -287,7 +287,7 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
 
     // 服务间路由带 /feign/<服务名> 前缀，网关不改写，因此不会与公开业务路由冲突。
     const batchResolveUsers = AccountFeignController.prototype.batchResolveUsers
-    assert.equal(Reflect.getMetadata(PATH_METADATA, batchResolveUsers), '/feign/account/user/batch/resolver')
+    assert.equal(Reflect.getMetadata(PATH_METADATA, batchResolveUsers), '/feign/account/user/batch/resolve')
     assert.equal(Reflect.getMetadata(METHOD_METADATA, batchResolveUsers), RequestMethod.POST)
     assert.equal(Reflect.getMetadata('auth:is-public', batchResolveUsers), true)
     assert.equal(Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'batchResolveUsers')['6:0'].data, 'authorization')
@@ -388,7 +388,7 @@ test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查�
 
     assert.deepEqual(requests, [
         { url: 'http://gateway.internal:5000/feign/finance/rates/sms/batch', method: 'POST' },
-        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolver?currency=CNY', method: 'GET' }
+        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolve?currency=CNY', method: 'GET' }
     ])
 })
 

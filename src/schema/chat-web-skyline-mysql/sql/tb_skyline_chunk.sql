@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS `tb_skyline_chunk` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `pid` int NULL COMMENT '父枚举项主键；根节点为空',
+    `module` varchar(32) NOT NULL DEFAULT 'system' COMMENT '枚举所属模块：system=系统；sales=销售；purchase=采购',
     `type` varchar(128) NOT NULL COMMENT '枚举类型编码',
     `name` varchar(128) NOT NULL COMMENT '枚举项显示名称',
     `value` varchar(128) NOT NULL COMMENT '枚举项业务值',
@@ -12,9 +13,9 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_chunk` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
-    UNIQUE KEY `uk_tb_skyline_chunk_type_value` (`type`, `value`),
+    UNIQUE KEY `uk_tb_skyline_chunk_module_type_value` (`module`, `type`, `value`),
     KEY `idx_tb_skyline_chunk_pid` (`pid`),
-    KEY `idx_tb_skyline_chunk_type_sort` (`type`, `sort`),
+    KEY `idx_tb_skyline_chunk_module_type_sort` (`module`, `type`, `sort`),
     KEY `idx_tb_skyline_chunk_status` (`status`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 10000

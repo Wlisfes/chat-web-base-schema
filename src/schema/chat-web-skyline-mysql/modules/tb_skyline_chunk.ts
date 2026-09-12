@@ -7,6 +7,7 @@ import { DataBaseAdapter, DataBaseDto, WithJsonColumn, defineEnumMetadata } from
 export enum TbSkylineChunkColumn {
     KEY_ID = 'key_id',
     PID = 'pid',
+    MODULE = 'module',
     TYPE = 'type',
     NAME = 'name',
     VALUE = 'value',
@@ -18,6 +19,26 @@ export enum TbSkylineChunkColumn {
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
+
+/** 枚举项所属业务模块，用于管理端按模块展示字典数据。 */
+export enum TbSkylineChunkModule {
+    SYSTEM = 'system',
+    SALES = 'sales',
+    PURCHASE = 'purchase'
+}
+
+export const TbSkylineChunkModuleDefinition = defineEnumMetadata(TbSkylineChunkModule, '枚举所属模块', {
+    [TbSkylineChunkModule.SYSTEM]: { label: '系统', description: '系统管理模块使用的枚举项' },
+    [TbSkylineChunkModule.SALES]: { label: '销售', description: '销售管理模块使用的枚举项' },
+    [TbSkylineChunkModule.PURCHASE]: { label: '采购', description: '采购管理模块使用的枚举项' }
+})
+
+export const {
+    metadata: TbSkylineChunkModuleMetadata,
+    options: TbSkylineChunkModuleOptions,
+    count: TbSkylineChunkModuleCount,
+    comment: TbSkylineChunkModuleComment
+} = TbSkylineChunkModuleDefinition
 
 /** 枚举项启用状态。 */
 export enum TbSkylineChunkStatus {
@@ -44,6 +65,15 @@ export class TbSkylineChunkDto extends DataBaseDto {
     @IsInt({ message: '父枚举项主键必须是整数' })
     @Min(1, { message: '父枚举项主键必须大于0' })
     pid: number
+
+    @ApiProperty({
+        description: TbSkylineChunkModuleComment,
+        enum: TbSkylineChunkModule,
+        enumName: 'TbSkylineChunkModule',
+        example: TbSkylineChunkModule.SYSTEM
+    })
+    @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
+    module: TbSkylineChunkModule
 
     @ApiProperty({ description: '枚举类型编码', example: 'CHUNK_DATETASK_STATUS' })
     @IsString({ message: '枚举类型编码必须是字符串' })
@@ -91,7 +121,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
     allowUpdate: boolean
 }
 
-@Index('uk_tb_skyline_chunk_type_value', ['type', 'value'], { unique: true })
+@Index('uk_tb_skyline_chunk_module_type_value', ['module', 'type', 'value'], { unique: true })
 @Index('idx_tb_skyline_chunk_pid', ['pid'])
 @Index('idx_tb_skyline_chunk_type_sort', ['type', 'sort'])
 @Index('idx_tb_skyline_chunk_status', ['status'])
@@ -99,6 +129,16 @@ export class TbSkylineChunkDto extends DataBaseDto {
 export class TbSkylineChunk extends DataBaseAdapter {
     @Column({ name: TbSkylineChunkColumn.PID, type: 'int', nullable: true, comment: '父枚举项主键；根节点为空' })
     pid: number
+
+    @Column({
+        name: TbSkylineChunkColumn.MODULE,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        default: TbSkylineChunkModule.SYSTEM,
+        comment: TbSkylineChunkModuleComment
+    })
+    module: TbSkylineChunkModule
 
     @Column({ name: TbSkylineChunkColumn.TYPE, type: 'varchar', length: 128, nullable: false, comment: '枚举类型编码' })
     type: string

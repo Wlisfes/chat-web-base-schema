@@ -55,12 +55,7 @@ export class TbAccountMenuDto extends DataBaseDto {
     @Min(1, { message: '父菜单主键必须大于0' })
     parentKeyId: number
 
-    @ApiProperty({
-        description: TbAccountMenuTypeDefinition.comment,
-        enum: TbAccountMenuType,
-        enumName: 'TbAccountMenuType',
-        example: TbAccountMenuType.MENU
-    })
+    @ApiProperty({ description: TbAccountMenuTypeDefinition.comment, enum: TbAccountMenuType, example: TbAccountMenuType.MENU })
     @IsEnum(TbAccountMenuType, { message: '菜单类型格式错误' })
     type: TbAccountMenuType
 
@@ -120,12 +115,7 @@ export class TbAccountMenuDto extends DataBaseDto {
     @IsBoolean({ message: '缓存标记必须是布尔值' })
     keepAlive: boolean
 
-    @ApiProperty({
-        description: TbAccountMenuStatusDefinition.comment,
-        enum: TbAccountMenuStatus,
-        enumName: 'TbAccountMenuStatus',
-        example: TbAccountMenuStatus.ENABLED
-    })
+    @ApiProperty({ description: TbAccountMenuStatusDefinition.comment, enum: TbAccountMenuStatus, example: TbAccountMenuStatus.ENABLED })
     @IsEnum(TbAccountMenuStatus, { message: '菜单状态格式错误' })
     status: TbAccountMenuStatus
 }
@@ -172,7 +162,7 @@ export class TbAccountMenu extends DataBaseAdapter {
         default: 1,
         comment: '菜单显示状态：0=隐藏（false）；1=显示（true）'
     })
-    visible: 0 | 1
+    visible: number
 
     @Column({ name: TbAccountMenuColumn.KEEP_ALIVE, type: 'boolean', nullable: false, default: false, comment: '页面是否保持缓存' })
     keepAlive: boolean

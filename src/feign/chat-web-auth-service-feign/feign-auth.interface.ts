@@ -2,8 +2,10 @@ import type {
     AuthPermissionCacheInvalidateRequestDto,
     AuthPermissionCacheInvalidateResponseDto,
     AuthPermissionCheckRequestDto,
-    AuthPermissionCheckResponseDto
-    , AuthDataScopeRequestDto, AuthDataScopeResponseDto, AuthSuperAdminResponseDto
+    AuthPermissionCheckResponseDto,
+    AuthDataScopeRequestDto,
+    AuthDataScopeResponseDto,
+    AuthSuperAdminResponseDto
 } from './feign-auth.dto'
 
 export type AuthPermissionCheckInput = AuthPermissionCheckRequestDto

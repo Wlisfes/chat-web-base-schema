@@ -5,8 +5,11 @@ import {
     AuthPermissionCacheInvalidateRequestDto,
     AuthPermissionCacheInvalidateResponseDto,
     AuthPermissionCheckRequestDto,
-    AuthPermissionCheckResponseDto
-    , AuthDataScopeRequestDto, AuthDataScopeResponseDto, AuthSuperAdminResponseDto, AuthUidRequestDto
+    AuthPermissionCheckResponseDto,
+    AuthDataScopeRequestDto,
+    AuthDataScopeResponseDto,
+    AuthSuperAdminResponseDto,
+    AuthUidRequestDto
 } from './feign-auth.dto'
 import type * as AuthTypes from './feign-auth.interface'
 

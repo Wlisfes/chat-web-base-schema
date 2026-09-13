@@ -6,6 +6,7 @@ import {
     AuthPermissionCacheInvalidateResponseDto,
     AuthPermissionCheckRequestDto,
     AuthPermissionCheckResponseDto
+    , AuthDataScopeRequestDto, AuthDataScopeResponseDto, AuthSuperAdminResponseDto, AuthUidRequestDto
 } from './feign-auth.dto'
 import type * as AuthTypes from './feign-auth.interface'
 
@@ -20,6 +21,30 @@ import type * as AuthTypes from './feign-auth.interface'
 export class FeignClientAuthManager extends FeignWebClient<AuthTypes.FeignClientAuthImplementation> {
     constructor(service?: AuthTypes.FeignClientAuthImplementation, configService?: ConfigService) {
         super(service, configService)
+    }
+
+    @FeignPost('/permission/data-scope', {
+        operation: { summary: '供业务服务查询用户数据权限' },
+        request: { source: 'body', type: AuthDataScopeRequestDto },
+        response: { type: AuthDataScopeResponseDto, description: '数据权限' }
+    })
+    async resolveDataScope(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: AuthTypes.AuthDataScopeInput
+    ): Promise<AuthTypes.AuthDataScopeResult> {
+        return this.dispatch('resolveDataScope', _authorization, _input)
+    }
+
+    @FeignPost('/permission/super-admin', {
+        operation: { summary: '供业务服务判断超级管理员' },
+        request: { source: 'body', type: AuthUidRequestDto },
+        response: { type: AuthSuperAdminResponseDto, description: '超级管理员判断结果' }
+    })
+    async checkSuperAdmin(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: { uid: string }
+    ): Promise<AuthTypes.AuthSuperAdminResult> {
+        return this.dispatch('checkSuperAdmin', _authorization, _input)
     }
 
     @FeignPost('/permission/check', {

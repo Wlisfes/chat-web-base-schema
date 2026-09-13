@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `tb_account_menu` (
     `icon` varchar(128) NULL COMMENT '图标标识',
     `external_url` varchar(512) NULL COMMENT '外部链接地址',
     `sort` int NOT NULL DEFAULT 0 COMMENT '同级排序值',
-    `visible` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否在导航中显示',
+    `visible` tinyint(1) NOT NULL DEFAULT 1 COMMENT '菜单显示状态：0=隐藏（false）；1=显示（true）',
     `keep_alive` tinyint(1) NOT NULL DEFAULT 0 COMMENT '页面是否保持缓存',
     `status` varchar(32) NOT NULL COMMENT '菜单状态：disabled=禁用（菜单及权限码不参与授权计算）；enabled=启用（菜单及权限码正常参与授权计算）',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',

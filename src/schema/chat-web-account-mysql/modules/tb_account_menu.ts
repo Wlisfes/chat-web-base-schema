@@ -1,6 +1,6 @@
 import { Entity, Column, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
+import { IsBoolean, IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
 
 /** tb_account_menu 的数据库字段名。 */
@@ -111,9 +111,10 @@ export class TbAccountMenuDto extends DataBaseDto {
     @Min(0, { message: '排序值不能小于0' })
     sort: number
 
-    @ApiProperty({ description: '是否在导航中显示', example: true })
-    @IsBoolean({ message: '显示标记必须是布尔值' })
-    visible: boolean
+    @ApiProperty({ description: '菜单显示状态：0=隐藏（false）；1=显示（true）', enum: [0, 1], example: 1 })
+    @IsInt({ message: '菜单显示状态必须是整数' })
+    @IsIn([0, 1], { message: '菜单显示状态只能是0或1' })
+    visible: 0 | 1
 
     @ApiProperty({ description: '页面是否保持缓存', example: false })
     @IsBoolean({ message: '缓存标记必须是布尔值' })
@@ -163,8 +164,15 @@ export class TbAccountMenu extends DataBaseAdapter {
     @Column({ name: TbAccountMenuColumn.SORT, type: 'int', nullable: false, default: 0, comment: '同级排序值' })
     sort: number
 
-    @Column({ name: TbAccountMenuColumn.VISIBLE, type: 'boolean', nullable: false, default: true, comment: '是否在导航中显示' })
-    visible: boolean
+    @Column({
+        name: TbAccountMenuColumn.VISIBLE,
+        type: 'tinyint',
+        width: 1,
+        nullable: false,
+        default: 1,
+        comment: '菜单显示状态：0=隐藏（false）；1=显示（true）'
+    })
+    visible: 0 | 1
 
     @Column({ name: TbAccountMenuColumn.KEEP_ALIVE, type: 'boolean', nullable: false, default: false, comment: '页面是否保持缓存' })
     keepAlive: boolean

@@ -18,6 +18,8 @@ export interface NacosRuntimeEnvironment {
     NACOS_CONFIG_GROUP?: string
     /** Nacos 服务名称，同时用于推导默认 Data ID。必填。 */
     NACOS_SERVICE_NAME?: string
+    /** 注册到 Nacos 的可达 IP；跨主机组网时应填写 WireGuard 地址。 */
+    NACOS_REGISTER_IP?: string
 }
 
 function optionalString(value: string | undefined): string | undefined {
@@ -45,7 +47,7 @@ function positiveInteger(name: string, value: string | number | undefined, maxim
  * 将调用方显式传入的扁平化环境变量转换为类型完整的 `NacosRuntimeOptions`。
  *
  * `PORT`、`NACOS_SERVER`、`NACOS_SERVICE_NAME` 和 `NACOS_NAMESPACE` 必须提供。
- * 其余 Nacos 客户端选项使用固定的运行时策略，不读取业务环境变量。
+ * 其余 Nacos 客户端选项使用固定的运行时策略，仅读取显式的注册 IP 覆盖。
  */
 export function forRootNacosRuntimeOptions(environment: NacosRuntimeEnvironment = process.env): NacosRuntimeOptions {
     const serviceName = requiredString('NACOS_SERVICE_NAME', environment.NACOS_SERVICE_NAME)
@@ -58,6 +60,7 @@ export function forRootNacosRuntimeOptions(environment: NacosRuntimeEnvironment 
         configDataId: optionalString(environment.NACOS_CONFIG_DATA_ID),
         configGroup: optionalString(environment.NACOS_CONFIG_GROUP),
         serviceName,
+        registerIp: optionalString(environment.NACOS_REGISTER_IP),
         registerPort: positiveInteger('PORT', environment.PORT, 65535)
     }
 }

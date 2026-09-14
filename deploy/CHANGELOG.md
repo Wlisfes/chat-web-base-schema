@@ -1,5 +1,13 @@
 # Deployment changelog
 
+## 2026-09-14 — 支持通过环境变量指定 Nacos 注册 IP
+
+- Affected consumers: explicitly upgraded Account for本地 WireGuard 联调；共享包本身不部署容器。
+- Change: `forRootNacosRuntimeOptions()` now reads optional `NACOS_REGISTER_IP` and passes it to the shared Nacos registration lifecycle. Omitted values retain automatic non-loopback IPv4 selection.
+- Machine-side operations: after the WireGuard tunnel is established, set local Account `NACOS_REGISTER_IP=10.66.0.2`; do not set `AllowedIPs=0.0.0.0/0`, and keep `10.66.0.0/24` outside the Clash TUN proxy.
+- Verification: confirm Nacos shows the local instance as `10.66.0.2:5010`, then test ECS connectivity with `nc -vz 10.66.0.2 5010`.
+- Rollback: remove `NACOS_REGISTER_IP` from the local `.env` and restart Account; the service returns to automatic local IPv4 selection.
+
 ## 2026-09-02 — 统一财务汇率日期列名
 
 - Affected consumers: Finance after upgrading to the shared package release containing this schema change; this library deploys no container.

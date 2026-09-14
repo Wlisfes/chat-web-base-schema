@@ -106,8 +106,8 @@ function nacosRuntimeEnvironment(overrides = {}) {
         NACOS_CONFIG_REQUIRED: undefined,
         NACOS_REGISTER_REQUIRED: undefined,
         NACOS_SERVICE_NAME: 'chat-web-example-service',
-        NACOS_GROUP: undefined,
         NACOS_REGISTER_IP: undefined,
+        NACOS_GROUP: undefined,
         NACOS_REGISTER_PORT: undefined,
         NACOS_REGISTER_WEIGHT: undefined,
         ...overrides
@@ -893,6 +893,7 @@ test('shared Nacos environment adapter only maps Nacos connection settings', () 
                 NACOS_PASSWORD: 'example-password',
                 NACOS_CONFIG_DATA_ID: 'example.yaml',
                 NACOS_CONFIG_GROUP: 'EXAMPLE_CONFIG',
+                NACOS_REGISTER_IP: '10.66.0.2',
                 NACOS_SERVICE_NAME: 'example-custom',
                 NACOS_REGISTER_ENABLED: 'false',
                 NACOS_REGISTER_PORT: '4020'
@@ -905,6 +906,7 @@ test('shared Nacos environment adapter only maps Nacos connection settings', () 
             password: 'example-password',
             configDataId: 'example.yaml',
             configGroup: 'EXAMPLE_CONFIG',
+            registerIp: '10.66.0.2',
             serviceName: 'example-custom',
             registerPort: 3020
         }
@@ -924,6 +926,7 @@ test('shared Nacos environment adapter requires PORT, service name, server and n
             namespace: 'example',
             username: undefined,
             password: undefined,
+            registerIp: undefined,
             configDataId: undefined,
             configGroup: undefined,
             serviceName: 'chat-web-example-service',

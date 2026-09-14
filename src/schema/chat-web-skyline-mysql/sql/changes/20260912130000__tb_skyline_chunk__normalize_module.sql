@@ -1,4 +1,8 @@
 -- 统一 Skyline 枚举模块编码格式，并将历史值迁移到新的 CHUNK_* 编码。
+-- 兼容迁移台账已记录 add_module 但实际列缺失的历史环境，先幂等补齐字段。
+ALTER TABLE `tb_skyline_chunk`
+    ADD COLUMN IF NOT EXISTS `module` varchar(32) NOT NULL DEFAULT 'CHUNK_SYSTEM' COMMENT '枚举所属模块：CHUNK_SYSTEM=系统；CHUNK_CRM=CRM；CHUNK_SRM=SRM' AFTER `pid`;
+
 UPDATE `tb_skyline_chunk`
 SET `module` = CASE `module`
     WHEN 'system' THEN 'CHUNK_SYSTEM'

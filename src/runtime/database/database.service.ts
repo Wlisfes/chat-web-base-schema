@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { DataSource, ObjectLiteral, QueryRunner, Repository, SelectQueryBuilder } from 'typeorm'
+import { DataSource, ObjectLiteral, QueryRunner, Repository, SelectQueryBuilder } from './typeorm'
 import { fetchSelection } from '@/utils'
 
 export interface DatabaseTransactionOptions {

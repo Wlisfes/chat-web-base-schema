@@ -650,7 +650,7 @@ test('shared Nacos discovery resolves weighted instances and owns subscriptions'
 
         assert.deepEqual(counts, { heavy: 30, light: 10 })
         assert.equal(service.getHealthyInstanceCount('chat-web-account-service'), 2)
-        assert.equal(patched.records.getAllInstancesCalls.length, 1)
+        assert.equal(patched.records.getAllInstancesCalls.length, 41)
         assert.deepEqual(patched.records.getAllInstancesCalls[0], {
             serviceName: 'chat-web-account-service',
             group: 'EXAMPLE_DISCOVERY_GROUP',
@@ -664,6 +664,27 @@ test('shared Nacos discovery resolves weighted instances and owns subscriptions'
         await service.onModuleDestroy()
         assert.equal(patched.records.unsubscribeCalls.length, 1)
         assert.equal(patched.records.namingCloseCalls, 1)
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos discovery rejects fallback when no healthy instance is available', async () => {
+    const patched = withPatchedNacosClients({
+        configContent: 'gateway: {}',
+        instances: [{ instanceId: 'disabled', ip: '10.0.0.12', port: 5010, weight: 1, healthy: true, enabled: false, metadata: {} }]
+    })
+
+    try {
+        const service = new NacosService(config(), nacosOptions({ registerEnabled: false }))
+        await service.onModuleInit()
+
+        await assert.rejects(
+            () => service.resolveService('chat-web-account-service', 'http://fallback:5010'),
+            /Nacos 服务 chat-web-account-service 没有可用实例/
+        )
+        assert.equal(service.getHealthyInstanceCount('chat-web-account-service'), 0)
+        await service.onModuleDestroy()
     } finally {
         patched.restore()
     }

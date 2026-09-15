@@ -22,6 +22,7 @@ type ClosableNacosNamingClient = NacosNamingClient & {
 }
 
 const MAX_NACOS_WEIGHT = 10_000
+const NO_AVAILABLE_INSTANCE_ERROR = 'NO_AVAILABLE_NACOS_INSTANCE'
 
 type ResolvedNacosRuntimeOptions = Required<Omit<NacosRuntimeOptions, 'username' | 'password' | 'registerIp'>> &
     Pick<NacosRuntimeOptions, 'username' | 'password' | 'registerIp'>
@@ -257,14 +258,14 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
         return client.getAllInstances(serviceName, this.getDiscoveryGroup(), '', subscribe)
     }
 
-    /** 按实例权重平滑选择健康实例；无可用实例时返回后备地址。 */
+    /** 按实例权重平滑选择健康实例；服务发现不可用时才返回后备地址。 */
     async resolveService(serviceName: string, fallbackUrl: string): Promise<string> {
         if (!this.options.discoveryEnabled || !this.connected) {
             return fallbackUrl
         }
         try {
             await this.ensureServiceSubscription(serviceName)
-            const hosts = this.hosts.get(serviceName) ?? []
+            const hosts = await this.refreshServiceInstances(serviceName)
             const healthy = hosts.filter(host => host.healthy && host.enabled && this.getInstanceWeight(host.weight) > 0)
             const selected = this.selectWeighted(serviceName, healthy)
             if (selected) {
@@ -272,7 +273,9 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
                 const hostname = selected.ip.includes(':') ? `[${selected.ip}]` : selected.ip
                 return `${protocol}://${hostname}:${selected.port}`
             }
+            throw Object.assign(new Error(`Nacos 服务 ${serviceName} 没有可用实例`), { code: NO_AVAILABLE_INSTANCE_ERROR })
         } catch (error) {
+            if (this.isNoAvailableInstanceError(error)) throw error
             this.logger.warn(`查询服务 ${serviceName} 失败，使用后备地址：${this.getErrorMessage(error)}`)
         }
         return fallbackUrl
@@ -294,6 +297,7 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
             }
             for (const serviceName of expected) {
                 await this.ensureServiceSubscription(serviceName)
+                await this.refreshServiceInstances(serviceName)
             }
         } catch (error) {
             this.discoveryError = this.getErrorMessage(error)
@@ -364,11 +368,20 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     private async initializeServiceSubscription(serviceName: string): Promise<void> {
         // Fetch directly, then attach one explicit listener. This avoids the SDK's
         // implicit cache subscription being created before our listener is known.
-        const hosts = await this.getAllInstances(serviceName, false)
-        this.setHosts(serviceName, hosts)
+        const hosts = await this.refreshServiceInstances(serviceName)
         const listener: NacosInstanceListener = nextHosts => this.setHosts(serviceName, nextHosts)
         await this.subscribeService(serviceName, listener)
         this.namingListeners.set(serviceName, listener)
+    }
+
+    private async refreshServiceInstances(serviceName: string): Promise<Host[]> {
+        const hosts = await this.getAllInstances(serviceName, false)
+        this.setHosts(serviceName, hosts)
+        return hosts
+    }
+
+    private isNoAvailableInstanceError(error: unknown): boolean {
+        return Boolean(error && typeof error === 'object' && 'code' in error && error.code === NO_AVAILABLE_INSTANCE_ERROR)
     }
 
     private selectWeighted(serviceName: string, hosts: Host[]): Host | undefined {

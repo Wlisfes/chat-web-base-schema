@@ -1,9 +1,10 @@
 import { cloneDeep, concat, omit, pick } from 'lodash'
 import { isNotEmpty, isEmpty, isArray, isEmail, isString, isObject, isBoolean } from 'class-validator'
+import type { PageResult } from './page'
 import moment from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import type { EnumMetadataItem, StringEnum, StringEnumValue } from '@/types'
+import type { Omix, EnumMetadataItem, StringEnum, StringEnumValue } from '@/types'
 moment.extend(timezone)
 moment.extend(utc)
 
@@ -36,4 +37,14 @@ export function defineEnumMetadata<const TEnum extends StringEnum>(
  */
 export function fetchSelection(alias: string, fields: string[]) {
     return (fields ?? []).map(field => (isNotEmpty(alias) ? `${alias}.${field}` : field))
+}
+
+/**
+ * 返回包装
+ * @param data
+ * @param options
+ * @returns
+ */
+export function fetchResolver<T>(data: Partial<PageResult<T>>, options: Omix = {}) {
+    return Object.assign(data, options)
 }

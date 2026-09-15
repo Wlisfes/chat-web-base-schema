@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer'
 import { ApiPropertyOptional } from '@nestjs/swagger'
 import { IsInt, IsOptional, Max, Min } from 'class-validator'
+import { Omix } from '@/types'
 
 /**
  * 所有服务统一使用的分页请求参数。
@@ -31,7 +32,8 @@ export class PageDto {
  */
 export class SizePageDto extends PageDto {}
 
-export interface PageResult<TItem> {
+export interface PageResult<TItem> extends Omix {
+    message: string
     page: number
     size: number
     total: number

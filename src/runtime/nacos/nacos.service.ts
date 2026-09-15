@@ -14,15 +14,88 @@ type RegisteredInstance = {
     weight: number
 }
 
+type NacosNamingQueryProxy = {
+    queryList?: (serviceName: string, clusters: string, udpPort: number, healthyOnly: boolean) => Promise<unknown>
+}
+
 type ClosableNacosNamingClient = NacosNamingClient & {
     /** nacos-naming 2.x exposes the lifecycle method as `_close()`. */
     _close?: () => Promise<void>
     /** Keep compatibility with wrappers that expose the public `close()`. */
     close?: () => Promise<void>
+    /**
+     * nacos-naming 2.x keeps the HTTP naming proxy here. Direct `queryList` avoids
+     * HostReactor treating an empty host list as invalid and retaining stale instances.
+     */
+    _serverProxy?: NacosNamingQueryProxy
 }
 
 const MAX_NACOS_WEIGHT = 10_000
 const NO_AVAILABLE_INSTANCE_ERROR = 'NO_AVAILABLE_NACOS_INSTANCE'
+const SERVICE_NAME_GROUP_SEPARATOR = '@@'
+
+type NacosHostLike = Partial<Host> & {
+    valid?: unknown
+    enable?: unknown
+}
+
+function parseNacosFlag(value: unknown, fallback: boolean): boolean {
+    if (typeof value === 'boolean') {
+        return value
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value !== 0
+    }
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase()
+        if (normalized === 'true' || normalized === '1' || normalized === 'yes') {
+            return true
+        }
+        if (normalized === 'false' || normalized === '0' || normalized === 'no') {
+            return false
+        }
+    }
+    return fallback
+}
+
+function nacosInstanceWeight(weight: unknown): number {
+    if (weight === undefined || weight === null || weight === '') {
+        return 1
+    }
+    const value = Number(weight)
+    return Number.isFinite(value) && value >= 0 ? value : 0
+}
+
+function normalizeNacosHost(host: NacosHostLike): Host {
+    return {
+        ...(host as Host),
+        healthy: parseNacosFlag(host.healthy ?? host.valid, true),
+        enabled: parseNacosFlag(host.enabled ?? host.enable, true),
+        weight: nacosInstanceWeight(host.weight)
+    }
+}
+
+function normalizeNacosHosts(hosts: unknown): Host[] {
+    if (!Array.isArray(hosts)) {
+        return []
+    }
+    return hosts.filter(host => host && typeof host === 'object').map(host => normalizeNacosHost(host as NacosHostLike))
+}
+
+function parseNacosInstanceList(raw: unknown): Host[] {
+    if (raw == null || raw === '') {
+        return []
+    }
+    const data = typeof raw === 'string' ? JSON.parse(raw) : raw
+    if (!data || typeof data !== 'object') {
+        return []
+    }
+    return normalizeNacosHosts((data as { hosts?: unknown }).hosts)
+}
+
+function isRoutableNacosHost(host: Host): boolean {
+    return Boolean(host.healthy && host.enabled && nacosInstanceWeight(host.weight) > 0)
+}
 
 type ResolvedNacosRuntimeOptions = Required<Omit<NacosRuntimeOptions, 'username' | 'password' | 'registerIp'>> &
     Pick<NacosRuntimeOptions, 'username' | 'password' | 'registerIp'>
@@ -255,7 +328,7 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
             return []
         }
         const client = await this.ensureNamingClient()
-        return client.getAllInstances(serviceName, this.getDiscoveryGroup(), '', subscribe)
+        return this.queryInstancesFromServer(client, serviceName, subscribe)
     }
 
     /** 按实例权重平滑选择健康实例；服务发现不可用时才返回后备地址。 */
@@ -266,7 +339,7 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
         try {
             await this.ensureServiceSubscription(serviceName)
             const hosts = await this.refreshServiceInstances(serviceName)
-            const healthy = hosts.filter(host => host.healthy && host.enabled && this.getInstanceWeight(host.weight) > 0)
+            const healthy = hosts.filter(host => isRoutableNacosHost(host))
             const selected = this.selectWeighted(serviceName, healthy)
             if (selected) {
                 const protocol = selected.metadata?.protocol === 'https' ? 'https' : 'http'
@@ -311,8 +384,7 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
 
     /** 返回指定服务当前健康实例数量。 */
     getHealthyInstanceCount(serviceName: string): number {
-        return (this.hosts.get(serviceName) ?? []).filter(host => host.healthy && host.enabled && this.getInstanceWeight(host.weight) > 0)
-            .length
+        return (this.hosts.get(serviceName) ?? []).filter(host => isRoutableNacosHost(host)).length
     }
 
     /** 订阅服务实例变更。 */
@@ -341,7 +413,7 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     }
 
     private setHosts(serviceName: string, hosts: Host[]): void {
-        this.hosts.set(serviceName, hosts)
+        this.hosts.set(serviceName, normalizeNacosHosts(hosts))
         const known = new Set(hosts.map(host => this.getInstanceKey(host)))
         const state = this.weightedState.get(serviceName)
         if (state) for (const key of state.keys()) if (!known.has(key)) state.delete(key)
@@ -368,8 +440,8 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     private async initializeServiceSubscription(serviceName: string): Promise<void> {
         // Fetch directly, then attach one explicit listener. This avoids the SDK's
         // implicit cache subscription being created before our listener is known.
-        const hosts = await this.refreshServiceInstances(serviceName)
-        const listener: NacosInstanceListener = nextHosts => this.setHosts(serviceName, nextHosts)
+        await this.refreshServiceInstances(serviceName)
+        const listener: NacosInstanceListener = nextHosts => this.setHosts(serviceName, nextHosts ?? [])
         await this.subscribeService(serviceName, listener)
         this.namingListeners.set(serviceName, listener)
     }
@@ -377,7 +449,23 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     private async refreshServiceInstances(serviceName: string): Promise<Host[]> {
         const hosts = await this.getAllInstances(serviceName, false)
         this.setHosts(serviceName, hosts)
-        return hosts
+        return this.hosts.get(serviceName) ?? []
+    }
+
+    /**
+     * Query instance/list directly and treat an empty host array as empty.
+     * nacos-naming HostReactor.processServiceJSON discards empty lists as invalid
+     * and keeps the previous cache, so console offline would otherwise still route.
+     */
+    private async queryInstancesFromServer(client: ClosableNacosNamingClient, serviceName: string, subscribe = false): Promise<Host[]> {
+        const proxy = client._serverProxy
+        if (proxy && typeof proxy.queryList === 'function') {
+            const groupedName = `${this.getDiscoveryGroup()}${SERVICE_NAME_GROUP_SEPARATOR}${serviceName}`
+            const raw = await proxy.queryList(groupedName, '', 0, false)
+            return parseNacosInstanceList(raw)
+        }
+        const hosts = await client.getAllInstances(serviceName, this.getDiscoveryGroup(), '', subscribe)
+        return normalizeNacosHosts(hosts)
     }
 
     private isNoAvailableInstanceError(error: unknown): boolean {
@@ -409,11 +497,7 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
     }
 
     private getInstanceWeight(weight: unknown): number {
-        if (weight === undefined || weight === null || weight === '') {
-            return 1
-        }
-        const value = Number(weight)
-        return Number.isFinite(value) && value >= 0 ? value : 0
+        return nacosInstanceWeight(weight)
     }
 
     private getInstanceKey(host: Host): string {

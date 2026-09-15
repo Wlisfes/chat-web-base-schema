@@ -133,7 +133,7 @@ function nacosShadowConfig(overrides = {}) {
     })
 }
 
-function withPatchedNacosClients({ configContent = 'remoteOnly: applied', registrationError, instances = [] } = {}) {
+function withPatchedNacosClients({ configContent = 'remoteOnly: applied', registrationError, instances = [], queryList } = {}) {
     const nacosConfigModule = require('nacos-config')
     const nacosNamingModule = require('nacos-naming')
     const originalConfigClient = nacosConfigModule.NacosConfigClient
@@ -146,6 +146,7 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
         registerInstanceCalls: [],
         deregisterInstanceCalls: [],
         getAllInstancesCalls: [],
+        queryListCalls: [],
         subscribeCalls: [],
         unsubscribeCalls: [],
         readyCalls: 0,
@@ -177,6 +178,14 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
         constructor(options) {
             this.options = options
             records.namingClientOptions.push(options)
+            if (queryList !== undefined) {
+                this._serverProxy = {
+                    async queryList(serviceName, clusters, udpPort, healthyOnly) {
+                        records.queryListCalls.push({ serviceName, clusters, udpPort, healthyOnly })
+                        return typeof queryList === 'function' ? queryList() : queryList
+                    }
+                }
+            }
         }
 
         async ready() {
@@ -664,6 +673,107 @@ test('shared Nacos discovery resolves weighted instances and owns subscriptions'
         await service.onModuleDestroy()
         assert.equal(patched.records.unsubscribeCalls.length, 1)
         assert.equal(patched.records.namingCloseCalls, 1)
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos discovery treats a direct empty instance list as offline', async () => {
+    const patched = withPatchedNacosClients({
+        configContent: 'gateway: {}',
+        instances: [{ instanceId: 'stale', ip: '10.0.0.12', port: 5010, weight: 1, healthy: true, enabled: true, metadata: {} }],
+        queryList: JSON.stringify({ hosts: [] })
+    })
+
+    try {
+        const service = new NacosService(config(), nacosOptions({ registerEnabled: false }))
+        await service.onModuleInit()
+
+        await assert.rejects(
+            () => service.resolveService('chat-web-auth-service', 'http://chat-web-auth-service:5050'),
+            /Nacos 服务 chat-web-auth-service 没有可用实例/
+        )
+        assert.equal(await service.getAllInstances('chat-web-auth-service', false).then(hosts => hosts.length), 0)
+        assert.equal(service.getHealthyInstanceCount('chat-web-auth-service'), 0)
+        assert.equal(patched.records.getAllInstancesCalls.length, 0)
+        assert.deepEqual(patched.records.queryListCalls[0], {
+            serviceName: 'EXAMPLE_DISCOVERY_GROUP@@chat-web-auth-service',
+            clusters: '',
+            udpPort: 0,
+            healthyOnly: false
+        })
+        await service.onModuleDestroy()
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos discovery keeps routing to remaining online instances', async () => {
+    const patched = withPatchedNacosClients({
+        configContent: 'gateway: {}',
+        instances: [
+            { instanceId: 'offline', ip: '10.0.0.12', port: 5050, weight: 1, healthy: true, enabled: true, metadata: {} },
+            { instanceId: 'online', ip: '10.0.0.13', port: 5050, weight: 1, healthy: true, enabled: true, metadata: {} }
+        ],
+        queryList: JSON.stringify({
+            hosts: [{ instanceId: 'online', ip: '10.0.0.13', port: 5050, weight: 1, healthy: true, enabled: true, metadata: {} }]
+        })
+    })
+
+    try {
+        const service = new NacosService(config(), nacosOptions({ registerEnabled: false }))
+        await service.onModuleInit()
+        assert.equal(await service.resolveService('chat-web-auth-service', 'http://chat-web-auth-service:5050'), 'http://10.0.0.13:5050')
+        assert.equal(service.getHealthyInstanceCount('chat-web-auth-service'), 1)
+        await service.onModuleDestroy()
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos discovery treats string enabled=false as offline', async () => {
+    const patched = withPatchedNacosClients({
+        configContent: 'gateway: {}',
+        queryList: JSON.stringify({
+            hosts: [{ instanceId: 'disabled', ip: '10.0.0.12', port: 5050, weight: 1, healthy: true, enabled: 'false', metadata: {} }]
+        })
+    })
+
+    try {
+        const service = new NacosService(config(), nacosOptions({ registerEnabled: false }))
+        await service.onModuleInit()
+        await assert.rejects(
+            () => service.resolveService('chat-web-auth-service', 'http://fallback:5050'),
+            /Nacos 服务 chat-web-auth-service 没有可用实例/
+        )
+        assert.equal(service.getHealthyInstanceCount('chat-web-auth-service'), 0)
+        await service.onModuleDestroy()
+    } finally {
+        patched.restore()
+    }
+})
+
+test('shared Nacos discovery recovers after console online replaces an empty list', async () => {
+    let payload = JSON.stringify({ hosts: [] })
+    const patched = withPatchedNacosClients({
+        configContent: 'gateway: {}',
+        instances: [{ instanceId: 'stale', ip: '10.0.0.12', port: 5050, weight: 1, healthy: true, enabled: true, metadata: {} }],
+        queryList: () => payload
+    })
+
+    try {
+        const service = new NacosService(config(), nacosOptions({ registerEnabled: false }))
+        await service.onModuleInit()
+        await assert.rejects(
+            () => service.resolveService('chat-web-auth-service', 'http://fallback:5050'),
+            /Nacos 服务 chat-web-auth-service 没有可用实例/
+        )
+        payload = JSON.stringify({
+            hosts: [{ instanceId: 'online', ip: '10.66.0.2', port: 5050, weight: 1, healthy: true, enabled: true, metadata: {} }]
+        })
+        assert.equal(await service.resolveService('chat-web-auth-service', 'http://fallback:5050'), 'http://10.66.0.2:5050')
+        assert.equal(service.getHealthyInstanceCount('chat-web-auth-service'), 1)
+        await service.onModuleDestroy()
     } finally {
         patched.restore()
     }

@@ -33,9 +33,9 @@ export class PageDto {
 export class SizePageDto extends PageDto {}
 
 export interface PageResult<TItem> extends Omix {
-    message: string
-    page: number
-    size: number
-    total: number
-    list: TItem[]
+    message?: string
+    page?: number
+    size?: number
+    total?: number
+    list?: TItem[]
 }

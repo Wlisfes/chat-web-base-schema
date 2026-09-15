@@ -42,9 +42,9 @@ export abstract class DataBaseAdapter {
     modifyTime: Date
 }
 
-/** 基础表的完整只读字段 DTO。 */
+/** 基础表的完整字段 DTO。 */
 export abstract class DataBaseDto {
-    @ApiProperty({ description: '表主键', example: 1, readOnly: true })
+    @ApiProperty({ description: '表主键', example: 1 })
     keyId: number
 
     @ApiProperty({ description: '创建时间', example: '2026-08-16 12:00:00.000', readOnly: true })

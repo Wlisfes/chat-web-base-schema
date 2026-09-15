@@ -14,6 +14,7 @@ const {
     resolveRequestId
 } = require('../dist/src/utils')
 const { ListResponseDto, PageListResponseDto, PageResponseDataDto } = require('../dist/src/decorator')
+const { DataBaseDto } = require('../dist/src/utils')
 const requestContext = require('../dist/src/utils/modules/request-context')
 
 test('共享分页 DTO 使用统一的 page/size 请求契约', () => {
@@ -50,6 +51,12 @@ test('共享响应 DTO 工厂生成带强类型 list 的普通和分页响应', 
         ['list', 'page', 'size', 'total']
     )
     assert.equal(typeof Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, ListDto.prototype, 'list').type, 'function')
+})
+
+test('基础主键 DTO 元数据允许作为请求入参复用', () => {
+    const keyId = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, DataBaseDto.prototype, 'keyId')
+
+    assert.equal(keyId.readOnly, undefined)
 })
 
 test('共享树工具校验层级并稳定排序', () => {

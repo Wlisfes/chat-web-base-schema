@@ -1039,9 +1039,38 @@ test('shared Nacos environment adapter only maps Nacos connection settings', () 
             configGroup: 'EXAMPLE_CONFIG',
             registerIp: '10.66.0.2',
             serviceName: 'example-custom',
-            registerPort: 3020
+            registerPort: 3020,
+            registerWeight: undefined
         }
     )
+})
+
+test('shared Nacos environment adapter maps NACOS_REGISTER_WEIGHT', () => {
+    assert.equal(
+        forRootNacosRuntimeOptions(
+            nacosRuntimeEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', NACOS_REGISTER_WEIGHT: '10000' })
+        ).registerWeight,
+        10000
+    )
+    assert.equal(
+        forRootNacosRuntimeOptions(
+            nacosRuntimeEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', NACOS_REGISTER_WEIGHT: '1.5' })
+        ).registerWeight,
+        1.5
+    )
+    assert.equal(
+        forRootNacosRuntimeOptions(nacosRuntimeEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example' })).registerWeight,
+        undefined
+    )
+    for (const weight of ['0', '-1', '10001', 'abc', 'Infinity']) {
+        assert.throws(
+            () =>
+                forRootNacosRuntimeOptions(
+                    nacosRuntimeEnvironment({ NACOS_SERVER: 'nacos:8848', NACOS_NAMESPACE: 'example', NACOS_REGISTER_WEIGHT: weight })
+                ),
+            /NACOS_REGISTER_WEIGHT/
+        )
+    }
 })
 
 test('shared Nacos environment adapter requires PORT, service name, server and namespace', () => {
@@ -1061,7 +1090,8 @@ test('shared Nacos environment adapter requires PORT, service name, server and n
             configDataId: undefined,
             configGroup: undefined,
             serviceName: 'chat-web-example-service',
-            registerPort: 3020
+            registerPort: 3020,
+            registerWeight: undefined
         }
     )
     assert.equal(

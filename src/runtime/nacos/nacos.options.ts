@@ -20,7 +20,11 @@ export interface NacosRuntimeEnvironment {
     NACOS_SERVICE_NAME?: string
     /** 注册到 Nacos 的可达 IP；跨主机组网时应填写 WireGuard 地址。 */
     NACOS_REGISTER_IP?: string
+    /** 注册实例权重；大于 0 且不超过 10000，未配置时由运行时默认 1。 */
+    NACOS_REGISTER_WEIGHT?: string
 }
+
+const MAX_NACOS_WEIGHT = 10_000
 
 function optionalString(value: string | undefined): string | undefined {
     return value?.trim() || undefined
@@ -43,11 +47,23 @@ function positiveInteger(name: string, value: string | number | undefined, maxim
     return parsed
 }
 
+function optionalPositiveNumber(name: string, value: string | undefined, maximum = MAX_NACOS_WEIGHT): number | undefined {
+    const normalized = optionalString(value)
+    if (!normalized) {
+        return undefined
+    }
+    const parsed = Number(normalized)
+    if (!Number.isFinite(parsed) || parsed <= 0 || parsed > maximum) {
+        throw new Error(`${name} 必须是大于 0 且不超过 ${maximum} 的有限数值`)
+    }
+    return parsed
+}
+
 /**
  * 将调用方显式传入的扁平化环境变量转换为类型完整的 `NacosRuntimeOptions`。
  *
  * `PORT`、`NACOS_SERVER`、`NACOS_SERVICE_NAME` 和 `NACOS_NAMESPACE` 必须提供。
- * 其余 Nacos 客户端选项使用固定的运行时策略，仅读取显式的注册 IP 覆盖。
+ * 其余 Nacos 客户端选项使用固定的运行时策略，仅读取显式的注册 IP 和注册权重覆盖。
  */
 export function forRootNacosRuntimeOptions(environment: NacosRuntimeEnvironment = process.env): NacosRuntimeOptions {
     const serviceName = requiredString('NACOS_SERVICE_NAME', environment.NACOS_SERVICE_NAME)
@@ -61,6 +77,7 @@ export function forRootNacosRuntimeOptions(environment: NacosRuntimeEnvironment 
         configGroup: optionalString(environment.NACOS_CONFIG_GROUP),
         serviceName,
         registerIp: optionalString(environment.NACOS_REGISTER_IP),
-        registerPort: positiveInteger('PORT', environment.PORT, 65535)
+        registerPort: positiveInteger('PORT', environment.PORT, 65535),
+        registerWeight: optionalPositiveNumber('NACOS_REGISTER_WEIGHT', environment.NACOS_REGISTER_WEIGHT)
     }
 }

@@ -2,7 +2,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const { plainToInstance } = require('class-transformer')
 const { validateSync } = require('class-validator')
-const { DECORATORS } = require('@nestjs/swagger')
+const { DECORATORS, PickType } = require('@nestjs/swagger')
 const {
     PageDto,
     SizePageDto,
@@ -54,9 +54,13 @@ test('共享响应 DTO 工厂生成带强类型 list 的普通和分页响应', 
 })
 
 test('基础主键 DTO 元数据允许作为请求入参复用', () => {
+    class KeyDto extends PickType(DataBaseDto, ['keyId']) {}
     const keyId = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, DataBaseDto.prototype, 'keyId')
 
     assert.equal(keyId.readOnly, undefined)
+    assert.equal(validateSync(plainToInstance(KeyDto, {})).length, 1)
+    assert.equal(validateSync(plainToInstance(KeyDto, { keyId: 0 })).length, 1)
+    assert.equal(validateSync(plainToInstance(KeyDto, { keyId: '2' })).length, 0)
 })
 
 test('共享树工具校验层级并稳定排序', () => {

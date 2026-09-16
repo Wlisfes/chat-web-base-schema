@@ -1,5 +1,7 @@
 import { PrimaryGeneratedColumn, UpdateDateColumn, CreateDateColumn, Column, ColumnOptions } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { IsInt, IsNotEmpty, Min } from 'class-validator'
 import { isEmpty, moment } from '@/utils/modules/common'
 
 /**时间格式装饰器**/
@@ -45,6 +47,10 @@ export abstract class DataBaseAdapter {
 /** 基础表的完整字段 DTO。 */
 export abstract class DataBaseDto {
     @ApiProperty({ description: '表主键', example: 1 })
+    @Type(() => Number)
+    @IsNotEmpty({ message: '表主键不能为空' })
+    @IsInt({ message: '表主键必须是整数' })
+    @Min(1, { message: '表主键必须大于0' })
     keyId: number
 
     @ApiProperty({ description: '创建时间', example: '2026-08-16 12:00:00.000', readOnly: true })

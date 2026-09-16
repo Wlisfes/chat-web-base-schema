@@ -6,6 +6,7 @@ const { TbSkylineDatetaskSystemDto } = require('../dist/src/schema/chat-web-skyl
 
 test('系统任务编号必须是 1 至 19 位数字字符串', () => {
     const valid = plainToInstance(TbSkylineDatetaskSystemDto, {
+        keyId: 1,
         taskId: '2149446185344106496',
         taskName: '汇率同步定时任务',
         handler: 'datetask-sync-exchange-rate',

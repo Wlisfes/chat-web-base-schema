@@ -138,6 +138,38 @@ Legacy `JWT_SECRET` and `AUTH_SESSION_PREFIX` keys are not read.
 during login while the account service generates them when creating accounts and
 resetting passwords; both sides must use identical scrypt parameters.
 
+## Authorization
+
+Business services must not compute permissions or data scopes locally. They import
+`AuthorizationModule` from the `auth` subpath, which calls Auth through the shared
+Feign client and `resolveFeignServiceAuthorization`.
+
+Register `GatewayPrincipalModule` first, then `AuthorizationModule`, and bind both
+guards as `APP_GUARD` in that order so `request.user` exists before permission checks.
+
+```ts
+import { AuthorizationGuard, AuthorizationModule, GatewayPrincipalGuard, GatewayPrincipalModule } from '@wlisfes/chat-web-base-schema/auth'
+
+@Module({
+    imports: [GatewayPrincipalModule, AuthorizationModule],
+    providers: [
+        { provide: APP_GUARD, useExisting: GatewayPrincipalGuard },
+        { provide: APP_GUARD, useExisting: AuthorizationGuard }
+    ]
+})
+export class AppModule {}
+```
+
+Annotate routes with `@RequirePermissions('account:user:list')`. Routes without the
+decorator pass through. A missing principal or a failed Auth check throws
+`ForbiddenException` with `缺少权限：...`.
+
+`AuthorizationService` exposes `hasPermission`, `isSuperAdmin`, `resolveDataScope`
+and `invalidate`. `AuthorizationModule` is global and registers `FeignClientAuthManager`
+internally without re-exporting it, so a consumer can still register its own Feign
+clients. Cache invalidation failures are logged and must not roll back an already
+committed business transaction; Auth short TTL is the fallback.
+
 ## Declarative Feign clients
 
 Cross-service HTTP calls use the shared declarative Feign runtime. Every client

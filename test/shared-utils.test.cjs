@@ -13,7 +13,7 @@ const {
     resolvePublicRequestUrl,
     resolveRequestId
 } = require('../dist/src/utils')
-const { ListResponseDto, PageListResponseDto, PageResponseDataDto } = require('../dist/src/decorator')
+const { EnumOptionDto, EnumsResponseDto, ListResponseDto, PageListResponseDto, PageResponseDataDto } = require('../dist/src/decorator')
 const { DataBaseDto } = require('../dist/src/utils')
 const requestContext = require('../dist/src/utils/modules/request-context')
 
@@ -33,6 +33,28 @@ test('共享分页响应字段统一为 page/size/total', () => {
     const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, PageResponseDataDto.prototype) ?? []
     assert.deepEqual(properties.map(property => property.replace(/^:/, '')).sort(), ['page', 'size', 'total'])
     assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, PageResponseDataDto.prototype, 'pageSize'), undefined)
+})
+
+test('共享枚举选项 DTO 使用统一的 value/label/description', () => {
+    const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, EnumOptionDto.prototype) ?? []
+    assert.deepEqual(properties.map(property => property.replace(/^:/, '')).sort(), ['description', 'label', 'value'])
+})
+
+test('共享枚举响应 DTO 工厂按字段生成 EnumOptionDto 数组', () => {
+    const example = [{ value: 'menu', label: '菜单', description: '可导航到页面的菜单节点' }]
+    const EnumsDto = EnumsResponseDto({
+        type: { description: '菜单类型选项', example }
+    })
+
+    assert.deepEqual(
+        (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, EnumsDto.prototype) ?? []).map(property => property.replace(/^:/, '')),
+        ['type']
+    )
+    const type = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, EnumsDto.prototype, 'type')
+    assert.equal(type.description, '菜单类型选项')
+    assert.equal(typeof type.type, 'function')
+    assert.equal(type.isArray, true)
+    assert.deepEqual(type.example, example)
 })
 
 test('共享响应 DTO 工厂生成带强类型 list 的普通和分页响应', () => {

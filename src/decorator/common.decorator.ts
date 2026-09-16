@@ -1,6 +1,6 @@
 import { type Type } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
-import { PageResponseDataDto } from '@/decorator/api-response.dto'
+import { EnumOptionDto, PageResponseDataDto } from '@/decorator/api-response.dto'
 import { registerDecorator, ValidationOptions, buildMessage, ValidateBy, ValidationArguments } from 'class-validator'
 
 /**自定义装饰器**/
@@ -56,4 +56,26 @@ export function PageListResponseDto<TItem>(itemType: Type<TItem>, description = 
     }
 
     return PageListResponseDataDto
+}
+
+/** 枚举响应字段的说明和示例。 */
+export interface EnumsResponseFieldOptions {
+    description: string
+    example?: EnumOptionDto[]
+}
+
+/** 创建多组枚举选项的 Swagger 响应 DTO。 */
+export function EnumsResponseDto<const TFields extends Record<string, EnumsResponseFieldOptions>>(fields: TFields) {
+    class EnumsResponseDataDto {}
+
+    for (const [propertyName, field] of Object.entries(fields)) {
+        ApiProperty({
+            description: field.description,
+            type: () => EnumOptionDto,
+            isArray: true,
+            ...(field.example === undefined ? {} : { example: field.example })
+        })(EnumsResponseDataDto.prototype, propertyName)
+    }
+
+    return EnumsResponseDataDto as Type<{ [K in keyof TFields]: EnumOptionDto[] }>
 }

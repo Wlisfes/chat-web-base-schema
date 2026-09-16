@@ -10,6 +10,11 @@ export interface EnumMetadataItem {
     description: string
 }
 
+/** 前后端下拉统一使用的枚举选项。 */
+export interface EnumOption<TValue extends string | number = string | number> extends EnumMetadataItem {
+    value: TValue
+}
+
 /** 仅包含字符串值的枚举对象。 */
 export type StringEnum = Record<string, string>
 

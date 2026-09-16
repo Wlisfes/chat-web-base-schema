@@ -72,6 +72,12 @@ Use `defineEnumMetadata()` to generate `metadata`, `values`, `options`, `count`
 and `comment`. Reuse the generated comment in Swagger and `@Column` metadata.
 External SQL must copy the same comment.
 
+Dropdown and static enum endpoints reuse `EnumOptionDto` (`value`, `label`,
+`description`) and `EnumsResponseDto({ field: { description, example } })` to
+generate `EnumOptionDto[]` fields. Business field names stay in the consuming
+service; do not add module-specific fields such as sheet `type` / `status` /
+`visible` to this package.
+
 ## Date rules
 
 - Date columns use MySQL `datetime(3)` unless the database design says otherwise.

@@ -173,6 +173,7 @@
 
 - Put exported reusable TypeScript types in `src/types.ts`.
 - 公共分页请求统一使用 `PageDto` 的 `page`、`size` 字段（默认 1/50，`size` 最大 100），分页响应统一为 `page`、`size`、`total`、`list`；不得新增 `pageSize`、`items`、`records` 或 `rows` 同义字段。
+- 枚举下拉响应统一使用 `EnumOptionDto` 的 `value`、`label`、`description`，多组枚举复用 `EnumsResponseDto` 工厂生成字段；业务字段名留在消费服务，不得把具体模块的枚举字段写进本包。
 - Keep implementation functions in the relevant utility module; do not move implementations into `src/types.ts`.
 - Internal source imports may use the `@/*` alias. The build must continue rewriting aliases for published output.
 - `DateWithColumn` must preserve write values and format database read values as `YYYY-MM-DD HH:mm:ss` by default.

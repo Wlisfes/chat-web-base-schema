@@ -41,3 +41,22 @@ export class PageResponseDataDto {
     @ApiProperty({ description: '数据总数', example: 128 })
     total: number
 }
+
+/** 前后端下拉统一使用的枚举选项。 */
+export class EnumOptionDto {
+    @ApiProperty({
+        description: '枚举值',
+        oneOf: [
+            { type: 'string', example: 'menu' },
+            { type: 'number', example: 1 }
+        ],
+        example: 'menu'
+    })
+    value: string | number
+
+    @ApiProperty({ description: '枚举展示名称', example: '菜单' })
+    label: string
+
+    @ApiProperty({ description: '枚举说明', example: '可导航到页面的菜单节点' })
+    description: string
+}

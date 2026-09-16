@@ -4,7 +4,7 @@ import type { PageResult } from './page'
 import moment from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import type { Omix, EnumMetadataItem, PrimitiveEnum, PrimitiveEnumValue } from '@/types'
+import type { Omix, EnumMetadataItem, EnumOption, PrimitiveEnum, PrimitiveEnumValue } from '@/types'
 moment.extend(timezone)
 moment.extend(utc)
 
@@ -24,7 +24,7 @@ export function defineEnumMetadata<const TEnum extends PrimitiveEnum>(
     metadata: Record<PrimitiveEnumValue<TEnum>, EnumMetadataItem>
 ) {
     const values = listEnumValues(enumObject)
-    const options = values.map(value => ({ value, ...metadata[value] }))
+    const options: EnumOption<PrimitiveEnumValue<TEnum>>[] = values.map(value => ({ value, ...metadata[value] }))
     const comment = `${title}：${options.map(option => `${option.value}=${option.label}（${option.description}）`).join('；')}`
 
     return {

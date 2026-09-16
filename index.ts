@@ -4,6 +4,7 @@ export type {
     Omix,
     OmixEnumValues,
     EnumMetadataItem,
+    EnumOption,
     StringEnum,
     StringEnumValue,
     PrimitiveEnum,

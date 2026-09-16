@@ -1,4 +1,14 @@
-export type { ApiResponse, ApiResponseOptions, Omix, OmixEnumValues, EnumMetadataItem, StringEnum, StringEnumValue } from './src/types'
+export type {
+    ApiResponse,
+    ApiResponseOptions,
+    Omix,
+    OmixEnumValues,
+    EnumMetadataItem,
+    StringEnum,
+    StringEnumValue,
+    PrimitiveEnum,
+    PrimitiveEnumValue
+} from './src/types'
 export * from './src/schema/chat-web-account-mysql'
 export * from './src/schema/chat-web-finance-mysql'
 export * from './src/schema/chat-web-crm-mysql'

@@ -158,7 +158,7 @@
 - Entity properties use camelCase; MySQL tables, columns, files, and SQL use snake_case.
 - Every `@Column` explicitly declares its database name, type, length or precision, nullable state, and Chinese comment where applicable.
 - Mirror every named `@Index` in the canonical and incremental SQL.
-- String business enums use `varchar`. Reuse the generated enum comment in Swagger, TypeORM, and SQL.
+- String business enums use `varchar`. Numeric 0/1 business enums use `tinyint(1)`. Reuse the generated enum comment in Swagger, TypeORM, and SQL.
 - Nullable database fields do not use `| null` in TypeScript in this repository.
 
 ### DTO, validation, and Swagger

@@ -224,7 +224,11 @@ validateTable({
     dto: accountSchema.TbAccountMenuDto,
     columns: accountSchema.TbAccountMenuColumn,
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_menu.sql'),
-    enumComments: [accountSchema.TbAccountMenuTypeDefinition.comment, accountSchema.TbAccountMenuStatusDefinition.comment]
+    enumComments: [
+        accountSchema.TbAccountMenuTypeDefinition.comment,
+        accountSchema.TbAccountMenuStatusDefinition.comment,
+        accountSchema.TbAccountMenuVisibleDefinition.comment
+    ]
 })
 
 validateTable({

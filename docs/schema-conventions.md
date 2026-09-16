@@ -51,6 +51,7 @@ Each table module exports:
   external SQL.
 - String enums are stored in `varchar`, not native MySQL `enum`, so values can
   evolve without rebuilding the column type.
+- Numeric 0/1 enums are stored in `tinyint(1)`, not converted to varchar strings.
 - Cross-service relations store IDs only. Do not add TypeORM relations to an
   entity owned by another microservice.
 

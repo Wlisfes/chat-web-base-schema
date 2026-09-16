@@ -1,6 +1,6 @@
 import { Entity, Column, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
+import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
 
 /** tb_account_menu 的数据库字段名。 */
@@ -45,6 +45,17 @@ export enum TbAccountMenuStatus {
 export const TbAccountMenuStatusDefinition = defineEnumMetadata(TbAccountMenuStatus, '菜单状态', {
     [TbAccountMenuStatus.DISABLED]: { label: '禁用', description: '菜单及权限码不参与授权计算' },
     [TbAccountMenuStatus.ENABLED]: { label: '启用', description: '菜单及权限码正常参与授权计算' }
+})
+
+/** 菜单显示状态。 */
+export enum TbAccountMenuVisible {
+    HIDE = 0,
+    SHOW = 1
+}
+
+export const TbAccountMenuVisibleDefinition = defineEnumMetadata(TbAccountMenuVisible, '菜单显示状态', {
+    [TbAccountMenuVisible.HIDE]: { label: '隐藏', description: '菜单不在前端导航中展示' },
+    [TbAccountMenuVisible.SHOW]: { label: '显示', description: '菜单在前端导航中正常展示' }
 })
 
 /** 系统菜单、页面和按钮的完整字段 DTO。 */
@@ -106,10 +117,9 @@ export class TbAccountMenuDto extends DataBaseDto {
     @Min(0, { message: '排序值不能小于0' })
     sort: number
 
-    @ApiProperty({ description: '菜单显示状态：0=隐藏（false）；1=显示（true）', enum: [0, 1], example: 1 })
-    @IsInt({ message: '菜单显示状态必须是整数' })
-    @IsIn([0, 1], { message: '菜单显示状态只能是0或1' })
-    visible: 0 | 1
+    @ApiProperty({ description: TbAccountMenuVisibleDefinition.comment, enum: TbAccountMenuVisible, example: TbAccountMenuVisible.SHOW })
+    @IsEnum(TbAccountMenuVisible, { message: '菜单显示状态格式错误' })
+    visible: TbAccountMenuVisible
 
     @ApiProperty({ description: '页面是否保持缓存', example: false })
     @IsBoolean({ message: '缓存标记必须是布尔值' })
@@ -159,10 +169,10 @@ export class TbAccountMenu extends DataBaseAdapter {
         type: 'tinyint',
         width: 1,
         nullable: false,
-        default: 1,
-        comment: '菜单显示状态：0=隐藏（false）；1=显示（true）'
+        default: TbAccountMenuVisible.SHOW,
+        comment: TbAccountMenuVisibleDefinition.comment
     })
-    visible: number
+    visible: TbAccountMenuVisible
 
     @Column({ name: TbAccountMenuColumn.KEEP_ALIVE, type: 'boolean', nullable: false, default: false, comment: '页面是否保持缓存' })
     keepAlive: boolean

@@ -256,7 +256,9 @@ test('身份上下文拒绝篡改、错误密钥和过期签发时间', () => {
     const [payload, signature] = signed.split('.')
 
     assert.equal(verifyGatewayPrincipal(`${payload}x.${signature}`, PRINCIPAL_SECRET, 60), undefined)
-    assert.equal(verifyGatewayPrincipal(`${payload}.${signature.slice(0, -1)}A`, PRINCIPAL_SECRET, 60), undefined)
+    // 只改签名末位时，base64url 填充位可能解码成相同字节，必须改有效数据位。
+    const tamperedSignature = `${signature[0] === 'A' ? 'B' : 'A'}${signature.slice(1)}`
+    assert.equal(verifyGatewayPrincipal(`${payload}.${tamperedSignature}`, PRINCIPAL_SECRET, 60), undefined)
     assert.equal(verifyGatewayPrincipal(signed, 'abcdef0123456789abcdef0123456789', 60), undefined)
     assert.equal(verifyGatewayPrincipal(undefined, PRINCIPAL_SECRET, 60), undefined)
     assert.equal(verifyGatewayPrincipal('not-a-context', PRINCIPAL_SECRET, 60), undefined)

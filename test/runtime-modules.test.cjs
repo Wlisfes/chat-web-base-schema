@@ -238,15 +238,20 @@ function withPatchedNacosClients({ configContent = 'remoteOnly: applied', regist
 const PRINCIPAL_SECRET = '0123456789abcdef0123456789abcdef'
 
 test('网关签发的身份上下文可被业务服务验签还原', () => {
-    const signed = signGatewayPrincipal({ uid: '2149446185344106496', sessionId: 'session-id' }, PRINCIPAL_SECRET)
+    const signed = signGatewayPrincipal(
+        { uid: '2149446185344106496', number: '1234', name: '张三', sessionId: 'session-id' },
+        PRINCIPAL_SECRET
+    )
     assert.deepEqual(verifyGatewayPrincipal(signed, PRINCIPAL_SECRET, 60), {
         uid: '2149446185344106496',
+        number: '1234',
+        name: '张三',
         sessionId: 'session-id'
     })
 })
 
 test('身份上下文拒绝篡改、错误密钥和过期签发时间', () => {
-    const principal = { uid: '2149446185344106496', sessionId: 'session-id' }
+    const principal = { uid: '2149446185344106496', number: '1234', name: '张三', sessionId: 'session-id' }
     const signed = signGatewayPrincipal(principal, PRINCIPAL_SECRET)
     const [payload, signature] = signed.split('.')
 
@@ -273,6 +278,25 @@ test('身份上下文配置缺失或过短时拒绝启动', () => {
     assert.equal(getGatewayPrincipalMaxAge(config()), 60)
     assert.equal(getGatewayPrincipalMaxAge(config({ gateway: { principal: { maxAgeSeconds: 120 } } })), 120)
     assert.throws(() => getGatewayPrincipalMaxAge(config({ gateway: { principal: { maxAgeSeconds: 1 } } })), /5-600/)
+})
+
+test('身份上下文拒绝缺少工号或姓名的主体', () => {
+    assert.equal(
+        verifyGatewayPrincipal(
+            signGatewayPrincipal({ uid: '2149446185344106496', number: '', name: '张三', sessionId: 'session-id' }, PRINCIPAL_SECRET),
+            PRINCIPAL_SECRET,
+            60
+        ),
+        undefined
+    )
+    assert.equal(
+        verifyGatewayPrincipal(
+            signGatewayPrincipal({ uid: '2149446185344106496', number: '1234', name: '张', sessionId: 'session-id' }, PRINCIPAL_SECRET),
+            PRINCIPAL_SECRET,
+            60
+        ),
+        undefined
+    )
 })
 
 test('网关必须剥离的入站头部覆盖身份上下文', () => {

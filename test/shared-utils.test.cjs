@@ -63,6 +63,19 @@ test('基础主键 DTO 元数据允许作为请求入参复用', () => {
     assert.equal(validateSync(plainToInstance(KeyDto, { keyId: '2' })).length, 0)
 })
 
+test('基础时间字段校验 YYYY-MM-DD HH:mm:ss 格式', () => {
+    class TimeDto extends PickType(DataBaseDto, ['createTime', 'modifyTime']) {}
+
+    assert.equal(validateSync(plainToInstance(TimeDto, {})).length, 0)
+    assert.equal(validateSync(plainToInstance(TimeDto, { createTime: '2026-08-16 12:00:00' })).length, 0)
+    assert.equal(
+        validateSync(plainToInstance(TimeDto, { createTime: '2026-08-16 12:00:00.000', modifyTime: '2026-08-16 12:00:00.000' })).length,
+        0
+    )
+    assert.equal(validateSync(plainToInstance(TimeDto, { createTime: '2026-08-16T12:00:00.000Z' })).length, 1)
+    assert.equal(validateSync(plainToInstance(TimeDto, { modifyTime: '16/08/2026' })).length, 1)
+})
+
 test('共享树工具校验层级并稳定排序', () => {
     const nodes = [
         { keyId: 2, parentKeyId: 1, sort: 2 },

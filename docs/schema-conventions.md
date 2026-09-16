@@ -77,8 +77,8 @@ External SQL must copy the same comment.
 - Date columns use `DateWithColumn`, which passes write values through unchanged
   and formats read values as `YYYY-MM-DD HH:mm:ss` by default.
 - A different output format can be supplied through the `format` option.
-- Database-generated date fields are Swagger `readOnly` and do not have input
-  validators.
+- Database-generated date fields are Swagger `readOnly` and optional on input.
+  When present, `createTime` / `modifyTime` must match `YYYY-MM-DD HH:mm:ss` or `YYYY-MM-DD HH:mm:ss.SSS`.
 
 ## Verification
 

@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { IS_PUBLIC_ROUTE } from './auth.decorator'
-import { AuthenticatedRequest, AuthTokenAuthenticator } from './auth.interface'
+import { AuthenticatedRequest, AuthPrincipal, AuthTokenAuthenticator } from './auth.interface'
 
 export const AUTH_TOKEN_AUTHENTICATOR = Symbol('AUTH_TOKEN_AUTHENTICATOR')
 
@@ -25,7 +25,8 @@ export class JwtAuthGuard implements CanActivate {
             throw new UnauthorizedException('缺少 Bearer 访问令牌')
         }
 
-        request.user = await this.authenticator.authenticateToken(match[1])
+        // JWT 路径只还原会话身份；工号和姓名由网关身份上下文承载。
+        request.user = (await this.authenticator.authenticateToken(match[1])) as AuthPrincipal
         return true
     }
 }

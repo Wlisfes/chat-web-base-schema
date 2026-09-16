@@ -6,6 +6,12 @@ export class AuthPrincipalResponseDto {
     @ApiProperty({ description: '账号 UID', example: '2149446185344106496' })
     uid: string
 
+    @ApiProperty({ description: '工号', example: '1234' })
+    number: string
+
+    @ApiProperty({ description: '姓名', example: '张三' })
+    name: string
+
     @ApiProperty({ description: '登录会话 ID', format: 'uuid', example: 'a56b8b36-1d86-4cf2-9c98-63f4134c83d0' })
     sessionId: string
 }

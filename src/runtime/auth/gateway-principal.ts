@@ -48,7 +48,13 @@ export function getGatewayPrincipalMaxAge(configService: ConfigService): number 
 
 /** 由网关签发身份上下文；载荷与签名之间使用 `.` 分隔。 */
 export function signGatewayPrincipal(principal: AuthPrincipal, secret: string, issuedAt = Math.floor(Date.now() / 1000)): string {
-    const payload: GatewayPrincipalPayload = { uid: principal.uid, sessionId: principal.sessionId, iat: issuedAt }
+    const payload: GatewayPrincipalPayload = {
+        uid: principal.uid,
+        number: principal.number,
+        name: principal.name,
+        sessionId: principal.sessionId,
+        iat: issuedAt
+    }
     const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url')
     return `${encoded}.${sign(encoded, secret)}`
 }
@@ -77,6 +83,11 @@ export function verifyGatewayPrincipal(value: string | undefined, secret: string
         typeof payload !== 'object' ||
         typeof payload.uid !== 'string' ||
         !/^\d{1,19}$/.test(payload.uid) ||
+        typeof payload.number !== 'string' ||
+        payload.number.length !== 4 ||
+        typeof payload.name !== 'string' ||
+        payload.name.length < 2 ||
+        payload.name.length > 32 ||
         typeof payload.sessionId !== 'string' ||
         !payload.sessionId ||
         !Number.isInteger(payload.iat) ||
@@ -85,7 +96,7 @@ export function verifyGatewayPrincipal(value: string | undefined, secret: string
     ) {
         return undefined
     }
-    return { uid: payload.uid, sessionId: payload.sessionId }
+    return { uid: payload.uid, number: payload.number, name: payload.name, sessionId: payload.sessionId }
 }
 
 function sign(value: string, secret: string): string {

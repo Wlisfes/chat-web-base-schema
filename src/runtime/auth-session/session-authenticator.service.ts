@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { AuthSessionService } from './auth-session.service'
-import { AuthPrincipal, AuthTokenAuthenticator } from '../auth/auth.interface'
+import { AuthSessionIdentity, AuthTokenAuthenticator } from '../auth/auth.interface'
 import { TokenService } from '../auth/token.service'
 
 @Injectable()
@@ -10,7 +10,7 @@ export class SessionAuthenticator implements AuthTokenAuthenticator {
         private readonly sessionService: AuthSessionService
     ) {}
 
-    async authenticateToken(token: string): Promise<AuthPrincipal> {
+    async authenticateToken(token: string): Promise<AuthSessionIdentity> {
         const claims = this.tokenService.verifyAccessToken(token)
         await this.sessionService.assertActive(claims)
         return { uid: claims.sub, sessionId: claims.jti }

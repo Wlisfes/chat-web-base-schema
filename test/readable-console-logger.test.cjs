@@ -2,7 +2,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const { stripVTControlCharacters } = require('node:util')
 
-const { ReadableConsoleLogger } = require('../dist/src/runtime/logging')
+const { ReadableConsoleLogger, resolveServiceExecutionMethod } = require('../dist/src/runtime/logging')
 
 function createPayload(overrides = {}) {
     return {
@@ -13,7 +13,7 @@ function createPayload(overrides = {}) {
         url: '/example/list',
         statusCode: 200,
         durationMs: 12,
-        executionMethod: 'ExampleController.httpBaseExampleList',
+        executionMethod: 'ExampleService.httpBaseExampleList',
         ip: '127.0.0.1',
         host: 'example.lisfes.com',
         origin: '',
@@ -70,12 +70,12 @@ test('本地请求日志保留彩色头部和缩进 JSON', () => {
 
     assert.match(line, /\u001B\[/)
     assert.match(plain, /服务名称:\[chat-web-example-service\]/)
-    assert.match(plain, /执行方法:\[ExampleController\.httpBaseExampleList\]/)
+    assert.match(plain, /执行方法:\[ExampleService\.httpBaseExampleList\]/)
     assert.match(plain, /日志ID:\[34ec4ca9-2abf-49b8-85f6-77d7fd23ea1d\]/)
     assert.ok(plain.trim().split(/\r?\n/).length > 1)
     assert.match(plain, /"message": "HTTP请求完成"/)
     assert.doesNotMatch(plain, /"requestId"/)
-    assert.match(plain, /"executionMethod": "ExampleController\.httpBaseExampleList"/)
+    assert.match(plain, /"executionMethod": "ExampleService\.httpBaseExampleList"/)
 })
 
 test('生产请求日志保留颜色并将 JSON 压缩为单个物理行', () => {
@@ -103,4 +103,45 @@ test('异常日志头部显示实际抛错方法', () => {
 test('日志初始化缺少 NODE_ENV 时直接抛出异常', () => {
     assert.throws(() => new ReadableConsoleLogger({ prefix: 'chat-web-example-service' }), /NODE_ENV/)
     assert.throws(() => new ReadableConsoleLogger({ NODE_ENV: '   ', prefix: 'chat-web-example-service' }), /NODE_ENV/)
+})
+
+test('普通日志从 Service 调用栈解析执行方法并忽略 Controller', () => {
+    const stack = [
+        'Error',
+        '    at ReadableConsoleLogger.formatMessage (E:\\chat-web-service\\chat-web-base-schema\\src\\runtime\\logging\\readable-console-logger.ts:120:50)',
+        '    at Logger.log (E:\\chat-web-service\\chat-web-base-schema\\node_modules\\@nestjs\\common\\services\\logger.service.js:40:10)',
+        '    at CaptchaService.create (E:\\chat-web-service\\chat-web-auth-service\\src\\modules\\auth\\captcha.service.ts:33:21)',
+        '    at AuthService.httpBaseAuthWriteCodex (E:\\chat-web-service\\chat-web-auth-service\\src\\modules\\auth\\auth.service.ts:80:10)',
+        '    at AuthController.httpBaseAuthWriteCodex (E:\\chat-web-service\\chat-web-auth-service\\src\\modules\\auth\\auth.controller.ts:40:10)'
+    ].join('\n')
+
+    assert.equal(resolveServiceExecutionMethod(stack, 'CaptchaService'), 'CaptchaService.create')
+    assert.equal(resolveServiceExecutionMethod(stack), 'CaptchaService.create')
+})
+
+test('CaptchaService 日志头部显示 CaptchaService.create 而不是类名', () => {
+    const lines = []
+    const originalWrite = process.stdout.write
+    process.stdout.write = value => {
+        lines.push(String(value))
+        return true
+    }
+
+    try {
+        const logger = new ReadableConsoleLogger({ NODE_ENV: 'development', prefix: 'chat-web-auth-service' })
+        class CaptchaService {
+            create() {
+                logger.log('图形验证码已写入 Redis：key=test, value=ABCD', CaptchaService.name)
+            }
+        }
+        new CaptchaService().create()
+    } finally {
+        process.stdout.write = originalWrite
+    }
+
+    assert.equal(lines.length, 1)
+    const plain = stripVTControlCharacters(lines[0])
+    assert.match(plain, /执行方法:\[CaptchaService\.create\]/)
+    assert.doesNotMatch(plain, /执行方法:\[CaptchaService\]/)
+    assert.doesNotMatch(plain, /AuthController/)
 })

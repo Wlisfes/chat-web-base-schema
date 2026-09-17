@@ -1,4 +1,6 @@
 export * from './logging.interface'
+export * from './business-status'
+export * from './execution-method'
 export * from './readable-console-logger'
 export * from './request-logging.middleware'
 export * from './structured-logger'

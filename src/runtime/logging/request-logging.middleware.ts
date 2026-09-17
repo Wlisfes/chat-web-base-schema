@@ -1,6 +1,8 @@
 import { Logger } from '@nestjs/common'
-import type { Request, RequestHandler } from 'express'
-import { resolveRequestId } from '@/utils/modules/request-context'
+import type { Request, RequestHandler, Response } from 'express'
+import { getActiveExecutionMethod, resolveRequestId } from '@/utils/modules/request-context'
+import { isBusinessSuccessStatus, parseJsonBusinessCode, resolveBusinessStatusCode } from '@/runtime/logging/business-status'
+import { normalizeServiceExecutionMethod } from '@/runtime/logging/execution-method'
 import { resolvePublicRequestUrl } from '@/utils/modules/request-url'
 import { getActiveTraceContext } from '@/runtime/observability'
 
@@ -67,8 +69,36 @@ function resolveClientIp(request: Request): string {
     return value?.trim() || request.ip || request.socket.remoteAddress || ''
 }
 
-function isIgnoredPath(path: string): boolean {
-    return ignoredPaths.has(path) || ignoredPathPrefixes.some(prefix => path.startsWith(prefix))
+function isIgnoredPath(pathName: string): boolean {
+    return ignoredPaths.has(pathName) || ignoredPathPrefixes.some(prefix => pathName.startsWith(prefix))
+}
+
+function captureResponseChunk(chunk: unknown): number | undefined {
+    if (chunk === undefined || chunk === null || typeof chunk === 'function') return undefined
+    const text = Buffer.isBuffer(chunk) ? chunk.toString('utf8') : typeof chunk === 'string' ? chunk : ''
+    return text ? parseJsonBusinessCode(text) : undefined
+}
+
+/** 包装 write/end，在未设置业务码响应头时从 JSON 响应体兜底读取 code。 */
+function attachBusinessCodeCapture(response: Response, onCode: (code: number) => void): void {
+    const originalWrite = typeof response.write === 'function' ? response.write.bind(response) : undefined
+    const originalEnd = typeof response.end === 'function' ? response.end.bind(response) : undefined
+
+    if (originalWrite) {
+        response.write = ((chunk: unknown, encoding?: unknown, callback?: unknown) => {
+            const code = captureResponseChunk(chunk)
+            if (code !== undefined) onCode(code)
+            return originalWrite(chunk as never, encoding as never, callback as never)
+        }) as typeof response.write
+    }
+
+    if (originalEnd) {
+        response.end = ((chunk?: unknown, encoding?: unknown, callback?: unknown) => {
+            const code = captureResponseChunk(chunk)
+            if (code !== undefined) onCode(code)
+            return originalEnd(chunk as never, encoding as never, callback as never)
+        }) as typeof response.end
+    }
 }
 
 /** 记录与 nest-platform-service LoggerMiddleware 一致的请求、入参、来源和耗时信息。 */
@@ -82,18 +112,24 @@ export function createRequestLoggingMiddleware(serviceName: string): RequestHand
         currentRequest.headers['x-request-id'] = requestId
         response.setHeader('x-request-id', requestId)
 
+        let capturedCode: number | undefined
+        attachBusinessCodeCapture(response, code => {
+            capturedCode = code
+        })
+
         response.once('finish', () => {
             if (isIgnoredPath(currentRequest.path)) return
             const traceContext = getActiveTraceContext()
+            const statusCode = resolveBusinessStatusCode(response, capturedCode)
             const payload = {
                 message: 'HTTP请求完成',
                 service: serviceName,
                 logId: requestId,
                 method: currentRequest.method,
                 url: resolvePublicRequestUrl(currentRequest),
-                statusCode: response.statusCode,
+                statusCode,
                 durationMs: Date.now() - startedAt,
-                executionMethod: currentRequest.executionMethod,
+                executionMethod: normalizeServiceExecutionMethod(currentRequest.executionMethod) ?? getActiveExecutionMethod(),
                 ip: resolveClientIp(currentRequest),
                 host: currentRequest.headers.host ?? '',
                 origin: currentRequest.headers.origin ?? '',
@@ -104,9 +140,8 @@ export function createRequestLoggingMiddleware(serviceName: string): RequestHand
                 body: truncate(currentRequest.body, MAX_PAYLOAD_LENGTH),
                 ...traceContext
             }
-            if (response.statusCode >= 500) logger.error(payload)
-            else if (response.statusCode >= 400) logger.warn(payload)
-            else logger.log(payload)
+            if (isBusinessSuccessStatus(statusCode)) logger.log(payload)
+            else logger.error(payload)
         })
         next()
     }

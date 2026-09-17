@@ -2,7 +2,11 @@ import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { FeignClientAuthManager } from '../../feign/chat-web-auth-service-feign/feign-auth.client.controller'
 import { resolveFeignServiceAuthorization } from '../../feign/feign.authorization'
-import type { AuthDataScopeResult, AuthPermissionCacheInvalidateInput } from '../../feign/chat-web-auth-service-feign/feign-auth.interface'
+import type {
+    AuthAuthorizedPrincipalResult,
+    AuthDataScopeResult,
+    AuthPermissionCacheInvalidateInput
+} from '../../feign/chat-web-auth-service-feign/feign-auth.interface'
 
 /** 业务服务调用 Auth 权限中心的统一适配服务。 */
 @Injectable()
@@ -24,6 +28,10 @@ export class AuthorizationService {
 
     public async resolveDataScope(uid: string, resourceCode: string): Promise<AuthDataScopeResult> {
         return this.authClient.resolveDataScope(this.authorization(), { uid, resourceCode })
+    }
+
+    public async resolveAuthorizedPrincipal(uid: string, permissionCodes: string[]): Promise<AuthAuthorizedPrincipalResult> {
+        return this.authClient.resolveAuthorizedPrincipal(this.authorization(), { uid, permissionCodes })
     }
 
     /** 缓存通知失败不回滚已提交事务，由 Auth 的短 TTL 兜底。 */

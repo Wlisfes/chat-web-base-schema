@@ -8,6 +8,7 @@ import {
     AuthPermissionCheckResponseDto,
     AuthDataScopeRequestDto,
     AuthDataScopeResponseDto,
+    AuthAuthorizedPrincipalResponseDto,
     AuthSuperAdminResponseDto,
     AuthUidRequestDto
 } from './feign-auth.dto'
@@ -36,6 +37,18 @@ export class FeignClientAuthManager extends FeignWebClient<AuthTypes.FeignClient
         @FeignBody() _input: AuthTypes.AuthDataScopeInput
     ): Promise<AuthTypes.AuthDataScopeResult> {
         return this.dispatch('resolveDataScope', _authorization, _input)
+    }
+
+    @FeignPost('/permission/authorized-principal', {
+        operation: { summary: '供业务服务查询授权身份与数据范围' },
+        request: { source: 'body', type: AuthPermissionCheckRequestDto },
+        response: { type: AuthAuthorizedPrincipalResponseDto, description: '授权身份与数据范围' }
+    })
+    async resolveAuthorizedPrincipal(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: AuthTypes.AuthPermissionCheckInput
+    ): Promise<AuthTypes.AuthAuthorizedPrincipalResult> {
+        return this.dispatch('resolveAuthorizedPrincipal', _authorization, _input)
     }
 
     @FeignPost('/permission/super-admin', {

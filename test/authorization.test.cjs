@@ -19,13 +19,22 @@ function config(initial = {}) {
 }
 
 function createContext(user) {
+    const request = { user }
     return {
+        request,
         getHandler: () => function handler() {},
         getClass: () => class TestController {},
         switchToHttp: () => ({
-            getRequest: () => ({ user })
+            getRequest: () => request
         })
     }
+}
+
+const authorizedPrincipal = {
+    superAdmin: false,
+    roleCodes: ['admin'],
+    all: false,
+    items: ['2281665656346656771']
 }
 
 test('auth 子路径导出业务服务授权适配层', () => {
@@ -35,7 +44,7 @@ test('auth 子路径导出业务服务授权适配层', () => {
     assert.deepEqual(Reflect.getMetadata(MODULE_METADATA.EXPORTS, AuthorizationModule), [AuthorizationService, AuthorizationGuard])
 })
 
-test('AuthorizationGuard 无权限码时直接放行且不调用权限中心', async () => {
+test('AuthorizationGuard 无权限码且无用户时直接放行', async () => {
     let called = false
     const guard = new AuthorizationGuard(
         { getAllAndOverride: () => [] },
@@ -43,11 +52,40 @@ test('AuthorizationGuard 无权限码时直接放行且不调用权限中心', a
             async hasPermission() {
                 called = true
                 return false
+            },
+            async resolveAuthorizedPrincipal() {
+                called = true
+                return authorizedPrincipal
             }
         }
     )
-    assert.equal(await guard.canActivate(createContext({ uid: '1' })), true)
+    assert.equal(await guard.canActivate(createContext(undefined)), true)
     assert.equal(called, false)
+})
+
+test('AuthorizationGuard 无权限码但有用户时仍挂载数据范围', async () => {
+    const calls = []
+    const guard = new AuthorizationGuard(
+        { getAllAndOverride: () => [] },
+        {
+            async hasPermission() {
+                calls.push('hasPermission')
+                return false
+            },
+            async resolveAuthorizedPrincipal(uid, permissionCodes) {
+                calls.push(['resolveAuthorizedPrincipal', uid, permissionCodes])
+                return authorizedPrincipal
+            }
+        }
+    )
+    const context = createContext({ uid: '2281665656346656771', sessionId: 's1' })
+    assert.equal(await guard.canActivate(context), true)
+    assert.deepEqual(calls, [['resolveAuthorizedPrincipal', '2281665656346656771', []]])
+    assert.deepEqual(context.request.user, {
+        uid: '2281665656346656771',
+        sessionId: 's1',
+        ...authorizedPrincipal
+    })
 })
 
 test('AuthorizationGuard 缺少登录用户时抛出 403', async () => {
@@ -58,6 +96,10 @@ test('AuthorizationGuard 缺少登录用户时抛出 403', async () => {
             async hasPermission() {
                 called = true
                 return true
+            },
+            async resolveAuthorizedPrincipal() {
+                called = true
+                return authorizedPrincipal
             }
         }
     )
@@ -73,13 +115,19 @@ test('AuthorizationGuard 缺少登录用户时抛出 403', async () => {
 })
 
 test('AuthorizationGuard 权限不足时抛出 403', async () => {
+    const calls = []
     const guard = new AuthorizationGuard(
         { getAllAndOverride: () => ['account:user:list', 'account:user:create'] },
         {
             async hasPermission(uid, permissionCodes) {
+                calls.push(['hasPermission', uid, permissionCodes])
                 assert.equal(uid, '2281665656346656771')
                 assert.deepEqual(permissionCodes, ['account:user:list', 'account:user:create'])
                 return false
+            },
+            async resolveAuthorizedPrincipal() {
+                calls.push('resolveAuthorizedPrincipal')
+                return authorizedPrincipal
             }
         }
     )
@@ -91,20 +139,37 @@ test('AuthorizationGuard 权限不足时抛出 403', async () => {
             return true
         }
     )
+    assert.deepEqual(calls, [['hasPermission', '2281665656346656771', ['account:user:list', 'account:user:create']]])
 })
 
-test('AuthorizationGuard 权限校验通过时放行', async () => {
+test('AuthorizationGuard 权限校验通过时挂载数据范围并放行', async () => {
+    const calls = []
     const guard = new AuthorizationGuard(
         { getAllAndOverride: () => ['account:user:list'] },
         {
             async hasPermission(uid, permissionCodes) {
-                assert.equal(uid, '2281665656346656771')
-                assert.deepEqual(permissionCodes, ['account:user:list'])
+                calls.push(['hasPermission', uid, permissionCodes])
                 return true
+            },
+            async resolveAuthorizedPrincipal(uid, permissionCodes) {
+                calls.push(['resolveAuthorizedPrincipal', uid, permissionCodes])
+                return authorizedPrincipal
             }
         }
     )
-    assert.equal(await guard.canActivate(createContext({ uid: '2281665656346656771' })), true)
+    const context = createContext({ uid: '2281665656346656771', number: 'A001', name: '张三', sessionId: 's1' })
+    assert.equal(await guard.canActivate(context), true)
+    assert.deepEqual(calls, [
+        ['hasPermission', '2281665656346656771', ['account:user:list']],
+        ['resolveAuthorizedPrincipal', '2281665656346656771', ['account:user:list']]
+    ])
+    assert.deepEqual(context.request.user, {
+        uid: '2281665656346656771',
+        number: 'A001',
+        name: '张三',
+        sessionId: 's1',
+        ...authorizedPrincipal
+    })
 })
 
 function createService(authClient, initial) {
@@ -125,6 +190,10 @@ test('AuthorizationService 使用服务凭据调用 Auth 权限接口', async ()
         async resolveDataScope(authorization, input) {
             calls.push(['resolveDataScope', authorization, input])
             return { all: false, includeSelf: true, organizationKeyIds: [1, 2] }
+        },
+        async resolveAuthorizedPrincipal(authorization, input) {
+            calls.push(['resolveAuthorizedPrincipal', authorization, input])
+            return authorizedPrincipal
         }
     }
     const service = createService(authClient, { gateway: { feign: { service_token: 'service-token' } } })
@@ -136,10 +205,12 @@ test('AuthorizationService 使用服务凭据调用 Auth 权限接口', async ()
         includeSelf: true,
         organizationKeyIds: [1, 2]
     })
+    assert.deepEqual(await service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list']), authorizedPrincipal)
     assert.deepEqual(calls, [
         ['checkPermission', 'Bearer service-token', { uid: '2281665656346656771', permissionCodes: ['account:user:list'] }],
         ['checkSuperAdmin', 'Bearer service-token', { uid: '2281665656346656771' }],
-        ['resolveDataScope', 'Bearer service-token', { uid: '2281665656346656771', resourceCode: 'account:user' }]
+        ['resolveDataScope', 'Bearer service-token', { uid: '2281665656346656771', resourceCode: 'account:user' }],
+        ['resolveAuthorizedPrincipal', 'Bearer service-token', { uid: '2281665656346656771', permissionCodes: ['account:user:list'] }]
     ])
 })
 

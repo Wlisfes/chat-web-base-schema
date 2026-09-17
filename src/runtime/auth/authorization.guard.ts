@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from './auth.interface'
 import { REQUIRED_PERMISSIONS } from './auth.decorator'
 import { AuthorizationService } from './authorization.service'
 
-/** 根据 RequirePermissions 元数据调用 Auth 权限中心进行统一授权。 */
+/** 根据 RequirePermissions 元数据调用 Auth 权限中心进行统一授权，并挂载数据范围。 */
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
     constructor(
@@ -14,11 +14,17 @@ export class AuthorizationGuard implements CanActivate {
 
     public async canActivate(context: ExecutionContext): Promise<boolean> {
         const required = this.reflector.getAllAndOverride<string[]>(REQUIRED_PERMISSIONS, [context.getHandler(), context.getClass()]) ?? []
-        if (!required.length) return true
         const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
-        if (!request.user || !(await this.authorizationService.hasPermission(request.user.uid, required))) {
+        const user = request.user
+        if (!required.length && !user) return true
+        if (!user) {
             throw new ForbiddenException(`缺少权限：${required.join(', ')}`)
         }
+        if (required.length && !(await this.authorizationService.hasPermission(user.uid, required))) {
+            throw new ForbiddenException(`缺少权限：${required.join(', ')}`)
+        }
+        const authorized = await this.authorizationService.resolveAuthorizedPrincipal(user.uid, required)
+        request.user = { ...user, ...authorized }
         return true
     }
 }

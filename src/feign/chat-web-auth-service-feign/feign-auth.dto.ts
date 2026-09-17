@@ -61,6 +61,21 @@ export class AuthDataScopeResponseDto {
     organizationKeyIds: number[]
 }
 
+/** Auth 授权身份与数据范围响应。 */
+export class AuthAuthorizedPrincipalResponseDto {
+    @ApiProperty({ description: '是否为超级管理员', example: false })
+    superAdmin: boolean
+
+    @ApiProperty({ description: '当前启用角色编码', type: [String], example: ['admin'] })
+    roleCodes: string[]
+
+    @ApiProperty({ description: '是否拥有全部数据；空 items 不能表示全部数据', example: false })
+    all: boolean
+
+    @ApiProperty({ description: '当前请求可访问的用户 UID 并集', type: [String], example: ['2281665656346656771'] })
+    items: string[]
+}
+
 /** Auth 超级管理员判断响应。 */
 export class AuthSuperAdminResponseDto {
     @ApiProperty({ description: '是否为超级管理员', example: false })

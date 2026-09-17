@@ -3,6 +3,7 @@ import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { createApiResponse, isApiResponse } from '@/utils/modules/response'
 import { resolveRequestId } from '@/utils/modules/request-context'
+import { setBusinessCodeHeader } from '@/runtime/logging/business-status'
 
 interface HttpRequestLike {
     headers: Record<string, string | string[] | undefined>
@@ -27,12 +28,9 @@ export class TransformInterceptor implements NestInterceptor {
         const request = httpContext.getRequest<HttpRequestLike>()
         const response = httpContext.getResponse<HttpResponseLike>()
         const logId = resolveRequestId(request.logId ?? request.headers['x-request-id'])
-        const controllerName = context.getClass().name
-        const handlerName = context.getHandler().name
 
         request.logId = logId
         request.headers['x-request-id'] = logId
-        request.executionMethod = [controllerName, handlerName].filter(Boolean).join('.')
         if (!response.headersSent) response.setHeader('x-request-id', logId)
 
         if (response.headersSent || response.getHeader('Content-Type') !== undefined) {
@@ -40,8 +38,9 @@ export class TransformInterceptor implements NestInterceptor {
         }
         return next.handle().pipe(
             map(data => {
-                if (!isApiResponse(data)) return createApiResponse(data, { logId })
-                return data.logId === logId ? data : { ...data, logId }
+                const body = !isApiResponse(data) ? createApiResponse(data, { logId }) : data.logId === logId ? data : { ...data, logId }
+                setBusinessCodeHeader(response, body.code)
+                return body
             })
         )
     }

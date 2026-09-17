@@ -2,7 +2,12 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const { Logger } = require('@nestjs/common')
 
-const { DEFAULT_REQUEST_LOGGING_IGNORED_PATHS, createRequestLoggingMiddleware } = require('../dist/src/runtime/logging')
+const {
+    DEFAULT_REQUEST_LOGGING_IGNORED_PATHS,
+    createRequestLoggingMiddleware,
+    parseJsonBusinessCode,
+    resolveBusinessStatusCode
+} = require('../dist/src/runtime/logging')
 
 test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
     const messages = []
@@ -17,7 +22,7 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
         query: { keyword: 'tester' },
         params: {},
         body: { name: 'tester', password: 'secret', code: 'A7K9' },
-        executionMethod: 'AuthController.httpBaseAccountLoginAuth',
+        executionMethod: 'AuthService.httpBaseAccountLoginAuth',
         ip: '127.0.0.1',
         socket: {}
     }
@@ -46,7 +51,7 @@ test('请求日志中间件生成请求 ID 并隐藏敏感入参', () => {
     const payload = messages[0]
     assert.equal(payload.message, 'HTTP请求完成')
     assert.equal(payload.logId, response['x-request-id'])
-    assert.equal(payload.executionMethod, 'AuthController.httpBaseAccountLoginAuth')
+    assert.equal(payload.executionMethod, 'AuthService.httpBaseAccountLoginAuth')
     assert.equal(payload.url, '/api/account/auth/token/login?source=manager')
     assert.equal('requestId' in payload, false)
     assert.equal(payload.body.name, 'tester')
@@ -91,4 +96,138 @@ test('请求日志中间件默认忽略健康检查、浏览器探测和接口�
     }
 
     assert.equal(messages.length, 0)
+})
+
+test('请求日志中间件忽略 Controller 执行方法', () => {
+    const messages = []
+    const originalLog = Logger.prototype.log
+    Logger.prototype.log = message => messages.push(message)
+    let finish
+    const request = {
+        headers: {},
+        method: 'GET',
+        originalUrl: '/auth/codex/write',
+        path: '/auth/codex/write',
+        query: {},
+        params: {},
+        body: {},
+        executionMethod: 'AuthController.httpBaseAuthWriteCodex',
+        ip: '127.0.0.1',
+        socket: {}
+    }
+    const response = {
+        statusCode: 200,
+        setHeader() {},
+        once(_name, listener) {
+            finish = listener
+        }
+    }
+
+    try {
+        createRequestLoggingMiddleware('test-service')(request, response, () => undefined)
+        finish()
+    } finally {
+        Logger.prototype.log = originalLog
+    }
+
+    assert.equal(messages[0].executionMethod, undefined)
+})
+
+test('parseJsonBusinessCode 支持截断的 JSON 片段', () => {
+    assert.equal(parseJsonBusinessCode('{"data":null,"code":500,"message":"服务器'), 500)
+    assert.equal(parseJsonBusinessCode('{"data":null,"code":200,"message":"success"}'), 200)
+})
+
+test('请求日志中间件将非 200 业务码记为错误', () => {
+    const logs = []
+    const errors = []
+    const originalLog = Logger.prototype.log
+    const originalError = Logger.prototype.error
+    Logger.prototype.log = message => logs.push(message)
+    Logger.prototype.error = message => errors.push(message)
+
+    try {
+        let finish
+        const headers = {}
+        const request = {
+            headers: {},
+            method: 'POST',
+            originalUrl: '/auth/token/login',
+            path: '/auth/token/login',
+            query: {},
+            params: {},
+            body: {},
+            ip: '127.0.0.1',
+            socket: {}
+        }
+        const response = {
+            statusCode: 200,
+            setHeader(name, value) {
+                headers[name] = value
+            },
+            getHeader(name) {
+                return headers[name]
+            },
+            once(_name, listener) {
+                finish = listener
+            }
+        }
+
+        createRequestLoggingMiddleware('test-service')(request, response, () => undefined)
+        response.setHeader('x-business-code', '500')
+        finish()
+
+        assert.equal(logs.length, 0)
+        assert.equal(errors.length, 1)
+        assert.equal(errors[0].message, 'HTTP请求完成')
+        assert.equal(errors[0].statusCode, 500)
+        assert.equal(resolveBusinessStatusCode(response), 500)
+    } finally {
+        Logger.prototype.log = originalLog
+        Logger.prototype.error = originalError
+    }
+})
+
+test('请求日志中间件从响应体读取业务码', () => {
+    const errors = []
+    const originalError = Logger.prototype.error
+    Logger.prototype.error = message => errors.push(message)
+
+    try {
+        let finish
+        const request = {
+            headers: {},
+            method: 'POST',
+            originalUrl: '/auth/token/login',
+            path: '/auth/token/login',
+            query: {},
+            params: {},
+            body: {},
+            ip: '127.0.0.1',
+            socket: {}
+        }
+        const response = {
+            statusCode: 200,
+            setHeader() {},
+            getHeader() {},
+            write() {
+                return true
+            },
+            end() {
+                return this
+            },
+            once(_name, listener) {
+                finish = listener
+            }
+        }
+
+        createRequestLoggingMiddleware('test-service')(request, response, () => undefined)
+        response.end('{"data":null,"code":400,"message":"名称不能为空"}')
+        finish()
+
+        assert.equal(errors.length, 1)
+        assert.equal(errors[0].statusCode, 400)
+    } finally {
+        Logger.prototype.error = originalError
+    }
 })

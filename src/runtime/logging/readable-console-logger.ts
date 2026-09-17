@@ -1,7 +1,8 @@
 import { ConsoleLogger, type LogLevel } from '@nestjs/common'
 import { styleText } from 'node:util'
 import type { ReadableConsoleLoggerOptions, RequestLogPayload } from '@/runtime/logging/logging.interface'
-import { getActiveRequestId } from '@/utils/modules/request-context'
+import { captureServiceExecutionMethod, normalizeServiceExecutionMethod } from '@/runtime/logging/execution-method'
+import { getActiveRequestId, setActiveExecutionMethod } from '@/utils/modules/request-context'
 
 type TerminalColor = Parameters<typeof styleText>[0]
 
@@ -70,6 +71,16 @@ function formatRequestLogDetails(payload: RequestLogPayload, colors: boolean, co
     return colorJson(JSON.stringify(createRequestLogDetails(payload), null, compact ? undefined : 4), colors)
 }
 
+function resolveLogExecutionMethod(requestLog: RequestLogPayload | undefined, contextMessage: string): string {
+    const resolved =
+        normalizeServiceExecutionMethod(requestLog?.executionMethod) ??
+        normalizeServiceExecutionMethod(contextMessage) ??
+        captureServiceExecutionMethod(contextMessage)
+
+    if (resolved) setActiveExecutionMethod(resolved)
+    return resolved ?? ''
+}
+
 function formatTimestamp(date: Date): string {
     const parts = new Intl.DateTimeFormat('zh-CN', {
         year: 'numeric',
@@ -120,7 +131,7 @@ export class ReadableConsoleLogger extends ConsoleLogger {
         timestampDiff: string
     ): string {
         const requestLog = isRequestLogPayload(message) ? message : undefined
-        const executionMethod = requestLog?.executionMethod ?? contextMessage
+        const executionMethod = resolveLogExecutionMethod(requestLog, contextMessage)
         const header = this.formatReadableHeader(logLevel, executionMethod, requestLog, this.options.colors === true, this.getTimestamp())
         const content = this.stringifyMessage(message, logLevel)
 

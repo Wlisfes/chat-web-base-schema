@@ -79,7 +79,8 @@ test('TransformInterceptor wraps HTTP data once', async () => {
     assert.equal(result.code, 200)
     assert.equal(result.logId, 'request-transform')
     assert.equal(response.headers['x-request-id'], 'request-transform')
-    assert.equal(request.executionMethod, 'TestController.defaultHandler')
+    assert.equal(response.headers['x-business-code'], '200')
+    assert.equal(request.executionMethod, undefined)
     assert.equal(isApiResponse(result), true)
 
     const repeated = await firstValueFrom(interceptor.intercept(context, { handle: () => of(result) }))
@@ -121,10 +122,11 @@ test('HttpExceptionFilter returns HTTP 200 and keeps the business error code', (
     assert.equal(response.body.message, '名称不能为空')
     assert.equal(response.body.logId, 'request-http-response')
     assert.equal(response['x-request-id'], response.body.logId)
+    assert.equal(response['x-business-code'], '400')
     assert.match(response.body.timestamp, timestampPattern)
 })
 
-test('HttpExceptionFilter falls back to the controller handler when the stack has no application frame', () => {
+test('HttpExceptionFilter ignores controller fallback when the stack has no service frame', () => {
     const filter = new HttpExceptionFilter()
     const response = {
         headersSent: false,
@@ -139,20 +141,20 @@ test('HttpExceptionFilter falls back to the controller handler when the stack ha
     const exception = new BadRequestException('参数错误')
     exception.stack = ['BadRequestException: 参数错误', '    at node:internal/process/task_queues:105:5'].join('\n')
     const request = { method: 'POST', originalUrl: '/users', headers: { 'x-request-id': 'request-route-fallback' } }
-    const originalWarn = Logger.prototype.warn
+    const originalError = Logger.prototype.error
     let loggedContext
-    Logger.prototype.warn = (_message, context) => {
+    Logger.prototype.error = (_message, _stack, context) => {
         loggedContext = context
     }
 
     try {
         filter.catch(exception, createHttpContext(response, defaultHandler, request))
     } finally {
-        Logger.prototype.warn = originalWarn
+        Logger.prototype.error = originalError
     }
 
-    assert.equal(loggedContext, 'TestController.defaultHandler')
-    assert.equal(request.executionMethod, 'TestController.defaultHandler')
+    assert.equal(loggedContext, undefined)
+    assert.equal(request.executionMethod, undefined)
 })
 
 test('HttpExceptionFilter logs the public gateway URL', () => {
@@ -171,16 +173,16 @@ test('HttpExceptionFilter logs the public gateway URL', () => {
         setHeader() {},
         json() {}
     }
-    const originalWarn = Logger.prototype.warn
+    const originalError = Logger.prototype.error
     let loggedMessage
-    Logger.prototype.warn = message => {
+    Logger.prototype.error = message => {
         loggedMessage = message
     }
 
     try {
         filter.catch(new BadRequestException('菜单ID不能为空'), createHttpContext(response, defaultHandler, request))
     } finally {
-        Logger.prototype.warn = originalWarn
+        Logger.prototype.error = originalError
     }
 
     assert.match(loggedMessage, /^POST \/api\/account\/sheet\/update -> 400 菜单ID不能为空/)
@@ -196,7 +198,9 @@ test('HttpExceptionFilter hides unhandled server error details', () => {
             this.statusCode = code
             return this
         },
-        setHeader() {},
+        setHeader(name, value) {
+            this[name] = value
+        },
         json(body) {
             this.body = body
         }
@@ -206,6 +210,7 @@ test('HttpExceptionFilter hides unhandled server error details', () => {
 
     assert.equal(response.statusCode, 200)
     assert.equal(response.body.code, 500)
+    assert.equal(response['x-business-code'], '500')
     assert.equal(response.body.message, '服务器内部错误')
     assert.equal(JSON.stringify(response.body).includes('database password leaked'), false)
 })

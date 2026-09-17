@@ -60,15 +60,17 @@ function parseStackFrame(line: string): ExceptionStackFrame | undefined {
 
 function isApplicationFrame(frame: ExceptionStackFrame): boolean {
     const normalizedFile = frame.file.replace(/\\/g, '/')
+    const className = frame.method?.replace(/^async\s+/, '').split(/[\s.]/)[0] ?? ''
     return (
         !normalizedFile.startsWith('node:') &&
         !normalizedFile.includes('/node_modules/') &&
-        !normalizedFile.includes('/src/filters/modules/')
+        !normalizedFile.includes('/src/filters/modules/') &&
+        !/Controller$/.test(className)
     )
 }
 
-/** 从异常堆栈中定位实际抛错方法；无法定位时回退到当前 Controller 方法。 */
-export function resolveExceptionExecutionMethod(exception: unknown, fallback = 'HttpExceptionFilter'): string {
+/** 从异常堆栈中定位实际抛错的 Service 方法；无法定位时回退到已捕获的 Service.method。 */
+export function resolveExceptionExecutionMethod(exception: unknown, fallback = ''): string {
     const stack = exception instanceof Error ? exception.stack : undefined
     if (!stack) return fallback
 

@@ -1,7 +1,9 @@
 import { ArgumentsHost, Catch, ExceptionFilter, ExecutionContext, HttpStatus, Logger } from '@nestjs/common'
 import type { ApiResponse } from '@/types'
 import { createApiResponse } from '@/utils/modules/response'
-import { resolveRequestId } from '@/utils/modules/request-context'
+import { getActiveExecutionMethod, resolveRequestId } from '@/utils/modules/request-context'
+import { setBusinessCodeHeader } from '@/runtime/logging/business-status'
+import { normalizeServiceExecutionMethod } from '@/runtime/logging/execution-method'
 import { resolvePublicRequestUrl } from '@/utils/modules/request-url'
 import {
     resolveExceptionData,
@@ -45,20 +47,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const url = resolvePublicRequestUrl(request)
         const executionMethod = resolveExceptionExecutionMethod(
             exception,
-            request.executionMethod ?? this.resolveRouteExecutionMethod(host)
+            normalizeServiceExecutionMethod(getActiveExecutionMethod() ?? request.executionMethod) ?? ''
         )
         const traceId = getActiveTraceContext().traceId
         const logMessage = `${method} ${url} -> ${status} ${message} [${logId}]${traceId ? ` [traceId=${traceId}]` : ''}`
 
         request.logId = logId
-        request.executionMethod = executionMethod
+        if (executionMethod) request.executionMethod = executionMethod
         if (request.headers) request.headers['x-request-id'] = logId
-        if (!response.headersSent) response.setHeader('x-request-id', logId)
+        if (!response.headersSent) {
+            response.setHeader('x-request-id', logId)
+            setBusinessCodeHeader(response, status)
+        }
 
-        if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-            this.logger.error(logMessage, exception instanceof Error ? exception.stack : undefined, executionMethod)
+        if (status !== HttpStatus.OK) {
+            this.logger.error(
+                logMessage,
+                status >= HttpStatus.INTERNAL_SERVER_ERROR && exception instanceof Error ? exception.stack : undefined,
+                executionMethod || undefined
+            )
         } else {
-            this.logger.warn(logMessage, executionMethod)
+            this.logger.log(logMessage, executionMethod || undefined)
         }
 
         if (!response.headersSent) {
@@ -72,13 +81,5 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const context = host as ExecutionContext
         const targets = [context.getHandler?.(), context.getClass?.()].filter((target): target is Function => typeof target === 'function')
         return targets.some(target => Reflect.getMetadata(PRESERVE_HTTP_STATUS_METADATA, target) === true)
-    }
-
-    private resolveRouteExecutionMethod(host: ArgumentsHost): string | undefined {
-        const context = host as ExecutionContext
-        const controllerName = context.getClass?.()?.name
-        const handlerName = context.getHandler?.()?.name
-        const executionMethod = [controllerName, handlerName].filter(Boolean).join('.')
-        return executionMethod || undefined
     }
 }

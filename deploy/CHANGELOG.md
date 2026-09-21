@@ -1,5 +1,13 @@
 # Deployment changelog
 
+## 2026-09-21 — Account 组织 key_id 重排到 1024000 号段
+
+- Affected consumers: `chat-web-account-service` after upgrading to the shared package release containing this migration.
+- Change: added immutable migration `20260921090000__tb_account_organization__reseed_key_id.sql`. Existing organization IDs and all organization references are shifted by `1024000`, and `tb_account_organization` uses `AUTO_INCREMENT = 1124000`.
+- Machine-side operations: publish the tested package, upgrade Account, and let its schema applicator apply or verify the migration. The current shared database has already applied and recorded this migration.
+- Verification: confirm organization count is unchanged, `key_id` is in the new range, `AUTO_INCREMENT` is `1124000`, and parent, closure, membership and role data-scope references have no orphans.
+- Rollback: before application, restore the previous complete Account image and package. After application, use a separately reviewed SQL migration to subtract `1024000`; do not edit the applied migration file.
+
 ## 2026-09-14 — 支持通过环境变量指定 Nacos 注册 IP
 
 - Affected consumers: explicitly upgraded Account for本地 WireGuard 联调；共享包本身不部署容器。

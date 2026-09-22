@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.6.35",
+    "version": "1.6.36",
     "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {

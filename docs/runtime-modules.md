@@ -161,8 +161,14 @@ export class AppModule {}
 ```
 
 Annotate routes with `@RequirePermissions('account:user:list')`. Routes without the
-decorator pass through. A missing principal or a failed Auth check throws
-`ForbiddenException` with `缺少权限：...`.
+decorator skip the permission-code check but still receive the authorized principal
+(`superAdmin` / `roleCodes` / `all` / `items`) on `request.user`, so handlers can apply
+data scope. A missing principal or a failed Auth check throws `ForbiddenException` with
+`缺少权限：...`.
+
+`AuthorizationGuard` resolves the permission check and the authorized principal in a
+single `resolveAuthorizedPrincipal` call: Auth returns `allowed` together with the data
+scope, so a protected request never issues two permission Feign round trips.
 
 `AuthorizationService` exposes `hasPermission`, `isSuperAdmin`, `resolveDataScope`
 and `invalidate`. `AuthorizationModule` is global and registers `FeignClientAuthManager`

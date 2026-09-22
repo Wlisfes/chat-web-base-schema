@@ -63,6 +63,9 @@ export class AuthDataScopeResponseDto {
 
 /** Auth 授权身份与数据范围响应。 */
 export class AuthAuthorizedPrincipalResponseDto {
+    @ApiProperty({ description: '是否拥有全部所需权限码；未传权限码时为 true', example: true })
+    allowed: boolean
+
     @ApiProperty({ description: '是否为超级管理员', example: false })
     superAdmin: boolean
 

@@ -1,31 +1,20 @@
 import type {
     AuthPermissionCacheInvalidateRequestDto,
     AuthPermissionCacheInvalidateResponseDto,
-    AuthPermissionCheckRequestDto,
-    AuthPermissionCheckResponseDto,
-    AuthDataScopeRequestDto,
-    AuthDataScopeResponseDto,
-    AuthAuthorizedPrincipalResponseDto,
-    AuthSuperAdminResponseDto
+    AuthAuthorizedPrincipalRequestDto,
+    AuthAuthorizedPrincipalResponseDto
 } from './feign-auth.dto'
 
-export type AuthPermissionCheckInput = AuthPermissionCheckRequestDto
-export type AuthPermissionCheckResult = AuthPermissionCheckResponseDto
+export type AuthAuthorizedPrincipalInput = AuthAuthorizedPrincipalRequestDto
+export type AuthAuthorizedPrincipalResult = AuthAuthorizedPrincipalResponseDto
 export type AuthPermissionCacheInvalidateInput = AuthPermissionCacheInvalidateRequestDto
 export type AuthPermissionCacheInvalidateResult = AuthPermissionCacheInvalidateResponseDto
-export type AuthDataScopeInput = AuthDataScopeRequestDto
-export type AuthDataScopeResult = AuthDataScopeResponseDto
-export type AuthAuthorizedPrincipalResult = AuthAuthorizedPrincipalResponseDto
-export type AuthSuperAdminResult = AuthSuperAdminResponseDto
 
 /** Auth 权限服务 Feign 实现约束。 */
 export interface FeignClientAuthImplementation {
-    checkPermission(authorization: string, input: AuthPermissionCheckInput): Promise<AuthPermissionCheckResult>
+    resolveAuthorizedPrincipal(authorization: string, input: AuthAuthorizedPrincipalInput): Promise<AuthAuthorizedPrincipalResult>
     invalidatePermissionCache(
         authorization: string,
         input: AuthPermissionCacheInvalidateInput
     ): Promise<AuthPermissionCacheInvalidateResult>
-    resolveDataScope(authorization: string, input: AuthDataScopeInput): Promise<AuthDataScopeResult>
-    resolveAuthorizedPrincipal(authorization: string, input: AuthPermissionCheckInput): Promise<AuthAuthorizedPrincipalResult>
-    checkSuperAdmin(authorization: string, input: { uid: string }): Promise<AuthSuperAdminResult>
 }

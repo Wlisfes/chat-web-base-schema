@@ -4,9 +4,7 @@ import { FeignClientAuthManager } from '../../feign/chat-web-auth-service-feign/
 import { resolveFeignServiceAuthorization } from '../../feign/feign.authorization'
 import type {
     AuthAuthorizedPrincipalResult,
-    AuthDataScopeResult,
-    AuthPermissionCacheInvalidateInput,
-    AuthSuperAdminResult
+    AuthPermissionCacheInvalidateInput
 } from '../../feign/chat-web-auth-service-feign/feign-auth.interface'
 
 /** 业务服务侧权限结果的进程内缓存条目。 */
@@ -28,31 +26,10 @@ export class AuthorizationService {
         private readonly configService: ConfigService
     ) {}
 
-    public async hasPermission(uid: string, permissionCodes: string[]): Promise<boolean> {
-        const codes = this.normalize(permissionCodes)
-        const result = await this.withCache<{ allowed: boolean }>(`permission:${uid}:${codes.join(',')}`, () =>
-            this.authClient.checkPermission(this.authorization(), { uid, permissionCodes })
-        )
-        return result.allowed
-    }
-
-    public async isSuperAdmin(uid: string): Promise<boolean> {
-        const result = await this.withCache<AuthSuperAdminResult>(`super-admin:${uid}`, () =>
-            this.authClient.checkSuperAdmin(this.authorization(), { uid })
-        )
-        return result.superAdmin
-    }
-
-    public async resolveDataScope(uid: string, resourceCode: string): Promise<AuthDataScopeResult> {
-        return this.withCache<AuthDataScopeResult>(`data-scope:${uid}:${resourceCode}`, () =>
-            this.authClient.resolveDataScope(this.authorization(), { uid, resourceCode })
-        )
-    }
-
     public async resolveAuthorizedPrincipal(uid: string, permissionCodes: string[]): Promise<AuthAuthorizedPrincipalResult> {
         const codes = this.normalize(permissionCodes)
         return this.withCache<AuthAuthorizedPrincipalResult>(`authorized:${uid}:${codes.join(',')}`, () =>
-            this.authClient.resolveAuthorizedPrincipal(this.authorization(), { uid, permissionCodes })
+            this.authClient.resolveAuthorizedPrincipal(this.authorization(), { uid, permissionCodes: codes })
         )
     }
 
@@ -73,7 +50,8 @@ export class AuthorizationService {
 
     /** 权限码归一化，保证缓存键与 Auth 侧计算口径一致。 */
     private normalize(permissionCodes: string[]): string[] {
-        return [...new Set(permissionCodes.map(code => code.trim()).filter(Boolean))].sort()
+        const codes = [...new Set(permissionCodes.map(code => code.trim()).filter(Boolean))]
+        return codes.includes('*') ? ['*'] : codes.sort()
     }
 
     /** 读取进程内缓存；未命中或已过期时发起一次 Feign 调用并缓存该 Promise。 */

@@ -4,13 +4,8 @@ import { FeignWebClient } from '../feign.web.client'
 import {
     AuthPermissionCacheInvalidateRequestDto,
     AuthPermissionCacheInvalidateResponseDto,
-    AuthPermissionCheckRequestDto,
-    AuthPermissionCheckResponseDto,
-    AuthDataScopeRequestDto,
-    AuthDataScopeResponseDto,
-    AuthAuthorizedPrincipalResponseDto,
-    AuthSuperAdminResponseDto,
-    AuthUidRequestDto
+    AuthAuthorizedPrincipalRequestDto,
+    AuthAuthorizedPrincipalResponseDto
 } from './feign-auth.dto'
 import type * as AuthTypes from './feign-auth.interface'
 
@@ -27,52 +22,16 @@ export class FeignClientAuthManager extends FeignWebClient<AuthTypes.FeignClient
         super(service, configService)
     }
 
-    @FeignPost('/permission/data-scope', {
-        operation: { summary: '供业务服务查询用户数据权限' },
-        request: { source: 'body', type: AuthDataScopeRequestDto },
-        response: { type: AuthDataScopeResponseDto, description: '数据权限' }
-    })
-    async resolveDataScope(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: AuthTypes.AuthDataScopeInput
-    ): Promise<AuthTypes.AuthDataScopeResult> {
-        return this.dispatch('resolveDataScope', _authorization, _input)
-    }
-
     @FeignPost('/permission/authorized-principal', {
-        operation: { summary: '供业务服务查询授权身份与数据范围' },
-        request: { source: 'body', type: AuthPermissionCheckRequestDto },
+        operation: { summary: '供业务服务校验权限并查询授权身份与数据范围' },
+        request: { source: 'body', type: AuthAuthorizedPrincipalRequestDto },
         response: { type: AuthAuthorizedPrincipalResponseDto, description: '授权身份与数据范围' }
     })
     async resolveAuthorizedPrincipal(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: AuthTypes.AuthPermissionCheckInput
+        @FeignBody() _input: AuthTypes.AuthAuthorizedPrincipalInput
     ): Promise<AuthTypes.AuthAuthorizedPrincipalResult> {
         return this.dispatch('resolveAuthorizedPrincipal', _authorization, _input)
-    }
-
-    @FeignPost('/permission/super-admin', {
-        operation: { summary: '供业务服务判断超级管理员' },
-        request: { source: 'body', type: AuthUidRequestDto },
-        response: { type: AuthSuperAdminResponseDto, description: '超级管理员判断结果' }
-    })
-    async checkSuperAdmin(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: { uid: string }
-    ): Promise<AuthTypes.AuthSuperAdminResult> {
-        return this.dispatch('checkSuperAdmin', _authorization, _input)
-    }
-
-    @FeignPost('/permission/check', {
-        operation: { summary: '供业务服务校验用户权限码' },
-        request: { source: 'body', type: AuthPermissionCheckRequestDto },
-        response: { type: AuthPermissionCheckResponseDto, description: '权限校验结果' }
-    })
-    async checkPermission(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: AuthTypes.AuthPermissionCheckInput
-    ): Promise<AuthTypes.AuthPermissionCheckResult> {
-        return this.dispatch('checkPermission', _authorization, _input)
     }
 
     @FeignPost('/permission/cache/invalidate', {

@@ -31,6 +31,15 @@ function createContext(user) {
 }
 
 const authorizedPrincipal = {
+    allowed: true,
+    superAdmin: false,
+    roleCodes: ['admin'],
+    all: false,
+    items: ['2281665656346656771']
+}
+
+// 守卫会把 allowed 之外的授权字段挂到 request.user。
+const attachedAuthorization = {
     superAdmin: false,
     roleCodes: ['admin'],
     all: false,
@@ -84,7 +93,7 @@ test('AuthorizationGuard 无权限码但有用户时仍挂载数据范围', asyn
     assert.deepEqual(context.request.user, {
         uid: '2281665656346656771',
         sessionId: 's1',
-        ...authorizedPrincipal
+        ...attachedAuthorization
     })
 })
 
@@ -119,15 +128,11 @@ test('AuthorizationGuard 权限不足时抛出 403', async () => {
     const guard = new AuthorizationGuard(
         { getAllAndOverride: () => ['account:user:list', 'account:user:create'] },
         {
-            async hasPermission(uid, permissionCodes) {
-                calls.push(['hasPermission', uid, permissionCodes])
+            async resolveAuthorizedPrincipal(uid, permissionCodes) {
+                calls.push(['resolveAuthorizedPrincipal', uid, permissionCodes])
                 assert.equal(uid, '2281665656346656771')
                 assert.deepEqual(permissionCodes, ['account:user:list', 'account:user:create'])
-                return false
-            },
-            async resolveAuthorizedPrincipal() {
-                calls.push('resolveAuthorizedPrincipal')
-                return authorizedPrincipal
+                return { ...authorizedPrincipal, allowed: false }
             }
         }
     )
@@ -139,11 +144,8 @@ test('AuthorizationGuard 权限不足时抛出 403', async () => {
             return true
         }
     )
-    // 权限校验与授权身份并发发起，权限不足时仍然抛出 403。
-    assert.deepEqual(calls, [
-        ['hasPermission', '2281665656346656771', ['account:user:list', 'account:user:create']],
-        'resolveAuthorizedPrincipal'
-    ])
+    // 权限校验与授权身份由一次 Auth 调用返回，权限不足时抛出 403。
+    assert.deepEqual(calls, [['resolveAuthorizedPrincipal', '2281665656346656771', ['account:user:list', 'account:user:create']]])
 })
 
 test('AuthorizationGuard 权限校验通过时挂载数据范围并放行', async () => {
@@ -151,10 +153,6 @@ test('AuthorizationGuard 权限校验通过时挂载数据范围并放行', asyn
     const guard = new AuthorizationGuard(
         { getAllAndOverride: () => ['account:user:list'] },
         {
-            async hasPermission(uid, permissionCodes) {
-                calls.push(['hasPermission', uid, permissionCodes])
-                return true
-            },
             async resolveAuthorizedPrincipal(uid, permissionCodes) {
                 calls.push(['resolveAuthorizedPrincipal', uid, permissionCodes])
                 return authorizedPrincipal
@@ -163,16 +161,13 @@ test('AuthorizationGuard 权限校验通过时挂载数据范围并放行', asyn
     )
     const context = createContext({ uid: '2281665656346656771', number: 'A001', name: '张三', sessionId: 's1' })
     assert.equal(await guard.canActivate(context), true)
-    assert.deepEqual(calls, [
-        ['hasPermission', '2281665656346656771', ['account:user:list']],
-        ['resolveAuthorizedPrincipal', '2281665656346656771', ['account:user:list']]
-    ])
+    assert.deepEqual(calls, [['resolveAuthorizedPrincipal', '2281665656346656771', ['account:user:list']]])
     assert.deepEqual(context.request.user, {
         uid: '2281665656346656771',
         number: 'A001',
         name: '张三',
         sessionId: 's1',
-        ...authorizedPrincipal
+        ...attachedAuthorization
     })
 })
 

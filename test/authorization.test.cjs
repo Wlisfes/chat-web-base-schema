@@ -53,15 +53,28 @@ test('auth 子路径导出业务服务授权适配层', () => {
     assert.deepEqual(Reflect.getMetadata(MODULE_METADATA.EXPORTS, AuthorizationModule), [AuthorizationService, AuthorizationGuard])
 })
 
+test('AuthorizationGuard 未使用 RequirePermissions 时不请求 Auth', async () => {
+    let called = false
+    const guard = new AuthorizationGuard(
+        { getAllAndOverride: () => undefined },
+        {
+            async resolveAuthorizedPrincipal() {
+                called = true
+                return authorizedPrincipal
+            }
+        }
+    )
+    const context = createContext({ uid: '2281665656346656771', sessionId: 's1' })
+    assert.equal(await guard.canActivate(context), true)
+    assert.equal(called, false)
+    assert.deepEqual(context.request.user, { uid: '2281665656346656771', sessionId: 's1' })
+})
+
 test('AuthorizationGuard 无权限码且无用户时直接放行', async () => {
     let called = false
     const guard = new AuthorizationGuard(
         { getAllAndOverride: () => [] },
         {
-            async hasPermission() {
-                called = true
-                return false
-            },
             async resolveAuthorizedPrincipal() {
                 called = true
                 return authorizedPrincipal
@@ -72,40 +85,11 @@ test('AuthorizationGuard 无权限码且无用户时直接放行', async () => {
     assert.equal(called, false)
 })
 
-test('AuthorizationGuard 无权限码但有用户时仍挂载数据范围', async () => {
-    const calls = []
-    const guard = new AuthorizationGuard(
-        { getAllAndOverride: () => [] },
-        {
-            async hasPermission() {
-                calls.push('hasPermission')
-                return false
-            },
-            async resolveAuthorizedPrincipal(uid, permissionCodes) {
-                calls.push(['resolveAuthorizedPrincipal', uid, permissionCodes])
-                return authorizedPrincipal
-            }
-        }
-    )
-    const context = createContext({ uid: '2281665656346656771', sessionId: 's1' })
-    assert.equal(await guard.canActivate(context), true)
-    assert.deepEqual(calls, [['resolveAuthorizedPrincipal', '2281665656346656771', []]])
-    assert.deepEqual(context.request.user, {
-        uid: '2281665656346656771',
-        sessionId: 's1',
-        ...attachedAuthorization
-    })
-})
-
 test('AuthorizationGuard 缺少登录用户时抛出 403', async () => {
     let called = false
     const guard = new AuthorizationGuard(
         { getAllAndOverride: () => ['account:user:list'] },
         {
-            async hasPermission() {
-                called = true
-                return true
-            },
             async resolveAuthorizedPrincipal() {
                 called = true
                 return authorizedPrincipal
@@ -144,11 +128,10 @@ test('AuthorizationGuard 权限不足时抛出 403', async () => {
             return true
         }
     )
-    // 权限校验与授权身份由一次 Auth 调用返回，权限不足时抛出 403。
     assert.deepEqual(calls, [['resolveAuthorizedPrincipal', '2281665656346656771', ['account:user:list', 'account:user:create']]])
 })
 
-test('AuthorizationGuard 权限校验通过时挂载数据范围并放行', async () => {
+test('AuthorizationGuard 权限校验通过时挂载角色与数据范围并放行', async () => {
     const calls = []
     const guard = new AuthorizationGuard(
         { getAllAndOverride: () => ['account:user:list'] },
@@ -171,51 +154,49 @@ test('AuthorizationGuard 权限校验通过时挂载数据范围并放行', asyn
     })
 })
 
+test('AuthorizationGuard 传入星号时仍查询授权身份并挂载数据范围', async () => {
+    const calls = []
+    const guard = new AuthorizationGuard(
+        { getAllAndOverride: () => ['*'] },
+        {
+            async resolveAuthorizedPrincipal(uid, permissionCodes) {
+                calls.push(['resolveAuthorizedPrincipal', uid, permissionCodes])
+                return authorizedPrincipal
+            }
+        }
+    )
+    const context = createContext({ uid: '2281665656346656771', sessionId: 's1' })
+    assert.equal(await guard.canActivate(context), true)
+    assert.deepEqual(calls, [['resolveAuthorizedPrincipal', '2281665656346656771', ['*']]])
+    assert.deepEqual(context.request.user, {
+        uid: '2281665656346656771',
+        sessionId: 's1',
+        ...attachedAuthorization
+    })
+})
+
 function createService(authClient, initial) {
     return new AuthorizationService(authClient, config(initial))
 }
 
-test('AuthorizationService 使用服务凭据调用 Auth 权限接口', async () => {
+test('AuthorizationService 使用服务凭据调用 Auth 授权身份接口', async () => {
     const calls = []
     const authClient = {
-        async checkPermission(authorization, input) {
-            calls.push(['checkPermission', authorization, input])
-            return { allowed: true }
-        },
-        async checkSuperAdmin(authorization, input) {
-            calls.push(['checkSuperAdmin', authorization, input])
-            return { superAdmin: true }
-        },
-        async resolveDataScope(authorization, input) {
-            calls.push(['resolveDataScope', authorization, input])
-            return { all: false, includeSelf: true, organizationKeyIds: [1, 2] }
-        },
         async resolveAuthorizedPrincipal(authorization, input) {
             calls.push(['resolveAuthorizedPrincipal', authorization, input])
             return authorizedPrincipal
         }
     }
     const service = createService(authClient, { gateway: { feign: { service_token: 'service-token' } } })
-
-    assert.equal(await service.hasPermission('2281665656346656771', ['account:user:list']), true)
-    assert.equal(await service.isSuperAdmin('2281665656346656771'), true)
-    assert.deepEqual(await service.resolveDataScope('2281665656346656771', 'account:user'), {
-        all: false,
-        includeSelf: true,
-        organizationKeyIds: [1, 2]
-    })
     assert.deepEqual(await service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list']), authorizedPrincipal)
     assert.deepEqual(calls, [
-        ['checkPermission', 'Bearer service-token', { uid: '2281665656346656771', permissionCodes: ['account:user:list'] }],
-        ['checkSuperAdmin', 'Bearer service-token', { uid: '2281665656346656771' }],
-        ['resolveDataScope', 'Bearer service-token', { uid: '2281665656346656771', resourceCode: 'account:user' }],
         ['resolveAuthorizedPrincipal', 'Bearer service-token', { uid: '2281665656346656771', permissionCodes: ['account:user:list'] }]
     ])
 })
 
 test('AuthorizationService 缺少服务凭据时抛出 ServiceUnavailableException', async () => {
     const service = createService({}, {})
-    await assert.rejects(() => service.hasPermission('1', ['account:user:list']), ServiceUnavailableException)
+    await assert.rejects(() => service.resolveAuthorizedPrincipal('1', ['account:user:list']), ServiceUnavailableException)
 })
 
 test('AuthorizationService 缓存失效失败只记录告警不抛错', async () => {
@@ -247,22 +228,21 @@ test('AuthorizationService 并发同一权限查询只调用 Auth 一次', async
     let calls = 0
     const service = createService(
         {
-            async checkPermission() {
+            async resolveAuthorizedPrincipal() {
                 calls += 1
-                return { allowed: true }
+                return authorizedPrincipal
             }
         },
         { gateway: { feign: { service_token: 'service-token' } } }
     )
     const results = await Promise.all([
-        service.hasPermission('2281665656346656771', ['account:user:list']),
-        service.hasPermission('2281665656346656771', ['account:user:list']),
-        service.hasPermission('2281665656346656771', ['account:user:list'])
+        service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list']),
+        service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list']),
+        service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list'])
     ])
-    assert.deepEqual(results, [true, true, true])
+    assert.deepEqual(results, [authorizedPrincipal, authorizedPrincipal, authorizedPrincipal])
     assert.equal(calls, 1)
-    // 缓存未过期时后续查询继续复用同一次调用结果。
-    assert.equal(await service.hasPermission('2281665656346656771', ['account:user:list']), true)
+    assert.deepEqual(await service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list']), authorizedPrincipal)
     assert.equal(calls, 1)
 })
 
@@ -282,20 +262,36 @@ test('AuthorizationService 权限码顺序不同时命中同一份缓存', async
     assert.equal(calls, 1)
 })
 
-test('AuthorizationService 查询失败不写入缓存', async () => {
-    let calls = 0
+test('AuthorizationService 星号权限码归一化后命中同一份缓存', async () => {
+    const calls = []
     const service = createService(
         {
-            async checkPermission() {
-                calls += 1
-                if (calls === 1) throw new Error('auth unavailable')
-                return { allowed: true }
+            async resolveAuthorizedPrincipal(_authorization, input) {
+                calls.push(input.permissionCodes)
+                return authorizedPrincipal
             }
         },
         { gateway: { feign: { service_token: 'service-token' } } }
     )
-    await assert.rejects(() => service.hasPermission('2281665656346656771', ['account:user:list']), /auth unavailable/)
-    assert.equal(await service.hasPermission('2281665656346656771', ['account:user:list']), true)
+    await service.resolveAuthorizedPrincipal('2281665656346656771', ['*', 'account:user:list'])
+    await service.resolveAuthorizedPrincipal('2281665656346656771', ['*'])
+    assert.deepEqual(calls, [['*']])
+})
+
+test('AuthorizationService 查询失败不写入缓存', async () => {
+    let calls = 0
+    const service = createService(
+        {
+            async resolveAuthorizedPrincipal() {
+                calls += 1
+                if (calls === 1) throw new Error('auth unavailable')
+                return authorizedPrincipal
+            }
+        },
+        { gateway: { feign: { service_token: 'service-token' } } }
+    )
+    await assert.rejects(() => service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list']), /auth unavailable/)
+    assert.deepEqual(await service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list']), authorizedPrincipal)
     assert.equal(calls, 2)
 })
 
@@ -303,9 +299,9 @@ test('AuthorizationService 缓存失效后重新查询 Auth', async () => {
     let calls = 0
     const service = createService(
         {
-            async checkPermission() {
+            async resolveAuthorizedPrincipal() {
                 calls += 1
-                return { allowed: true }
+                return authorizedPrincipal
             },
             async invalidatePermissionCache() {
                 return { success: true }
@@ -313,8 +309,8 @@ test('AuthorizationService 缓存失效后重新查询 Auth', async () => {
         },
         { gateway: { feign: { service_token: 'service-token' } } }
     )
-    await service.hasPermission('2281665656346656771', ['account:user:list'])
+    await service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list'])
     await service.invalidate({ uids: ['2281665656346656771'] })
-    await service.hasPermission('2281665656346656771', ['account:user:list'])
+    await service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list'])
     assert.equal(calls, 2)
 })

@@ -160,21 +160,23 @@ import { AuthorizationGuard, AuthorizationModule, GatewayPrincipalGuard, Gateway
 export class AppModule {}
 ```
 
-Annotate routes with `@RequirePermissions('account:user:list')`. Routes without the
-decorator skip the permission-code check but still receive the authorized principal
-(`superAdmin` / `roleCodes` / `all` / `items`) on `request.user`, so handlers can apply
-data scope. A missing principal or a failed Auth check throws `ForbiddenException` with
-`缺少权限：...`.
+Annotate routes with `@RequirePermissions('account:user:list')`. Multiple permission
+codes are OR: any one match is enough. Pass `*` to skip the permission-code check but
+still load the current user's roles and data scope. Routes without the decorator do
+not call Auth; they keep the gateway principal as-is and never request
+`/feign/auth/permission/authorized-principal`.
 
-`AuthorizationGuard` resolves the permission check and the authorized principal in a
-single `resolveAuthorizedPrincipal` call: Auth returns `allowed` together with the data
-scope, so a protected request never issues two permission Feign round trips.
+When `@RequirePermissions` is present, `AuthorizationGuard` makes a single
+`resolveAuthorizedPrincipal` call. Auth returns `allowed` together with
+`superAdmin` / `roleCodes` / `all` / `items`, which the guard attaches to
+`request.user` after a successful check. A missing principal or `allowed: false`
+throws `ForbiddenException` with `缺少权限：...`.
 
-`AuthorizationService` exposes `hasPermission`, `isSuperAdmin`, `resolveDataScope`
-and `invalidate`. `AuthorizationModule` is global and registers `FeignClientAuthManager`
-internally without re-exporting it, so a consumer can still register its own Feign
-clients. Cache invalidation failures are logged and must not roll back an already
-committed business transaction; Auth short TTL is the fallback.
+`AuthorizationService` exposes `resolveAuthorizedPrincipal` and `invalidate`.
+`AuthorizationModule` is global and registers `FeignClientAuthManager` internally
+without re-exporting it, so a consumer can still register its own Feign clients.
+Cache invalidation failures are logged and must not roll back an already committed
+business transaction; Auth short TTL is the fallback.
 
 ## Declarative Feign clients
 

@@ -12,12 +12,13 @@ CREATE TABLE IF NOT EXISTS `tb_account_role` (
     UNIQUE KEY `uk_tb_account_role_code` (`code`),
     KEY `idx_tb_account_role_status_sort` (`status`, `sort`)
 ) ENGINE = InnoDB
+  AUTO_INCREMENT = 1024100
   DEFAULT CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_unicode_ci
   COMMENT = '系统角色表';
 
-INSERT INTO `tb_account_role` (`code`, `name`, `description`, `sort`, `builtin`, `status`)
-SELECT 'super_admin', '超级管理员', '系统内置超级管理员角色', 0, 1, 'enabled'
+INSERT INTO `tb_account_role` (`key_id`, `code`, `name`, `description`, `sort`, `builtin`, `status`)
+SELECT 1024100, 'super_admin', '超级管理员', '系统内置超级管理员角色', 0, 1, 'enabled'
 WHERE NOT EXISTS (
     SELECT 1 FROM `tb_account_role` WHERE `code` = 'super_admin'
 );

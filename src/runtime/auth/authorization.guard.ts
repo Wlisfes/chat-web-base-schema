@@ -20,10 +20,14 @@ export class AuthorizationGuard implements CanActivate {
         if (!user) {
             throw new ForbiddenException(`缺少权限：${required.join(', ')}`)
         }
-        if (required.length && !(await this.authorizationService.hasPermission(user.uid, required))) {
+        // 权限校验与授权身份同时依赖同一批权限码，并发获取避免两次串行 Feign 往返。
+        const [allowed, authorized] = await Promise.all([
+            required.length ? this.authorizationService.hasPermission(user.uid, required) : Promise.resolve(true),
+            this.authorizationService.resolveAuthorizedPrincipal(user.uid, required)
+        ])
+        if (!allowed) {
             throw new ForbiddenException(`缺少权限：${required.join(', ')}`)
         }
-        const authorized = await this.authorizationService.resolveAuthorizedPrincipal(user.uid, required)
         request.user = { ...user, ...authorized }
         return true
     }

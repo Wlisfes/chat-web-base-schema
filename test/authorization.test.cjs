@@ -139,7 +139,11 @@ test('AuthorizationGuard 权限不足时抛出 403', async () => {
             return true
         }
     )
-    assert.deepEqual(calls, [['hasPermission', '2281665656346656771', ['account:user:list', 'account:user:create']]])
+    // 权限校验与授权身份并发发起，权限不足时仍然抛出 403。
+    assert.deepEqual(calls, [
+        ['hasPermission', '2281665656346656771', ['account:user:list', 'account:user:create']],
+        'resolveAuthorizedPrincipal'
+    ])
 })
 
 test('AuthorizationGuard 权限校验通过时挂载数据范围并放行', async () => {
@@ -242,4 +246,80 @@ test('AuthorizationService 缓存失效失败只记录告警不抛错', async ()
     } finally {
         Logger.prototype.warn = originalWarn
     }
+})
+
+test('AuthorizationService 并发同一权限查询只调用 Auth 一次', async () => {
+    let calls = 0
+    const service = createService(
+        {
+            async checkPermission() {
+                calls += 1
+                return { allowed: true }
+            }
+        },
+        { gateway: { feign: { service_token: 'service-token' } } }
+    )
+    const results = await Promise.all([
+        service.hasPermission('2281665656346656771', ['account:user:list']),
+        service.hasPermission('2281665656346656771', ['account:user:list']),
+        service.hasPermission('2281665656346656771', ['account:user:list'])
+    ])
+    assert.deepEqual(results, [true, true, true])
+    assert.equal(calls, 1)
+    // 缓存未过期时后续查询继续复用同一次调用结果。
+    assert.equal(await service.hasPermission('2281665656346656771', ['account:user:list']), true)
+    assert.equal(calls, 1)
+})
+
+test('AuthorizationService 权限码顺序不同时命中同一份缓存', async () => {
+    let calls = 0
+    const service = createService(
+        {
+            async resolveAuthorizedPrincipal() {
+                calls += 1
+                return authorizedPrincipal
+            }
+        },
+        { gateway: { feign: { service_token: 'service-token' } } }
+    )
+    await service.resolveAuthorizedPrincipal('2281665656346656771', ['b:read', 'a:read'])
+    await service.resolveAuthorizedPrincipal('2281665656346656771', ['a:read', 'b:read'])
+    assert.equal(calls, 1)
+})
+
+test('AuthorizationService 查询失败不写入缓存', async () => {
+    let calls = 0
+    const service = createService(
+        {
+            async checkPermission() {
+                calls += 1
+                if (calls === 1) throw new Error('auth unavailable')
+                return { allowed: true }
+            }
+        },
+        { gateway: { feign: { service_token: 'service-token' } } }
+    )
+    await assert.rejects(() => service.hasPermission('2281665656346656771', ['account:user:list']), /auth unavailable/)
+    assert.equal(await service.hasPermission('2281665656346656771', ['account:user:list']), true)
+    assert.equal(calls, 2)
+})
+
+test('AuthorizationService 缓存失效后重新查询 Auth', async () => {
+    let calls = 0
+    const service = createService(
+        {
+            async checkPermission() {
+                calls += 1
+                return { allowed: true }
+            },
+            async invalidatePermissionCache() {
+                return { success: true }
+            }
+        },
+        { gateway: { feign: { service_token: 'service-token' } } }
+    )
+    await service.hasPermission('2281665656346656771', ['account:user:list'])
+    await service.invalidate({ uids: ['2281665656346656771'] })
+    await service.hasPermission('2281665656346656771', ['account:user:list'])
+    assert.equal(calls, 2)
 })

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS `tb_account_organization` (
     UNIQUE KEY `uk_tb_account_organization_code` (`code`),
     KEY `idx_tb_account_organization_parent_sort` (`parent_key_id`, `sort`)
 ) ENGINE = InnoDB
+  AUTO_INCREMENT = 1124100
   DEFAULT CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_unicode_ci
   COMMENT = '组织架构表';

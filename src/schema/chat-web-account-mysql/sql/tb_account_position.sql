@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `tb_account_position` (
     UNIQUE KEY `uk_tb_account_position_name` (`name`),
     KEY `idx_tb_account_position_sort` (`sort`, `key_id`)
 ) ENGINE = InnoDB
+  AUTO_INCREMENT = 1066
   DEFAULT CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_unicode_ci
   COMMENT = '员工职位表';

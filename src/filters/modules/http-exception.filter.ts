@@ -45,12 +45,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const body = createApiResponse(resolveExceptionData(exception), { code: status, message, logId })
         const method = request.method ?? 'UNKNOWN'
         const url = resolvePublicRequestUrl(request)
+        const routeMethod = this.resolveRouteMethod(host)
         const executionMethod = resolveExceptionExecutionMethod(
             exception,
-            normalizeServiceExecutionMethod(getActiveExecutionMethod() ?? request.executionMethod) ?? ''
+            normalizeServiceExecutionMethod(getActiveExecutionMethod() ?? request.executionMethod) ?? routeMethod
         )
         const traceId = getActiveTraceContext().traceId
-        const logMessage = `${method} ${url} -> ${status} ${message} [${logId}]${traceId ? ` [traceId=${traceId}]` : ''}`
+        const location = executionMethod ? ` [位置=${executionMethod}]` : ''
+        const logMessage = `${method} ${url} -> ${status} ${message} [${logId}]${location}${traceId ? ` [traceId=${traceId}]` : ''}`
 
         request.logId = logId
         if (executionMethod) request.executionMethod = executionMethod
@@ -74,6 +76,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
             /** 前端统一读取响应体 code，避免 Axios 将业务异常当作传输层错误。 */
             response.status(this.shouldPreserveHttpStatus(host, request) ? status : HttpStatus.OK).json(body)
         }
+    }
+
+    /** 异步驱动错误的堆栈可能只剩 node_modules 帧，此时用当前命中的路由处理器作为定位兜底。 */
+    private resolveRouteMethod(host: ArgumentsHost): string {
+        const context = host as ExecutionContext
+        const handler = context.getHandler?.()
+        const controller = context.getClass?.()
+        if (typeof handler !== 'function' || typeof controller !== 'function' || !controller.name || !handler.name) return ''
+        return `${controller.name}.${handler.name}`
     }
 
     private shouldPreserveHttpStatus(host: ArgumentsHost, request: HttpRequestLike): boolean {

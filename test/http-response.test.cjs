@@ -126,7 +126,7 @@ test('HttpExceptionFilter returns HTTP 200 and keeps the business error code', (
     assert.match(response.body.timestamp, timestampPattern)
 })
 
-test('HttpExceptionFilter ignores controller fallback when the stack has no service frame', () => {
+test('HttpExceptionFilter falls back to the matched route handler when the stack has no application frame', () => {
     const filter = new HttpExceptionFilter()
     const response = {
         headersSent: false,
@@ -143,7 +143,9 @@ test('HttpExceptionFilter ignores controller fallback when the stack has no serv
     const request = { method: 'POST', originalUrl: '/users', headers: { 'x-request-id': 'request-route-fallback' } }
     const originalError = Logger.prototype.error
     let loggedContext
-    Logger.prototype.error = (_message, _stack, context) => {
+    let loggedMessage
+    Logger.prototype.error = (message, _stack, context) => {
+        loggedMessage = message
         loggedContext = context
     }
 
@@ -153,8 +155,9 @@ test('HttpExceptionFilter ignores controller fallback when the stack has no serv
         Logger.prototype.error = originalError
     }
 
-    assert.equal(loggedContext, undefined)
-    assert.equal(request.executionMethod, undefined)
+    assert.equal(loggedContext, 'TestController.defaultHandler')
+    assert.equal(request.executionMethod, 'TestController.defaultHandler')
+    assert.match(loggedMessage, /\[位置=TestController\.defaultHandler\]/)
 })
 
 test('HttpExceptionFilter logs the public gateway URL', () => {

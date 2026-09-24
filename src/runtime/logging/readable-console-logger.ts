@@ -53,7 +53,6 @@ function createRequestLogDetails(payload: RequestLogPayload) {
         url: payload.url,
         statusCode: payload.statusCode,
         durationMs: payload.durationMs,
-        ...(payload.executionMethod ? { executionMethod: payload.executionMethod } : {}),
         ip: payload.ip,
         host: payload.host,
         origin: payload.origin,
@@ -72,11 +71,10 @@ function formatRequestLogDetails(payload: RequestLogPayload, colors: boolean, co
 }
 
 function resolveLogExecutionMethod(requestLog: RequestLogPayload | undefined, contextMessage: string): string {
-    const resolved =
-        normalizeServiceExecutionMethod(requestLog?.executionMethod) ??
-        normalizeServiceExecutionMethod(contextMessage) ??
-        captureServiceExecutionMethod(contextMessage)
+    // 请求完成日志可能来自异常过滤器写入的 Controller 兜底位置，头部应直接展示，便于定位驱动层异常。
+    if (requestLog?.executionMethod) return requestLog.executionMethod
 
+    const resolved = normalizeServiceExecutionMethod(contextMessage) ?? captureServiceExecutionMethod(contextMessage)
     if (resolved) setActiveExecutionMethod(resolved)
     return resolved ?? ''
 }

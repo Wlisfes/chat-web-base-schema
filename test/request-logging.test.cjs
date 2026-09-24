@@ -1,6 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const { Logger } = require('@nestjs/common')
+const { EventEmitter } = require('node:events')
 
 const {
     DEFAULT_REQUEST_LOGGING_IGNORED_PATHS,
@@ -230,4 +231,72 @@ test('请求日志中间件从响应体读取业务码', () => {
     } finally {
         Logger.prototype.error = originalError
     }
+})
+
+test('请求日志中间件在未解析 body 的流式转发场景下旁路捕获并脱敏入参', () => {
+    const messages = []
+    const originalError = Logger.prototype.error
+    Logger.prototype.error = message => messages.push(message)
+    const request = Object.assign(new EventEmitter(), {
+        headers: { 'content-type': 'application/json; charset=utf-8' },
+        method: 'POST',
+        originalUrl: '/api/account/user/update',
+        path: '/api/account/user/update',
+        query: {},
+        params: {},
+        ip: '127.0.0.1',
+        socket: {}
+    })
+    let finish
+    const response = {
+        statusCode: 200,
+        setHeader() {},
+        getHeader: () => '400',
+        once(_name, listener) {
+            finish = listener
+        }
+    }
+    const received = []
+    request.on('data', chunk => received.push(chunk))
+
+    try {
+        createRequestLoggingMiddleware('test-service')(request, response, () => undefined)
+        request.emit('data', Buffer.from('{"phone":"123",'))
+        request.emit('data', Buffer.from('"password":"secret"}'))
+        finish()
+    } finally {
+        Logger.prototype.error = originalError
+    }
+
+    assert.equal(Buffer.concat(received).toString(), '{"phone":"123","password":"secret"}')
+    assert.deepEqual(messages[0].body, { phone: '123', password: '[已隐藏]' })
+})
+
+test('请求日志中间件截断超长原始入参时仍隐藏敏感字段', () => {
+    const messages = []
+    const originalLog = Logger.prototype.log
+    Logger.prototype.log = message => messages.push(message)
+    const request = Object.assign(new EventEmitter(), {
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+        originalUrl: '/upload',
+        path: '/upload',
+        query: {},
+        params: {},
+        ip: '127.0.0.1',
+        socket: {}
+    })
+    let finish
+    const response = { statusCode: 200, setHeader() {}, once: (_name, listener) => (finish = listener) }
+
+    try {
+        createRequestLoggingMiddleware('test-service')(request, response, () => undefined)
+        request.emit('data', Buffer.from(`{"password":"secret","content":"${'x'.repeat(5000)}"}`))
+        finish()
+    } finally {
+        Logger.prototype.log = originalLog
+    }
+
+    assert.match(messages[0].body, /^\{"password":"\[已隐藏\]","content":"x+\.\.\.\[已截断\]$/)
+    assert.equal(messages[0].body.includes('secret'), false)
 })

@@ -9,6 +9,17 @@ import { getActiveTraceContext } from '@/runtime/observability'
 type RequestWithExecutionMethod = Request & { executionMethod?: string }
 
 const MAX_PAYLOAD_LENGTH = 4096
+const TRUNCATED_SUFFIX = '...[已截断]'
+const REQUEST_BODY_CAPTURE_SYMBOL = Symbol.for('chat-web.request-body-capture')
+const CAPTURABLE_CONTENT_TYPE_PATTERN = /^(application\/(?:[\w.+-]+\+)?json|application\/x-www-form-urlencoded|text\/)/i
+
+interface RequestBodyCapture {
+    chunks: Buffer[]
+    length: number
+    truncated: boolean
+}
+
+type RequestWithBodyCapture = RequestWithExecutionMethod & { [REQUEST_BODY_CAPTURE_SYMBOL]?: RequestBodyCapture }
 
 export const DEFAULT_REQUEST_LOGGING_IGNORED_PATHS = [
     '/health',
@@ -55,12 +66,76 @@ function sanitize(value: unknown, depth = 0): unknown {
     )
 }
 
-function truncate(value: unknown, maxLength: number): unknown {
+/** 脱敏并截断日志入参，避免密码、Token 或超大请求体进入日志。 */
+export function sanitizeRequestLogValue(value: unknown, maxLength = MAX_PAYLOAD_LENGTH): unknown {
     if (value === undefined) return undefined
+    if (typeof value === 'string') {
+        if (value.length <= maxLength || value.endsWith(TRUNCATED_SUFFIX)) return value
+        return `${value.slice(0, maxLength)}${TRUNCATED_SUFFIX}`
+    }
     const serialized = JSON.stringify(sanitize(value))
     if (serialized === undefined) return String(value)
     if (serialized.length <= maxLength) return JSON.parse(serialized) as unknown
-    return `${serialized.slice(0, maxLength)}...[已截断]`
+    return `${serialized.slice(0, maxLength)}${TRUNCATED_SUFFIX}`
+}
+
+/**
+ * 网关为流式转发关闭了 bodyParser，request.body 始终为空。
+ * 这里在不改变流模式的前提下旁路复制 data 事件，最多保留 MAX_PAYLOAD_LENGTH 字节用于日志。
+ */
+function attachRequestBodyCapture(request: RequestWithBodyCapture): void {
+    const contentType = String(request.headers['content-type'] ?? '')
+    if (!CAPTURABLE_CONTENT_TYPE_PATTERN.test(contentType) || typeof request.emit !== 'function') return
+
+    const capture: RequestBodyCapture = { chunks: [], length: 0, truncated: false }
+    const originalEmit = request.emit.bind(request) as (event: string | symbol, ...args: unknown[]) => boolean
+    request[REQUEST_BODY_CAPTURE_SYMBOL] = capture
+    request.emit = ((event: string | symbol, ...args: unknown[]) => {
+        if (event === 'data' && !capture.truncated) {
+            const chunk = args[0]
+            const buffer = Buffer.isBuffer(chunk) ? chunk : typeof chunk === 'string' ? Buffer.from(chunk) : undefined
+            if (buffer) {
+                const remaining = MAX_PAYLOAD_LENGTH - capture.length
+                capture.chunks.push(buffer.subarray(0, Math.max(remaining, 0)))
+                capture.length += Math.min(buffer.length, Math.max(remaining, 0))
+                if (buffer.length > remaining) capture.truncated = true
+            }
+        }
+        return originalEmit(event, ...args)
+    }) as typeof request.emit
+}
+
+const SENSITIVE_TEXT_PATTERN = new RegExp(
+    `("(?:${[...SENSITIVE_KEYS].join('|')})"\\s*:\\s*)("(?:\\\\.|[^"\\\\])*"?|[^,}\\s]*)|((?:^|&)(?:${[...SENSITIVE_KEYS].join('|')})=)[^&]*`,
+    'gi'
+)
+
+/** 截断或无法解析的原始文本也要隐藏敏感字段，避免半截 JSON 泄露密码。 */
+function redactSensitiveText(text: string): string {
+    return text.replace(SENSITIVE_TEXT_PATTERN, (_match, jsonKey: string | undefined, _jsonValue, formKey: string | undefined) =>
+        jsonKey ? `${jsonKey}"[已隐藏]"` : `${formKey}[已隐藏]`
+    )
+}
+
+function parseCapturedBody(request: RequestWithBodyCapture): unknown {
+    const capture = request[REQUEST_BODY_CAPTURE_SYMBOL]
+    if (!capture || capture.length === 0) return undefined
+
+    const text = Buffer.concat(capture.chunks).toString('utf8')
+    if (capture.truncated) return `${redactSensitiveText(text)}${TRUNCATED_SUFFIX}`
+
+    const contentType = String(request.headers['content-type'] ?? '').toLowerCase()
+    try {
+        if (contentType.includes('json')) return JSON.parse(text) as unknown
+        if (contentType.startsWith('application/x-www-form-urlencoded')) return Object.fromEntries(new URLSearchParams(text))
+    } catch {
+        return redactSensitiveText(text)
+    }
+    return redactSensitiveText(text)
+}
+
+function resolveRequestBody(request: RequestWithBodyCapture): unknown {
+    return request.body !== undefined ? request.body : parseCapturedBody(request)
 }
 
 function resolveClientIp(request: Request): string {
@@ -106,13 +181,14 @@ export function createRequestLoggingMiddleware(serviceName: string): RequestHand
     const logger = new Logger(`${serviceName}:HTTP`)
 
     return (request, response, next) => {
-        const currentRequest = request as RequestWithExecutionMethod
+        const currentRequest = request as RequestWithBodyCapture
         const startedAt = Date.now()
         const requestId = resolveRequestId(currentRequest.headers['x-request-id'])
         currentRequest.headers['x-request-id'] = requestId
         response.setHeader('x-request-id', requestId)
 
         let capturedCode: number | undefined
+        if (!isIgnoredPath(currentRequest.path)) attachRequestBodyCapture(currentRequest)
         attachBusinessCodeCapture(response, code => {
             capturedCode = code
         })
@@ -135,9 +211,9 @@ export function createRequestLoggingMiddleware(serviceName: string): RequestHand
                 origin: currentRequest.headers.origin ?? '',
                 referer: currentRequest.headers.referer ?? '',
                 userAgent: currentRequest.headers['user-agent'] ?? '',
-                query: truncate(currentRequest.query, MAX_PAYLOAD_LENGTH),
-                params: truncate(currentRequest.params, MAX_PAYLOAD_LENGTH),
-                body: truncate(currentRequest.body, MAX_PAYLOAD_LENGTH),
+                query: sanitizeRequestLogValue(currentRequest.query),
+                params: sanitizeRequestLogValue(currentRequest.params),
+                body: sanitizeRequestLogValue(resolveRequestBody(currentRequest)),
                 ...traceContext
             }
             if (isBusinessSuccessStatus(statusCode)) logger.log(payload)

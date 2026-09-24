@@ -292,3 +292,102 @@ test('resolveExceptionExecutionMethod locates the application throw site', () =>
 
     assert.equal(resolveExceptionExecutionMethod(exception), 'SheetUtilsService.findRequired (sheet.utils.service.ts:27:19)')
 })
+
+test('HttpExceptionFilter 校验失败日志包含路由位置、完整入参和用户且不输出 undefined', () => {
+    const filter = new HttpExceptionFilter()
+    const request = {
+        method: 'POST',
+        originalUrl: '/user/update',
+        headers: { 'x-request-id': 'request-validation', 'x-forwarded-prefix': '/api/account' },
+        routeMethod: 'UserController.httpBaseUserUpdate',
+        query: {},
+        params: {},
+        body: { phone: '123', email: 'bad', password: 'secret' },
+        user: { uid: '10001', number: 'U001', name: '管理员', sessionId: 'hidden-session' }
+    }
+    const response = {
+        headersSent: false,
+        status() {
+            return this
+        },
+        setHeader() {},
+        json() {}
+    }
+    const originalError = Logger.prototype.error
+    let loggedArgs
+    Logger.prototype.error = (...args) => {
+        loggedArgs = args
+    }
+
+    try {
+        filter.catch(createPipeException(['手机号格式错误', '邮箱格式错误']), {
+            switchToHttp: () => ({ getRequest: () => request, getResponse: () => response })
+        })
+    } finally {
+        Logger.prototype.error = originalError
+    }
+
+    const [message, stack, context] = loggedArgs
+    assert.equal(stack, undefined)
+    assert.equal(context, 'UserController.httpBaseUserUpdate')
+    assert.match(message, /^POST \/api\/account\/user\/update -> 400 手机号格式错误 \[位置=UserController\.httpBaseUserUpdate\]/)
+    const details = JSON.parse(message.slice(message.indexOf(' {') + 1))
+    assert.deepEqual(details.errors, ['手机号格式错误', '邮箱格式错误'])
+    assert.deepEqual(details.body, { phone: '123', email: 'bad', password: '[已隐藏]' })
+    assert.deepEqual(details.user, { uid: '10001', number: 'U001', name: '管理员' })
+    assert.equal('query' in details, false)
+})
+
+test('HttpExceptionFilter 没有定位信息时只传入日志消息', () => {
+    const filter = new HttpExceptionFilter()
+    const request = { method: 'GET', originalUrl: '/users', headers: {} }
+    const response = {
+        headersSent: false,
+        status() {
+            return this
+        },
+        setHeader() {},
+        json() {}
+    }
+    const originalError = Logger.prototype.error
+    let loggedArgs
+    Logger.prototype.error = (...args) => {
+        loggedArgs = args
+    }
+
+    try {
+        filter.catch(createPipeException('参数错误'), {
+            switchToHttp: () => ({ getRequest: () => request, getResponse: () => response })
+        })
+    } finally {
+        Logger.prototype.error = originalError
+    }
+
+    assert.equal(loggedArgs.length, 1)
+})
+
+test('TransformInterceptor 在管道执行前记录路由方法', async () => {
+    const request = { headers: { 'x-request-id': 'request-route-method' } }
+    const response = { headersSent: false, getHeader() {}, setHeader() {} }
+    const context = {
+        getType: () => 'http',
+        getClass: () => class UserController {},
+        getHandler: function httpBaseUserUpdate() {},
+        switchToHttp: () => ({ getRequest: () => request, getResponse: () => response })
+    }
+    context.getHandler = () => function httpBaseUserUpdate() {}
+
+    await firstValueFrom(new TransformInterceptor().intercept(context, { handle: () => of({}) }))
+
+    assert.equal(request.routeMethod, 'UserController.httpBaseUserUpdate')
+})
+
+/** 模拟 ValidationPipe 抛出的异常：调用栈只包含 Nest 运行时帧。 */
+function createPipeException(message) {
+    const exception = new BadRequestException(message)
+    exception.stack = [
+        'BadRequestException',
+        '    at ValidationPipe.transform (/app/node_modules/@nestjs/common/pipes/validation.pipe.js:1:1)'
+    ].join('\n')
+    return exception
+}

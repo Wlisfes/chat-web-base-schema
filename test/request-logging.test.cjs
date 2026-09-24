@@ -98,7 +98,7 @@ test('请求日志中间件默认忽略健康检查、浏览器探测和接口�
     assert.equal(messages.length, 0)
 })
 
-test('请求日志中间件忽略 Controller 执行方法', () => {
+test('请求日志中间件保留异常过滤器写入的路由定位', () => {
     const messages = []
     const originalLog = Logger.prototype.log
     Logger.prototype.log = message => messages.push(message)
@@ -130,7 +130,7 @@ test('请求日志中间件忽略 Controller 执行方法', () => {
         Logger.prototype.log = originalLog
     }
 
-    assert.equal(messages[0].executionMethod, undefined)
+    assert.equal(messages[0].executionMethod, 'AuthController.httpBaseAuthWriteCodex')
 })
 
 test('parseJsonBusinessCode 支持截断的 JSON 片段', () => {

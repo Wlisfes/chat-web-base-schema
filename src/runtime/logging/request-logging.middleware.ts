@@ -129,7 +129,7 @@ export function createRequestLoggingMiddleware(serviceName: string): RequestHand
                 url: resolvePublicRequestUrl(currentRequest),
                 statusCode,
                 durationMs: Date.now() - startedAt,
-                executionMethod: normalizeServiceExecutionMethod(currentRequest.executionMethod) ?? getActiveExecutionMethod(),
+                executionMethod: currentRequest.executionMethod ?? getActiveExecutionMethod(),
                 ip: resolveClientIp(currentRequest),
                 host: currentRequest.headers.host ?? '',
                 origin: currentRequest.headers.origin ?? '',

@@ -75,7 +75,18 @@ test('本地请求日志保留彩色头部和缩进 JSON', () => {
     assert.ok(plain.trim().split(/\r?\n/).length > 1)
     assert.match(plain, /"message": "HTTP请求完成"/)
     assert.doesNotMatch(plain, /"requestId"/)
-    assert.match(plain, /"executionMethod": "ExampleService\.httpBaseExampleList"/)
+    assert.doesNotMatch(plain, /"executionMethod"/)
+})
+
+test('请求日志头部显示异常过滤器写入的 Controller 兜底位置', () => {
+    const line = captureLog(
+        { NODE_ENV: 'development', prefix: 'chat-web-example-service' },
+        createPayload({ executionMethod: 'UserController.httpBaseAccountColumnUser' })
+    )
+    const plain = stripVTControlCharacters(line)
+
+    assert.match(plain, /执行方法:\[UserController\.httpBaseAccountColumnUser\]/)
+    assert.doesNotMatch(plain, /"executionMethod"/)
 })
 
 test('生产请求日志保留颜色并将 JSON 压缩为单个物理行', () => {

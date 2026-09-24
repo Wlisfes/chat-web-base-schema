@@ -41,6 +41,42 @@ function validateServiceFiles(serviceRoot) {
     }
 }
 
+/** 校验实体源码里的列名必须引用列名枚举，禁止硬编码字符串字面量。 */
+function validateColumnEnumUsage(serviceRoot) {
+    const directory = resolve(serviceRoot, 'modules')
+    const failures = []
+
+    for (const name of readdirSync(directory)) {
+        if (!name.startsWith('tb_') || extname(name) !== '.ts') continue
+
+        const source = readFileSync(resolve(directory, name), 'utf8')
+        const entityIndex = source.search(/@Entity\(/)
+        if (entityIndex < 0) {
+            failures.push(`${name}: missing @Entity declaration`)
+            continue
+        }
+        if (!/export enum Tb\w*Column \{/.test(source)) {
+            failures.push(`${name}: missing Tb<Table>Column enum`)
+            continue
+        }
+
+        const body = source.slice(entityIndex)
+        const decorators = [...body.matchAll(/@(Column|WithJsonColumn|DateWithColumn|JoinColumn)\(([\s\S]*?)\)\s*\n/g)]
+
+        for (const [, decorator, options] of decorators) {
+            const literal = options.match(/name:\s*'([^']+)'/)
+            if (literal) failures.push(`${name}: @${decorator} hardcodes name: '${literal[1]}', use the column enum instead`)
+            else if (!/name:\s*(?:DataBaseColumn|Tb\w*Column)\./.test(options)) {
+                failures.push(`${name}: @${decorator} is missing an enum-based name option`)
+            }
+        }
+    }
+
+    if (failures.length) {
+        throw new Error(`${basename(serviceRoot)} column enum usage errors:\n  - ${failures.join('\n  - ')}`)
+    }
+}
+
 function validateTable({ entity, dto, columns, sqlPath, enumComments = [] }) {
     const metadata = getMetadataArgsStorage()
     const inheritedTargets = [DataBaseAdapter]
@@ -76,15 +112,19 @@ function validateTable({ entity, dto, columns, sqlPath, enumComments = [] }) {
 
 const accountServiceRoot = resolve(__dirname, '../src/schema/chat-web-account-mysql')
 validateServiceFiles(accountServiceRoot)
+validateColumnEnumUsage(accountServiceRoot)
 
 const financeServiceRoot = resolve(__dirname, '../src/schema/chat-web-finance-mysql')
 validateServiceFiles(financeServiceRoot)
+validateColumnEnumUsage(financeServiceRoot)
 
 const crmServiceRoot = resolve(__dirname, '../src/schema/chat-web-crm-mysql')
 validateServiceFiles(crmServiceRoot)
+validateColumnEnumUsage(crmServiceRoot)
 
 const skylineServiceRoot = resolve(__dirname, '../src/schema/chat-web-skyline-mysql')
 validateServiceFiles(skylineServiceRoot)
+validateColumnEnumUsage(skylineServiceRoot)
 
 validateTable({
     entity: accountSchema.TbAccountUser,

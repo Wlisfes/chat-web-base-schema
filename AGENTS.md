@@ -163,6 +163,9 @@
 - Export a database-column enum, business value enums, metadata definitions created with `defineEnumMetadata`, a complete field DTO, and a PascalCase TypeORM Entity.
 - Entity properties use camelCase; MySQL tables, columns, files, and SQL use snake_case.
 - Every `@Column` explicitly declares its database name, type, length or precision, nullable state, and Chinese comment where applicable.
+- The column enum is named `Tb<Table>Column`, declares every physical column of the table including `key_id`、`create_time`、`modify_time` and the audit columns, and its member names are the UPPER_SNAKE_CASE form of the Entity property names.
+- `@Column`、`@WithJsonColumn`、`@DateWithColumn` and `@JoinColumn` must reference the column enum, for example `name: TbAccountMenuColumn.TYPE`; hardcoded string literals such as `name: 'type'` are forbidden. Common columns inherited from `DataBaseAdapter` / `DataBaseByAdapter` reference `DataBaseColumn`.
+- When an Entity property name and its database column name intentionally differ, keep a Chinese comment above the `@Column` explaining the reason.
 - Mirror every named `@Index` in the canonical and incremental SQL.
 - String business enums use `varchar`. Numeric 0/1 business enums use `tinyint(1)`. Reuse the generated enum comment in Swagger, TypeORM, and SQL.
 - Nullable database fields do not use `| null` in TypeScript in this repository.

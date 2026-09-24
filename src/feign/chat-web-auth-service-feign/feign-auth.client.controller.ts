@@ -1,12 +1,7 @@
 import { ConfigService } from '@nestjs/config'
 import { FeignBody, FeignClient, FeignHeader, FeignPost } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
-import {
-    AuthPermissionCacheInvalidateRequestDto,
-    AuthPermissionCacheInvalidateResponseDto,
-    AuthAuthorizedPrincipalRequestDto,
-    AuthAuthorizedPrincipalResponseDto
-} from './feign-auth.dto'
+import * as AuthDto from './feign-auth.dto'
 import type * as AuthTypes from './feign-auth.interface'
 
 /** Auth 服务权限校验客户端；调用方通过 Gateway 访问 Auth 服务。 */
@@ -22,27 +17,29 @@ export class FeignClientAuthManager extends FeignWebClient<AuthTypes.FeignClient
         super(service, configService)
     }
 
+    /**校验权限码并返回授权身份、角色与数据范围**/
     @FeignPost('/permission/authorized-principal', {
         operation: { summary: '供业务服务校验权限并查询授权身份与数据范围' },
-        request: { source: 'body', type: AuthAuthorizedPrincipalRequestDto },
-        response: { type: AuthAuthorizedPrincipalResponseDto, description: '授权身份与数据范围' }
+        request: { source: 'body', type: AuthDto.AuthAuthorizedPrincipalRequestDto },
+        response: { type: AuthDto.AuthAuthorizedPrincipalResponseDto, description: '授权身份与数据范围' }
     })
-    async resolveAuthorizedPrincipal(
+    async httpBaseAuthAuthorizedPrincipalResolver(
         @FeignHeader('authorization') _authorization: string,
         @FeignBody() _input: AuthTypes.AuthAuthorizedPrincipalInput
     ): Promise<AuthTypes.AuthAuthorizedPrincipalResult> {
-        return this.dispatch('resolveAuthorizedPrincipal', _authorization, _input)
+        return this.dispatch('httpBaseAuthAuthorizedPrincipalResolver', _authorization, _input)
     }
 
+    /**按账号 UID 清理权限缓存**/
     @FeignPost('/permission/cache/invalidate', {
         operation: { summary: '供账号服务清理权限缓存' },
-        request: { source: 'body', type: AuthPermissionCacheInvalidateRequestDto },
-        response: { type: AuthPermissionCacheInvalidateResponseDto, description: '缓存清理结果' }
+        request: { source: 'body', type: AuthDto.AuthPermissionCacheInvalidateRequestDto },
+        response: { type: AuthDto.AuthPermissionCacheInvalidateResponseDto, description: '缓存清理结果' }
     })
-    async invalidatePermissionCache(
+    async httpBaseAuthInvalidatePermissionCache(
         @FeignHeader('authorization') _authorization: string,
         @FeignBody() _input: AuthTypes.AuthPermissionCacheInvalidateInput
     ): Promise<AuthTypes.AuthPermissionCacheInvalidateResult> {
-        return this.dispatch('invalidatePermissionCache', _authorization, _input)
+        return this.dispatch('httpBaseAuthInvalidatePermissionCache', _authorization, _input)
     }
 }

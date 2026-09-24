@@ -1,11 +1,14 @@
 /** 财务服务 Feign 服务端实现必须满足的接口。 */
 export interface FinanceFeignImplementation {
     /**按国家/地区主键批量获取短信基础价格**/
-    batchSmsRates(authorization: string, input: FinanceSmsRateBatchRequest): Promise<FinanceSmsRate[]>
+    httpBaseFinanceBatchSmsRate(authorization: string, input: FinanceSmsRateBatchRequest): Promise<FinanceSmsRate[]>
     /**按币种获取最新汇率**/
-    resolveCurrencyExchange(authorization: string, input: FinanceCurrencyExchangeResolveRequest): Promise<FinanceCurrencyExchange>
+    httpBaseFinanceCurrencyExchangeResolver(
+        authorization: string,
+        input: FinanceCurrencyExchangeResolveRequest
+    ): Promise<FinanceCurrencyExchange>
     /**触发财务服务拉取并同步最新币种汇率**/
-    syncCurrencyExchange(authorization: string): Promise<FinanceCurrencyExchangeSyncResponse>
+    httpBaseFinanceSyncCurrencyExchange(authorization: string): Promise<FinanceCurrencyExchangeSyncResponse>
 }
 
 /**财务服务短信基础价格数据，供 CRM 报价流程使用。*/

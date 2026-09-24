@@ -25,27 +25,27 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
 
     /**按国家/地区主键批量获取短信基础价格**/
     @FeignPost('/rates/sms/batch')
-    async batchSmsRates(
+    async httpBaseFinanceBatchSmsRate(
         @FeignHeader('authorization') _authorization: string,
         @FeignBody() _input: FinanceTypes.FinanceSmsRateBatchRequest
     ): Promise<FinanceTypes.FinanceSmsRate[]> {
-        return this.dispatch('batchSmsRates', _authorization, _input)
+        return this.dispatch('httpBaseFinanceBatchSmsRate', _authorization, _input)
     }
 
     /**按币种获取最新汇率**/
     @FeignPost('/currency/exchange/resolve')
-    async resolveCurrencyExchange(
+    async httpBaseFinanceCurrencyExchangeResolver(
         @FeignHeader('authorization') _authorization: string,
         @FeignBody() _input: FinanceTypes.FinanceCurrencyExchangeResolveRequest
     ): Promise<FinanceTypes.FinanceCurrencyExchange> {
-        return this.dispatch('resolveCurrencyExchange', _authorization, _input)
+        return this.dispatch('httpBaseFinanceCurrencyExchangeResolver', _authorization, _input)
     }
 
     /**触发财务服务拉取并同步最新币种汇率**/
     @FeignPost('/currency/exchange/sync')
-    async syncCurrencyExchange(
+    async httpBaseFinanceSyncCurrencyExchange(
         @FeignHeader('authorization') _authorization: string
     ): Promise<FinanceTypes.FinanceCurrencyExchangeSyncResponse> {
-        return this.dispatch('syncCurrencyExchange', _authorization)
+        return this.dispatch('httpBaseFinanceSyncCurrencyExchange', _authorization)
     }
 }

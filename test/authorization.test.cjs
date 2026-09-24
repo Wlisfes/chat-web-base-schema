@@ -182,15 +182,19 @@ function createService(authClient, initial) {
 test('AuthorizationService 使用服务凭据调用 Auth 授权身份接口', async () => {
     const calls = []
     const authClient = {
-        async resolveAuthorizedPrincipal(authorization, input) {
-            calls.push(['resolveAuthorizedPrincipal', authorization, input])
+        async httpBaseAuthAuthorizedPrincipalResolver(authorization, input) {
+            calls.push(['httpBaseAuthAuthorizedPrincipalResolver', authorization, input])
             return authorizedPrincipal
         }
     }
     const service = createService(authClient, { gateway: { feign: { service_token: 'service-token' } } })
     assert.deepEqual(await service.resolveAuthorizedPrincipal('2281665656346656771', ['account:user:list']), authorizedPrincipal)
     assert.deepEqual(calls, [
-        ['resolveAuthorizedPrincipal', 'Bearer service-token', { uid: '2281665656346656771', permissionCodes: ['account:user:list'] }]
+        [
+            'httpBaseAuthAuthorizedPrincipalResolver',
+            'Bearer service-token',
+            { uid: '2281665656346656771', permissionCodes: ['account:user:list'] }
+        ]
     ])
 })
 
@@ -208,7 +212,7 @@ test('AuthorizationService 缓存失效失败只记录告警不抛错', async ()
     try {
         const service = createService(
             {
-                async invalidatePermissionCache() {
+                async httpBaseAuthInvalidatePermissionCache() {
                     throw new Error('auth unavailable')
                 }
             },
@@ -228,7 +232,7 @@ test('AuthorizationService 并发同一权限查询只调用 Auth 一次', async
     let calls = 0
     const service = createService(
         {
-            async resolveAuthorizedPrincipal() {
+            async httpBaseAuthAuthorizedPrincipalResolver() {
                 calls += 1
                 return authorizedPrincipal
             }
@@ -250,7 +254,7 @@ test('AuthorizationService 权限码顺序不同时命中同一份缓存', async
     let calls = 0
     const service = createService(
         {
-            async resolveAuthorizedPrincipal() {
+            async httpBaseAuthAuthorizedPrincipalResolver() {
                 calls += 1
                 return authorizedPrincipal
             }
@@ -266,7 +270,7 @@ test('AuthorizationService 星号权限码归一化后命中同一份缓存', as
     const calls = []
     const service = createService(
         {
-            async resolveAuthorizedPrincipal(_authorization, input) {
+            async httpBaseAuthAuthorizedPrincipalResolver(_authorization, input) {
                 calls.push(input.permissionCodes)
                 return authorizedPrincipal
             }
@@ -282,7 +286,7 @@ test('AuthorizationService 查询失败不写入缓存', async () => {
     let calls = 0
     const service = createService(
         {
-            async resolveAuthorizedPrincipal() {
+            async httpBaseAuthAuthorizedPrincipalResolver() {
                 calls += 1
                 if (calls === 1) throw new Error('auth unavailable')
                 return authorizedPrincipal
@@ -299,11 +303,11 @@ test('AuthorizationService 缓存失效后重新查询 Auth', async () => {
     let calls = 0
     const service = createService(
         {
-            async resolveAuthorizedPrincipal() {
+            async httpBaseAuthAuthorizedPrincipalResolver() {
                 calls += 1
                 return authorizedPrincipal
             },
-            async invalidatePermissionCache() {
+            async httpBaseAuthInvalidatePermissionCache() {
                 return { success: true }
             }
         },

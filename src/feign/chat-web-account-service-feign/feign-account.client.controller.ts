@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config'
 import { FeignBody, FeignClient, FeignHeader, FeignPost } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
-import { AccountUserSummaryResponseDto, AccountUserBatchDto } from './feign-account.dto'
+import * as AccountDto from './feign-account.dto'
 import type * as AccountTypes from './feign-account.interface'
 
 /**
@@ -25,15 +25,16 @@ export class FeignClientAccountManager extends FeignWebClient<AccountTypes.Feign
         super(service, configService)
     }
 
+    /**批量把账号 UID 还原为展示摘要**/
     @FeignPost('/user/batch/resolve', {
         operation: { summary: '供内部服务批量把账号 UID 还原为展示摘要' },
-        request: { source: 'body', type: AccountUserBatchDto },
-        response: { type: AccountUserSummaryResponseDto, isArray: true, description: '账号展示摘要列表' }
+        request: { source: 'body', type: AccountDto.AccountUserBatchDto },
+        response: { type: AccountDto.AccountUserSummaryResponseDto, isArray: true, description: '账号展示摘要列表' }
     })
-    async batchResolveUsers(
+    async httpBaseAccountBatchUserResolver(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: AccountUserBatchDto
+        @FeignBody() _input: AccountDto.AccountUserBatchDto
     ): Promise<AccountTypes.AccountUserSummary[]> {
-        return this.dispatch('batchResolveUsers', _authorization, _input)
+        return this.dispatch('httpBaseAccountBatchUserResolver', _authorization, _input)
     }
 }

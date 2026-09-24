@@ -62,7 +62,7 @@ export class SkylineColumnChunkOptionRequestDto {
 }
 
 /** 按枚举业务值解析单个枚举字典选项的请求。 */
-export class SkylineResolveChunkOptionRequestDto {
+export class SkylineChunkOptionResolverRequestDto {
     @ApiProperty({
         description: '枚举所属模块；不传表示不限制模块',
         required: false,

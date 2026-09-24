@@ -1,12 +1,7 @@
 import { ConfigService } from '@nestjs/config'
 import { FeignBody, FeignClient, FeignHeader, FeignPost } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
-import {
-    SkylineColumnChunkOptionRequestDto,
-    SkylineChunkOptionDto,
-    SkylineChunkOptionGroupDto,
-    SkylineResolveChunkOptionRequestDto
-} from './feign-skyline.dto'
+import * as SkylineDto from './feign-skyline.dto'
 import type * as SkylineTypes from './feign-skyline.interface'
 
 /**
@@ -31,26 +26,26 @@ export class FeignClientSkylineManager extends FeignWebClient<SkylineTypes.Feign
     /**按枚举类型编码批量获取启用状态的枚举字典选项**/
     @FeignPost('/chunk/column', {
         operation: { summary: '供内部服务按枚举类型编码批量获取枚举字典选项' },
-        request: { source: 'body', type: SkylineColumnChunkOptionRequestDto },
-        response: { type: SkylineChunkOptionGroupDto, isArray: true, description: '按枚举类型编码分组的枚举字典选项' }
+        request: { source: 'body', type: SkylineDto.SkylineColumnChunkOptionRequestDto },
+        response: { type: SkylineDto.SkylineChunkOptionGroupDto, isArray: true, description: '按枚举类型编码分组的枚举字典选项' }
     })
-    async columnChunkOptions(
+    async httpBaseSkylineColumnChunkOption(
         @FeignHeader('authorization') _authorization: string,
         @FeignBody() _input: SkylineTypes.SkylineColumnChunkOptionInput
     ): Promise<SkylineTypes.SkylineChunkOptionGroup[]> {
-        return this.dispatch('columnChunkOptions', _authorization, _input)
+        return this.dispatch('httpBaseSkylineColumnChunkOption', _authorization, _input)
     }
 
     /**按枚举业务值解析单个启用状态的枚举字典选项**/
     @FeignPost('/chunk/resolve', {
         operation: { summary: '供内部服务按枚举业务值解析单个枚举字典选项' },
-        request: { source: 'body', type: SkylineResolveChunkOptionRequestDto },
-        response: { type: SkylineChunkOptionDto, description: '枚举字典选项' }
+        request: { source: 'body', type: SkylineDto.SkylineChunkOptionResolverRequestDto },
+        response: { type: SkylineDto.SkylineChunkOptionDto, description: '枚举字典选项' }
     })
-    async resolveChunkOption(
+    async httpBaseSkylineChunkOptionResolver(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: SkylineTypes.SkylineResolveChunkOptionInput
+        @FeignBody() _input: SkylineTypes.SkylineChunkOptionResolverInput
     ): Promise<SkylineTypes.SkylineChunkOption> {
-        return this.dispatch('resolveChunkOption', _authorization, _input)
+        return this.dispatch('httpBaseSkylineChunkOptionResolver', _authorization, _input)
     }
 }

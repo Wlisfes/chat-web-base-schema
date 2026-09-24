@@ -70,7 +70,7 @@
 - Controller 必须保持为薄协议层：只声明路由、权限、Swagger/Apifox 元数据，接收 `query`、`body`、当前身份或必要请求/响应上下文，并将参数原样交给同名 Service 方法；禁止解构/改名业务参数、补业务默认值、拼装业务响应、访问 Repository 或编写业务判断。设置 Cookie、响应头、重定向和流式响应等纯 HTTP 协议操作可以保留在 Controller。
 - Controller 与对应 Service 的公开接口方法必须统一使用 `public async`，并采用 `httpBase<Service><Action><Resource>` 命名；两层方法名必须完全一致。Controller 不得调用 `create`、`list`、`findOne`、`update` 等另一套简写方法名。
 - Controller 的 `GET` 只接收 `@Query()` DTO，`POST` 只接收 `@Body()` DTO；局部变量使用 `query`、`body` 或 `input` 等能够准确表达来源的名称，无请求 DTO 的接口不制造空 DTO。每个接口都必须使用 `ApiServiceDecorator` 完整声明请求来源、请求 DTO、响应 DTO、数组标识和中文说明。
-- Service 负责业务编排和事务边界，公开接口方法必须添加简洁中文职责注释并显式声明 `Promise<...>` 返回类型；入参优先接收完整 DTO，不得要求 Controller 拆字段或做协议转换。DTO 在 Service 中优先使用 `import * as XxxDto` 归组引用。
+- Service 负责业务编排和事务边界，公开接口方法必须添加简洁中文职责注释并显式声明 `Promise<...>` 返回类型；入参优先接收完整 DTO，不得要求 Controller 拆字段或做协议转换。DTO 在 Service 中统一使用 `import * as XxxDto` 归组引用。
 - 分页查询统一返回 `PageResult<Entity>`，使用 `DataBaseService.builder` 构造 QueryBuilder，别名统一为 `t`；筛选、排序、分页和 `getManyAndCount` 应在同一 builder 回调内清晰完成。禁止在业务模块重复封装 QueryBuilder 或创建无意义 Repository Adapter。
 - 可复用的实体查找、存在性校验、唯一性校验、树校验、锁表等工具逻辑放入同模块 `<module>.utils.service.ts`，使用 `@Injectable()` 并由 Module 注册注入；主 Service 只保留用例编排。不得把仅调用一次且没有复用价值的简单业务步骤机械拆成工具类。
 - 多步写操作、唯一性检查、层级结构调整和关联关系替换必须由 Service 明确建立事务；需要并发保护时通过 Utils Service 锁定相关数据，再执行校验和写入。
@@ -174,7 +174,11 @@
 
 - Every service-to-service Feign method uses `@FeignPost` with a `@FeignBody` DTO; `@FeignGet` and `@FeignQuery` remain available in the runtime but must not be used in service contracts, so that request shapes stay declarative and extensible without breaking route signatures.
 - Each `chat-web-<service>-service-feign` folder exposes an `index.ts` that re-exports its DTO, interface, and client controller; `src/feign/index.ts` aggregates the folders instead of individual files.
-- Feign method names mirror the route action, for example `/chunk/column` maps to `columnChunkOptions`, and their request and response DTO names use the same action word.
+- Feign method names follow the same `httpBase<Service><Action><Resource>` convention as HTTP controllers. Client method, server implementation, interface signature, and `dispatch` key must all use that identical name.
+- The `Resolver` action is a suffix, so single-record lookups read `httpBaseSkylineChunkOptionResolver` rather than `httpBaseSkylineResolverChunkOption`; every other action word stays in front of the resource, for example `httpBaseSkylineColumnChunkOption`.
+- Feign renames never propagate into the local business services they delegate to; `FeignService` keeps calling the module service method under its existing name.
+- Every Feign client method, server implementation method, implementation interface member, exported request and response type alias, and `FeignController` class carries a Chinese doc comment describing its purpose.
+- Feign DTO、interface、client 和 schema 的导入统一使用命名空间形式，例如 `import * as CrmDto from './feign-crm.dto'`、`import type * as CrmTypes from './feign-crm.interface'`、`import * as FeignSchema from '@wlisfes/chat-web-base-schema/feign'`，具体阈值见通用导入规约。
 
 ### DTO, validation, and Swagger
 
@@ -191,6 +195,7 @@
 - 枚举下拉响应统一使用 `EnumOptionDto` 的 `value`、`label`、`description`，多组枚举复用 `EnumsResponseDto` 工厂生成字段；业务字段名留在消费服务，不得把具体模块的枚举字段写进本包。
 - Keep implementation functions in the relevant utility module; do not move implementations into `src/types.ts`.
 - Internal source imports may use the `@/*` alias. The build must continue rewriting aliases for published output.
+- 从同一 interface、dto、schema 或类型定义模块具名导入的标识符超过 3 个时，一律改为 `import * as XxxDto from ...` 命名空间导入（仅类型用途时使用 `import type * as XxxTypes from ...`），别名沿用 `<领域>Dto`、`<领域>Types`、`Schema` 等既有风格；`@nestjs/*`、`class-validator`、`class-transformer`、`typeorm` 等框架装饰器和校验器无论数量多少一律保持具名导入，禁止写成 `Nest.Injectable()`、`Validator.IsString()` 这类命名空间调用。
 - `DateWithColumn` must preserve write values and format database read values as `YYYY-MM-DD HH:mm:ss` by default.
 - Reusable Redis, Nacos, authentication, database configuration and grant-validation behavior belongs in the runtime modules here. Runtime helpers must preserve per-service Redis indexes and reject MySQL grants outside the owning database.
 - 运行时只允许从 `.env` 读取 `NODE_ENV`、`PORT` 和 Nacos 连接/订阅参数；MySQL、Redis、JWT、Feign、路由与超时等业务配置只从 Nacos 读取，缺少必需字段时直接抛出异常，不提供旧环境变量兼容或静默默认值。

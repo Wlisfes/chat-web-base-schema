@@ -21,8 +21,8 @@ export enum TbFinanceBrandStatus {
 }
 
 export const TbFinanceBrandStatusDefinition = defineEnumMetadata(TbFinanceBrandStatus, '品牌状态', {
-    [TbFinanceBrandStatus.DISABLE]: { label: '禁用', description: '品牌不可用于新客户' },
-    [TbFinanceBrandStatus.ENABLE]: { label: '启用', description: '品牌可正常使用' }
+    [TbFinanceBrandStatus.DISABLE]: { label: '禁用', description: '品牌不可用于新客户', type: 'error' },
+    [TbFinanceBrandStatus.ENABLE]: { label: '启用', description: '品牌可正常使用', type: 'success' }
 })
 
 export class TbFinanceBrandDto extends DataBaseByDto {

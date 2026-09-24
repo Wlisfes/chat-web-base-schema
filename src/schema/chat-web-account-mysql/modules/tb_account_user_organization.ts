@@ -22,8 +22,8 @@ export enum TbAccountUserOrganizationStatus {
 }
 
 export const TbAccountUserOrganizationStatusDefinition = defineEnumMetadata(TbAccountUserOrganizationStatus, '用户组织关系状态', {
-    [TbAccountUserOrganizationStatus.DISABLED]: { label: '禁用', description: '成员关系暂不参与组织和权限计算' },
-    [TbAccountUserOrganizationStatus.ENABLED]: { label: '启用', description: '成员关系正常参与组织和权限计算' }
+    [TbAccountUserOrganizationStatus.DISABLED]: { label: '禁用', description: '成员关系暂不参与组织和权限计算', type: 'error' },
+    [TbAccountUserOrganizationStatus.ENABLED]: { label: '启用', description: '成员关系正常参与组织和权限计算', type: 'success' }
 })
 
 /** 用户与组织成员关系的完整字段 DTO。 */

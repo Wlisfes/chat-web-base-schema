@@ -4,10 +4,36 @@ export type Omix<T = Record<string, any>> = T & Record<string, any>
 /** 从枚举对象中提取所有枚举值的联合类型。 */
 export type OmixEnumValues<T> = T[Exclude<keyof T, 'name' | 'value'>] extends { value: infer V } ? V : never
 
+/**
+ * 枚举标签颜色类型。
+ *
+ * 与管理端 `common-base-chunk` 组件的 `COMMON_BASE_CHUNK_TYPES` 保持一致：前五个为 Naive 主题色，
+ * 其余为自定义色板。后端只负责给出语义色，具体色值由前端组件解析。
+ */
+export type EnumChunkType =
+    | 'default'
+    | 'primary'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'red'
+    | 'orange'
+    | 'lime'
+    | 'green'
+    | 'cyan'
+    | 'blue'
+    | 'geekblue'
+    | 'purple'
+    | 'pink'
+    | 'volcano'
+
 /** 枚举值对应的展示信息。 */
 export interface EnumMetadataItem {
     label: string
     description: string
+    /** 前端标签颜色类型，用于列表和详情统一着色。 */
+    type: EnumChunkType
 }
 
 /** 前后端下拉统一使用的枚举选项。 */

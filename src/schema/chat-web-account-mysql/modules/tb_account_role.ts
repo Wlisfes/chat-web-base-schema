@@ -23,8 +23,8 @@ export enum TbAccountRoleStatus {
 }
 
 export const TbAccountRoleStatusDefinition = defineEnumMetadata(TbAccountRoleStatus, '角色状态', {
-    [TbAccountRoleStatus.DISABLED]: { label: '禁用', description: '角色不参与菜单和数据权限计算' },
-    [TbAccountRoleStatus.ENABLED]: { label: '启用', description: '角色正常参与菜单和数据权限计算' }
+    [TbAccountRoleStatus.DISABLED]: { label: '禁用', description: '角色不参与菜单和数据权限计算', type: 'error' },
+    [TbAccountRoleStatus.ENABLED]: { label: '启用', description: '角色正常参与菜单和数据权限计算', type: 'success' }
 })
 
 /** 系统角色的完整字段 DTO。 */

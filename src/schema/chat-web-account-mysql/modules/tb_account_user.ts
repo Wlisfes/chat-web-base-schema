@@ -33,11 +33,13 @@ export enum TbAccountUserStatus {
 export const TbAccountUserStatusDefinition = defineEnumMetadata(TbAccountUserStatus, '账号状态', {
     [TbAccountUserStatus.DISABLED]: {
         label: '禁用',
-        description: '账号不可登录'
+        description: '账号不可登录',
+        type: 'error'
     },
     [TbAccountUserStatus.ENABLED]: {
         label: '启用',
-        description: '账号可以正常登录'
+        description: '账号可以正常登录',
+        type: 'success'
     }
 })
 
@@ -51,11 +53,13 @@ export enum TbAccountUserEmploymentStatus {
 export const TbAccountUserEmploymentStatusDefinition = defineEnumMetadata(TbAccountUserEmploymentStatus, '员工状态', {
     [TbAccountUserEmploymentStatus.EMPLOYED]: {
         label: '在职',
-        description: '员工当前处于在职状态'
+        description: '员工当前处于在职状态',
+        type: 'success'
     },
     [TbAccountUserEmploymentStatus.RESIGNED]: {
         label: '离职',
-        description: '员工已经离职'
+        description: '员工已经离职',
+        type: 'default'
     }
 })
 

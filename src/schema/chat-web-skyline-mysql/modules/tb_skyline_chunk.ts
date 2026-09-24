@@ -28,9 +28,9 @@ export enum TbSkylineChunkModule {
 }
 
 export const TbSkylineChunkModuleDefinition = defineEnumMetadata(TbSkylineChunkModule, '枚举所属模块', {
-    [TbSkylineChunkModule.CHUNK_SYSTEM]: { label: '系统', description: '系统管理模块使用的枚举项' },
-    [TbSkylineChunkModule.CHUNK_CRM]: { label: 'CRM', description: 'CRM 客户关系管理模块使用的枚举项' },
-    [TbSkylineChunkModule.CHUNK_SRM]: { label: 'SRM', description: 'SRM 供应商关系管理模块使用的枚举项' }
+    [TbSkylineChunkModule.CHUNK_SYSTEM]: { label: '系统', description: '系统管理模块使用的枚举项', type: 'geekblue' },
+    [TbSkylineChunkModule.CHUNK_CRM]: { label: 'CRM', description: 'CRM 客户关系管理模块使用的枚举项', type: 'blue' },
+    [TbSkylineChunkModule.CHUNK_SRM]: { label: 'SRM', description: 'SRM 供应商关系管理模块使用的枚举项', type: 'cyan' }
 })
 
 /** 枚举项启用状态。 */
@@ -40,8 +40,8 @@ export enum TbSkylineChunkStatus {
 }
 
 export const TbSkylineChunkStatusDefinition = defineEnumMetadata(TbSkylineChunkStatus, '枚举项状态', {
-    [TbSkylineChunkStatus.CHUNK_DISABLE]: { label: '禁用', description: '枚举项不可用于业务选择' },
-    [TbSkylineChunkStatus.CHUNK_ENABLE]: { label: '启用', description: '枚举项可正常用于业务选择' }
+    [TbSkylineChunkStatus.CHUNK_DISABLE]: { label: '禁用', description: '枚举项不可用于业务选择', type: 'error' },
+    [TbSkylineChunkStatus.CHUNK_ENABLE]: { label: '启用', description: '枚举项可正常用于业务选择', type: 'success' }
 })
 
 /** 枚举项完整字段 DTO；后端状态和其他下拉枚举统一通过此表持久化。 */

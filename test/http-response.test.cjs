@@ -332,7 +332,8 @@ test('HttpExceptionFilter 校验失败日志包含路由位置、完整入参和
     assert.equal(context, 'UserController.httpBaseUserUpdate')
     assert.match(message, /^POST \/api\/account\/user\/update -> 400 手机号格式错误 执行方法:\[UserController\.httpBaseUserUpdate\]/)
     const details = JSON.parse(message.slice(message.indexOf(' {') + 1))
-    assert.deepEqual(details.errors, ['手机号格式错误', '邮箱格式错误'])
+    assert.deepEqual(details.error.response.message, ['手机号格式错误', '邮箱格式错误'])
+    assert.equal(details.error.name, 'BadRequestException')
     assert.deepEqual(details.body, { phone: '123', email: 'bad', password: '[已隐藏]' })
     assert.deepEqual(details.user, { uid: '10001', number: 'U001', name: '管理员' })
     assert.equal('query' in details, false)
@@ -391,3 +392,47 @@ function createPipeException(message) {
     ].join('\n')
     return exception
 }
+
+test('DetailedValidationPipe 在异常 cause 中保留原始校验错误且响应不变', async () => {
+    const { IsMobilePhone, IsString } = require('class-validator')
+    const { DetailedValidationPipe } = require('../dist/src/filters')
+    class UpdateUserDto {}
+    IsMobilePhone('zh-CN', { strictMode: false }, { message: '手机号格式错误' })(UpdateUserDto.prototype, 'phone')
+    IsString({ message: '密码必须是字符串' })(UpdateUserDto.prototype, 'password')
+
+    const pipe = new DetailedValidationPipe({ transform: true, whitelist: true })
+    const exception = await pipe.transform({ phone: '123', password: 1 }, { type: 'body', metatype: UpdateUserDto }).then(
+        () => undefined,
+        error => error
+    )
+
+    assert.ok(exception instanceof BadRequestException)
+    assert.deepEqual(exception.getResponse().message, ['手机号格式错误', '密码必须是字符串'])
+    assert.equal(exception.cause.length, 2)
+
+    const { serializeExceptionForLog } = require('../dist/src/filters')
+    const serialized = serializeExceptionForLog(exception)
+    assert.equal(serialized.name, 'BadRequestException')
+    assert.equal(serialized.status, 400)
+    assert.deepEqual(serialized.cause[0], { property: 'phone', value: '123', constraints: { isMobilePhone: '手机号格式错误' } })
+    assert.equal(serialized.cause[1].value, '[已隐藏]')
+    assert.equal('target' in serialized.cause[0], false)
+})
+
+test('serializeExceptionForLog 保留驱动错误属性并处理循环引用', () => {
+    const { serializeExceptionForLog } = require('../dist/src/filters')
+    const error = new Error('Duplicate entry')
+    error.code = 'ER_DUP_ENTRY'
+    error.errno = 1062
+    error.sql = 'INSERT INTO tb_account_user'
+    error.parameters = { password: 'secret' }
+    error.self = error
+
+    const serialized = serializeExceptionForLog(error)
+    assert.equal(serialized.message, 'Duplicate entry')
+    assert.equal(serialized.code, 'ER_DUP_ENTRY')
+    assert.equal(serialized.errno, 1062)
+    assert.equal(serialized.parameters.password, '[已隐藏]')
+    assert.equal(serialized.self, '[循环引用]')
+    assert.equal('stack' in serialized, false)
+})

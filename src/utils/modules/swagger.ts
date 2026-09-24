@@ -1,7 +1,7 @@
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { ConfigService } from '@nestjs/config'
-import { ValidationPipe } from '@nestjs/common'
+import { DetailedValidationPipe } from '@/filters/modules/detailed-validation.pipe'
 import { Omix } from '@/types'
 import cookieParser from 'cookie-parser'
 import express from 'express'
@@ -23,8 +23,8 @@ export async function setupSwagger(app: NestExpressApplication, options: SetupOp
     app.use(cookieParser())
     app.use(express.json())
     app.use(express.urlencoded({ extended: true }))
-    /**全局注册验证管道**/
-    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
+    /**全局注册验证管道，校验失败时保留原始 ValidationError 供异常日志输出**/
+    app.useGlobalPipes(new DetailedValidationPipe({ transform: true, whitelist: true }))
     /**获取配置服务**/
     const configService = app.get(ConfigService)
     /**初始化文档**/

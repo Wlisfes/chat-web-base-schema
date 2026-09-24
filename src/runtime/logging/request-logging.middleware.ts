@@ -50,6 +50,11 @@ const SENSITIVE_KEYS = new Set([
     'token'
 ])
 
+/** 判断字段名是否属于需要在日志中隐藏的敏感字段。 */
+export function isSensitiveLogKey(key: string): boolean {
+    return SENSITIVE_KEYS.has(key.toLowerCase())
+}
+
 function sanitize(value: unknown, depth = 0): unknown {
     if (depth > 4) return '[内容层级过深]'
     if (Array.isArray(value)) return value.slice(0, 100).map(item => sanitize(item, depth + 1))

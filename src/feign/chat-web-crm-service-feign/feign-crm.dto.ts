@@ -1,18 +1,12 @@
 import { ApiProperty, IntersectionType, PartialType, PickType } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
-import {
-    TbCrmConsumerAuthStatus,
-    TbCrmConsumerDto,
-    TbCrmConsumerPayMode,
-    TbCrmConsumerSource,
-    TbCrmConsumerStatus
-} from '@/schema/chat-web-crm-mysql'
+import * as Schema from '@/schema/chat-web-crm-mysql'
 import { PageResponseDataDto } from '@/decorator'
 import { PageDto } from '@/utils'
 
 /** CRM 客户服务间响应摘要。 */
-export class CrmConsumerResponseDto extends TbCrmConsumerDto {
+export class CrmConsumerResponseDto extends Schema.TbCrmConsumerDto {
     @ApiProperty({ description: '财务品牌主键', example: 1 })
     brandId: number
 }
@@ -97,24 +91,29 @@ export class CrmCreateConsumerRequestDto {
     @MaxLength(32, { message: '电话号码长度不能超过32位' })
     phone?: string
 
-    @ApiProperty({ description: '客户状态', required: false, enum: TbCrmConsumerStatus, example: TbCrmConsumerStatus.ENABLE })
+    @ApiProperty({ description: '客户状态', required: false, enum: Schema.TbCrmConsumerStatus, example: Schema.TbCrmConsumerStatus.ENABLE })
     @IsOptional()
-    @IsEnum(TbCrmConsumerStatus, { message: '客户状态格式错误' })
-    status?: TbCrmConsumerStatus
+    @IsEnum(Schema.TbCrmConsumerStatus, { message: '客户状态格式错误' })
+    status?: Schema.TbCrmConsumerStatus
 
-    @ApiProperty({ description: '付款模式', enum: TbCrmConsumerPayMode, example: TbCrmConsumerPayMode.PREPAID })
-    @IsEnum(TbCrmConsumerPayMode, { message: '付款模式格式错误' })
-    payMode: TbCrmConsumerPayMode
+    @ApiProperty({ description: '付款模式', enum: Schema.TbCrmConsumerPayMode, example: Schema.TbCrmConsumerPayMode.PREPAID })
+    @IsEnum(Schema.TbCrmConsumerPayMode, { message: '付款模式格式错误' })
+    payMode: Schema.TbCrmConsumerPayMode
 
-    @ApiProperty({ description: '认证状态', required: false, enum: TbCrmConsumerAuthStatus, example: TbCrmConsumerAuthStatus.UNVERIFIED })
+    @ApiProperty({
+        description: '认证状态',
+        required: false,
+        enum: Schema.TbCrmConsumerAuthStatus,
+        example: Schema.TbCrmConsumerAuthStatus.UNVERIFIED
+    })
     @IsOptional()
-    @IsEnum(TbCrmConsumerAuthStatus, { message: '认证状态格式错误' })
-    authStatus?: TbCrmConsumerAuthStatus
+    @IsEnum(Schema.TbCrmConsumerAuthStatus, { message: '认证状态格式错误' })
+    authStatus?: Schema.TbCrmConsumerAuthStatus
 
-    @ApiProperty({ description: '注册来源', required: false, enum: TbCrmConsumerSource, example: TbCrmConsumerSource.MANUAL })
+    @ApiProperty({ description: '注册来源', required: false, enum: Schema.TbCrmConsumerSource, example: Schema.TbCrmConsumerSource.MANUAL })
     @IsOptional()
-    @IsEnum(TbCrmConsumerSource, { message: '注册来源格式错误' })
-    source?: TbCrmConsumerSource
+    @IsEnum(Schema.TbCrmConsumerSource, { message: '注册来源格式错误' })
+    source?: Schema.TbCrmConsumerSource
 
     @ApiProperty({ description: '备注', required: false, example: '重点跟进客户' })
     @IsOptional()
@@ -133,7 +132,7 @@ export class CrmUpdateConsumerRequestDto extends CrmCreateConsumerRequestDto {
 }
 
 /** CRM 客户状态更新服务间请求。 */
-export class CrmUpdateConsumerStatusRequestDto extends PickType(TbCrmConsumerDto, ['status'] as const) {
+export class CrmUpdateConsumerStatusRequestDto extends PickType(Schema.TbCrmConsumerDto, ['status'] as const) {
     @ApiProperty({ description: '客户主键', example: 5181000 })
     @Type(() => Number)
     @IsInt({ message: '客户主键必须是整数' })
@@ -142,7 +141,7 @@ export class CrmUpdateConsumerStatusRequestDto extends PickType(TbCrmConsumerDto
 }
 
 /** CRM 客户详情服务间请求。 */
-export class CrmResolveConsumerRequestDto extends PickType(TbCrmConsumerDto, ['keyId'] as const) {
+export class CrmResolveConsumerRequestDto extends PickType(Schema.TbCrmConsumerDto, ['keyId'] as const) {
     @ApiProperty({ description: '客户主键', example: 5181000 })
     @Type(() => Number)
     @IsInt({ message: '客户主键必须是整数' })
@@ -151,12 +150,12 @@ export class CrmResolveConsumerRequestDto extends PickType(TbCrmConsumerDto, ['k
 }
 
 /** CRM 客户下拉服务间请求。 */
-export class CrmSelectConsumerRequestDto extends PartialType(PickType(TbCrmConsumerDto, ['name'] as const)) {}
+export class CrmSelectConsumerRequestDto extends PartialType(PickType(Schema.TbCrmConsumerDto, ['name'] as const)) {}
 
 /** CRM 客户分页服务间请求。 */
 export class CrmListConsumerRequestDto extends IntersectionType(
     PageDto,
-    PartialType(PickType(TbCrmConsumerDto, ['name', 'status', 'currency', 'payMode', 'authStatus', 'source'] as const))
+    PartialType(PickType(Schema.TbCrmConsumerDto, ['name', 'status', 'currency', 'payMode', 'authStatus', 'source'] as const))
 ) {
     @ApiProperty({ description: '财务品牌主键', required: false, example: 1 })
     @IsOptional()

@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.6.37",
+    "version": "1.6.38",
     "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {
@@ -124,7 +124,8 @@
         "validate:schema": "node scripts/validate-schema.cjs",
         "test": "node --test test/*.test.cjs",
         "verify": "yarn format:check && yarn typecheck && yarn build && yarn validate:schema && yarn test",
-        "prepublishOnly": "yarn verify"
+        "prepublishOnly": "yarn verify",
+        "deploy": "node scripts/deploy-branch.cjs"
     },
     "peerDependencies": {
         "@nestjs/common": ">=11 <12",

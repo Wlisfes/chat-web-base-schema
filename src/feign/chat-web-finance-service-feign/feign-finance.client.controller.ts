@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config'
-import { FeignBody, FeignClient, FeignGet, FeignHeader, FeignPost, FeignQuery } from '../feign.decorator'
+import { FeignBody, FeignClient, FeignHeader, FeignPost } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
 import type * as FinanceTypes from './feign-finance.interface'
 
@@ -25,27 +25,27 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
 
     /**按国家/地区主键批量获取短信基础价格**/
     @FeignPost('/rates/sms/batch')
-    async batchSmsRates(
+    async httpBaseFinanceBatchSmsRate(
         @FeignHeader('authorization') _authorization: string,
         @FeignBody() _input: FinanceTypes.FinanceSmsRateBatchRequest
     ): Promise<FinanceTypes.FinanceSmsRate[]> {
-        return this.dispatch('batchSmsRates', _authorization, _input)
+        return this.dispatch('httpBaseFinanceBatchSmsRate', _authorization, _input)
     }
 
     /**按币种获取最新汇率**/
-    @FeignGet('/currency/exchange/resolve')
-    async resolveCurrencyExchange(
+    @FeignPost('/currency/exchange/resolve')
+    async httpBaseFinanceCurrencyExchangeResolver(
         @FeignHeader('authorization') _authorization: string,
-        @FeignQuery('currency') _currency: string
+        @FeignBody() _input: FinanceTypes.FinanceCurrencyExchangeResolveRequest
     ): Promise<FinanceTypes.FinanceCurrencyExchange> {
-        return this.dispatch('resolveCurrencyExchange', _authorization, _currency)
+        return this.dispatch('httpBaseFinanceCurrencyExchangeResolver', _authorization, _input)
     }
 
     /**触发财务服务拉取并同步最新币种汇率**/
     @FeignPost('/currency/exchange/sync')
-    async syncCurrencyExchange(
+    async httpBaseFinanceSyncCurrencyExchange(
         @FeignHeader('authorization') _authorization: string
     ): Promise<FinanceTypes.FinanceCurrencyExchangeSyncResponse> {
-        return this.dispatch('syncCurrencyExchange', _authorization)
+        return this.dispatch('httpBaseFinanceSyncCurrencyExchange', _authorization)
     }
 }

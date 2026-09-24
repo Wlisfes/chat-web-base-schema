@@ -310,7 +310,7 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
     class AccountFeignController extends FeignClientAccountManager {}
     const controller = new AccountFeignController(
         {
-            async batchResolveUsers(authorization, input) {
+            async httpBaseAccountBatchUserResolver(authorization, input) {
                 return { authorization, input }
             }
         },
@@ -318,21 +318,24 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
     )
 
     assert.equal(AccountFeignController.prototype.introspect, undefined)
-    assert.equal(AccountFeignController.prototype.resolveConsumer, undefined)
+    assert.equal(AccountFeignController.prototype.httpBaseCrmConsumerResolver, undefined)
 
     // 服务间路由带 /feign/<服务名> 前缀，网关不改写，因此不会与公开业务路由冲突。
-    const batchResolveUsers = AccountFeignController.prototype.batchResolveUsers
-    assert.equal(Reflect.getMetadata(PATH_METADATA, batchResolveUsers), '/feign/account/user/batch/resolve')
-    assert.equal(Reflect.getMetadata(METHOD_METADATA, batchResolveUsers), RequestMethod.POST)
-    assert.equal(Reflect.getMetadata('auth:is-public', batchResolveUsers), true)
-    assert.equal(Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'batchResolveUsers')['6:0'].data, 'authorization')
-    assert.deepEqual(await controller.batchResolveUsers('Bearer service-token', { uids: ['1'] }), {
+    const httpBaseAccountBatchUserResolver = AccountFeignController.prototype.httpBaseAccountBatchUserResolver
+    assert.equal(Reflect.getMetadata(PATH_METADATA, httpBaseAccountBatchUserResolver), '/feign/account/user/batch/resolve')
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, httpBaseAccountBatchUserResolver), RequestMethod.POST)
+    assert.equal(Reflect.getMetadata('auth:is-public', httpBaseAccountBatchUserResolver), true)
+    assert.equal(
+        Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'httpBaseAccountBatchUserResolver')['6:0'].data,
+        'authorization'
+    )
+    assert.deepEqual(await controller.httpBaseAccountBatchUserResolver('Bearer service-token', { uids: ['1'] }), {
         authorization: 'Bearer service-token',
         input: { uids: ['1'] }
     })
 
     /** 业务 Feign 的 Authorization 位承载服务凭据，凭据不匹配必须拒绝。 */
-    await assert.rejects(() => controller.batchResolveUsers('Bearer user-token', { uids: ['1'] }), UnauthorizedException)
+    await assert.rejects(() => controller.httpBaseAccountBatchUserResolver('Bearer user-token', { uids: ['1'] }), UnauthorizedException)
 })
 
 test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorization', () => {
@@ -390,7 +393,7 @@ test('shared Feign finance client triggers server-owned currency exchange synchr
         }
     )
     const service = factory.create(FeignClientFinanceManager)
-    const result = await service.syncCurrencyExchange('Bearer finance-token')
+    const result = await service.httpBaseFinanceSyncCurrencyExchange('Bearer finance-token')
 
     // 客户端访问 Gateway，保留目标服务的 Feign 路径前缀。
     assert.equal(request.url, 'http://gateway.internal:5000/feign/finance/currency/exchange/sync')
@@ -418,12 +421,12 @@ test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查�
     )
     const service = factory.create(FeignClientFinanceManager)
 
-    await service.batchSmsRates('Bearer service-token', { countryKeyIds: [1, 2] })
-    await service.resolveCurrencyExchange('Bearer service-token', 'CNY')
+    await service.httpBaseFinanceBatchSmsRate('Bearer service-token', { countryKeyIds: [1, 2] })
+    await service.httpBaseFinanceCurrencyExchangeResolver('Bearer service-token', { currency: 'CNY' })
 
     assert.deepEqual(requests, [
         { url: 'http://gateway.internal:5000/feign/finance/rates/sms/batch', method: 'POST' },
-        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolve?currency=CNY', method: 'GET' }
+        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolve', method: 'POST' }
     ])
 })
 

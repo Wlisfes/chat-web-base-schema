@@ -16,7 +16,8 @@ export interface AccountUserBatchRequest {
     uids: string[]
 }
 
+/** 账号服务 Feign 服务端实现必须满足的接口。 */
 export interface FeignClientAccountImplementation {
     /**批量把账号 UID 还原为展示摘要**/
-    batchResolveUsers(authorization: string, input: AccountUserBatchRequest): Promise<AccountUserSummary[]>
+    httpBaseAccountBatchUserResolver(authorization: string, input: AccountUserBatchRequest): Promise<AccountUserSummary[]>
 }

@@ -29,7 +29,7 @@ export class AuthorizationService {
     public async resolveAuthorizedPrincipal(uid: string, permissionCodes: string[]): Promise<AuthAuthorizedPrincipalResult> {
         const codes = this.normalize(permissionCodes)
         return this.withCache<AuthAuthorizedPrincipalResult>(`authorized:${uid}:${codes.join(',')}`, () =>
-            this.authClient.resolveAuthorizedPrincipal(this.authorization(), { uid, permissionCodes: codes })
+            this.authClient.httpBaseAuthAuthorizedPrincipalResolver(this.authorization(), { uid, permissionCodes: codes })
         )
     }
 
@@ -37,7 +37,7 @@ export class AuthorizationService {
     public async invalidate(input: AuthPermissionCacheInvalidateInput): Promise<void> {
         this.cache.clear()
         try {
-            await this.authClient.invalidatePermissionCache(this.authorization(), input)
+            await this.authClient.httpBaseAuthInvalidatePermissionCache(this.authorization(), input)
         } catch (error) {
             this.logger.warn(`Auth 权限缓存失效通知失败：${error instanceof Error ? error.message : String(error)}`)
         }

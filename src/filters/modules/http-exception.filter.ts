@@ -69,7 +69,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
             normalizeServiceExecutionMethod(getActiveExecutionMethod() ?? request.executionMethod) ?? routeMethod
         )
         const traceId = getActiveTraceContext().traceId
-        const location = executionMethod ? ` [位置=${executionMethod}]` : ''
+        const location = executionMethod ? ` 执行方法:[${executionMethod}]` : ''
         const details = this.createLogDetails(request, exception)
         const logMessage = `${method} ${url} -> ${status} ${message}${location}${traceId ? ` [traceId=${traceId}]` : ''}${
             details ? ` ${details}` : ''

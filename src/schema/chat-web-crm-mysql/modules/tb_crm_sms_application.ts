@@ -28,9 +28,9 @@ export enum TbCrmSmsApplicationStatus {
 }
 
 export const TbCrmSmsApplicationStatusDefinition = defineEnumMetadata(TbCrmSmsApplicationStatus, '短信应用状态', {
-    [TbCrmSmsApplicationStatus.ACTIVE]: { label: '已激活', description: '应用可正常发送短信' },
-    [TbCrmSmsApplicationStatus.DISABLE]: { label: '禁用', description: '应用已停止使用' },
-    [TbCrmSmsApplicationStatus.INACTIVE]: { label: '未激活', description: '应用尚未启用' }
+    [TbCrmSmsApplicationStatus.ACTIVE]: { label: '已激活', description: '应用可正常发送短信', type: 'success' },
+    [TbCrmSmsApplicationStatus.DISABLE]: { label: '禁用', description: '应用已停止使用', type: 'error' },
+    [TbCrmSmsApplicationStatus.INACTIVE]: { label: '未激活', description: '应用尚未启用', type: 'warning' }
 })
 
 export enum TbCrmSmsApplicationType {
@@ -40,9 +40,9 @@ export enum TbCrmSmsApplicationType {
 }
 
 export const TbCrmSmsApplicationTypeDefinition = defineEnumMetadata(TbCrmSmsApplicationType, '短信应用类型', {
-    [TbCrmSmsApplicationType.MARKET]: { label: '营销短信', description: '用于营销推广内容' },
-    [TbCrmSmsApplicationType.NOTIFY]: { label: '通知短信', description: '用于业务通知内容' },
-    [TbCrmSmsApplicationType.OTP]: { label: '验证码', description: '用于一次性验证码' }
+    [TbCrmSmsApplicationType.MARKET]: { label: '营销短信', description: '用于营销推广内容', type: 'orange' },
+    [TbCrmSmsApplicationType.NOTIFY]: { label: '通知短信', description: '用于业务通知内容', type: 'blue' },
+    [TbCrmSmsApplicationType.OTP]: { label: '验证码', description: '用于一次性验证码', type: 'geekblue' }
 })
 
 export class TbCrmSmsApplicationDto extends DataBaseByDto {

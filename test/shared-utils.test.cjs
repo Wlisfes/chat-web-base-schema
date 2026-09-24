@@ -16,6 +16,10 @@ const {
 const { EnumOptionDto, EnumsResponseDto, ListResponseDto, PageListResponseDto, PageResponseDataDto } = require('../dist/src/decorator')
 const { DataBaseDto } = require('../dist/src/utils')
 const requestContext = require('../dist/src/utils/modules/request-context')
+const accountSchema = require('../dist/src/schema/chat-web-account-mysql')
+const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
+const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
+const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
 
 test('共享分页 DTO 使用统一的 page/size 请求契约', () => {
     const page = plainToInstance(PageDto, {})
@@ -35,9 +39,44 @@ test('共享分页响应字段统一为 page/size/total', () => {
     assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, PageResponseDataDto.prototype, 'pageSize'), undefined)
 })
 
-test('共享枚举选项 DTO 使用统一的 value/label/description', () => {
+test('共享枚举选项 DTO 使用统一的 value/label/description/type', () => {
     const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, EnumOptionDto.prototype) ?? []
-    assert.deepEqual(properties.map(property => property.replace(/^:/, '')).sort(), ['description', 'label', 'value'])
+    assert.deepEqual(properties.map(property => property.replace(/^:/, '')).sort(), ['description', 'label', 'type', 'value'])
+})
+
+test('枚举元数据的 type 取值限定在管理端标签颜色类型内', () => {
+    // 与管理端 common-base-chunk 的 COMMON_BASE_CHUNK_TYPES 保持一致
+    const allowed = new Set([
+        'default',
+        'primary',
+        'info',
+        'success',
+        'warning',
+        'error',
+        'red',
+        'orange',
+        'lime',
+        'green',
+        'cyan',
+        'blue',
+        'geekblue',
+        'purple',
+        'pink',
+        'volcano'
+    ])
+    const definitions = [
+        ...Object.entries(accountSchema),
+        ...Object.entries(financeSchema),
+        ...Object.entries(crmSchema),
+        ...Object.entries(skylineSchema)
+    ].filter(([name, value]) => name.endsWith('Definition') && value && Array.isArray(value.options))
+
+    assert.ok(definitions.length >= 29, `枚举 Definition 数量异常：${definitions.length}`)
+    for (const [name, definition] of definitions) {
+        for (const option of definition.options) {
+            assert.ok(allowed.has(option.type), `${name} 的 ${option.value} 使用了非法颜色类型：${option.type}`)
+        }
+    }
 })
 
 test('共享枚举响应 DTO 工厂按字段生成 EnumOptionDto 数组', () => {

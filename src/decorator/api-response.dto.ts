@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import type { EnumChunkType } from '@/types'
 
 /** Swagger 与 Apifox 展示使用的统一响应外壳。 */
 export class ApiResponseDocumentDto {
@@ -59,4 +60,10 @@ export class EnumOptionDto {
 
     @ApiProperty({ description: '枚举说明', example: '可导航到页面的菜单节点' })
     description: string
+
+    @ApiProperty({
+        description: '枚举标签颜色类型，取值与管理端 common-base-chunk 组件一致',
+        example: 'blue'
+    })
+    type: EnumChunkType
 }

@@ -39,8 +39,8 @@ export enum TbCrmSmsQuoteDraftSource {
 }
 
 export const TbCrmSmsQuoteDraftSourceDefinition = defineEnumMetadata(TbCrmSmsQuoteDraftSource, '报价来源', {
-    [TbCrmSmsQuoteDraftSource.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价' },
-    [TbCrmSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制' }
+    [TbCrmSmsQuoteDraftSource.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'cyan' },
+    [TbCrmSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制', type: 'blue' }
 })
 
 export enum TbCrmSmsQuoteDraftStatus {
@@ -49,8 +49,8 @@ export enum TbCrmSmsQuoteDraftStatus {
 }
 
 export const TbCrmSmsQuoteDraftStatusDefinition = defineEnumMetadata(TbCrmSmsQuoteDraftStatus, '报价草稿状态', {
-    [TbCrmSmsQuoteDraftStatus.ACTIVE]: { label: '编辑中', description: '草稿可以继续编辑' },
-    [TbCrmSmsQuoteDraftStatus.DELETED]: { label: '已删除', description: '草稿已被移除' }
+    [TbCrmSmsQuoteDraftStatus.ACTIVE]: { label: '编辑中', description: '草稿可以继续编辑', type: 'warning' },
+    [TbCrmSmsQuoteDraftStatus.DELETED]: { label: '已删除', description: '草稿已被移除', type: 'default' }
 })
 
 export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {

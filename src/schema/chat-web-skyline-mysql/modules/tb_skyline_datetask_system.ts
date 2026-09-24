@@ -28,9 +28,9 @@ export enum TbSkylineDatetaskSystemType {
 }
 
 export const TbSkylineDatetaskSystemTypeDefinition = defineEnumMetadata(TbSkylineDatetaskSystemType, '任务类型', {
-    [TbSkylineDatetaskSystemType.CRON]: { label: '周期任务', description: '按照 Cron 表达式周期执行的任务' },
-    [TbSkylineDatetaskSystemType.MANUAL]: { label: '手动任务', description: '仅由人工操作触发的任务' },
-    [TbSkylineDatetaskSystemType.SYSTEM]: { label: '系统任务', description: '系统内置且不可删除的任务' }
+    [TbSkylineDatetaskSystemType.CRON]: { label: '周期任务', description: '按照 Cron 表达式周期执行的任务', type: 'blue' },
+    [TbSkylineDatetaskSystemType.MANUAL]: { label: '手动任务', description: '仅由人工操作触发的任务', type: 'orange' },
+    [TbSkylineDatetaskSystemType.SYSTEM]: { label: '系统任务', description: '系统内置且不可删除的任务', type: 'geekblue' }
 })
 
 /** 系统任务状态。 */
@@ -42,10 +42,10 @@ export enum TbSkylineDatetaskSystemStatus {
 }
 
 export const TbSkylineDatetaskSystemStatusDefinition = defineEnumMetadata(TbSkylineDatetaskSystemStatus, '任务状态', {
-    [TbSkylineDatetaskSystemStatus.STOP]: { label: '停止', description: '任务已停止调度' },
-    [TbSkylineDatetaskSystemStatus.WAIT]: { label: '等待运行', description: '任务等待下一次调度' },
-    [TbSkylineDatetaskSystemStatus.RUNNING]: { label: '运行中', description: '任务已启用并参与调度' },
-    [TbSkylineDatetaskSystemStatus.FINISH]: { label: '已完成', description: '任务已执行完成' }
+    [TbSkylineDatetaskSystemStatus.STOP]: { label: '停止', description: '任务已停止调度', type: 'default' },
+    [TbSkylineDatetaskSystemStatus.WAIT]: { label: '等待运行', description: '任务等待下一次调度', type: 'warning' },
+    [TbSkylineDatetaskSystemStatus.RUNNING]: { label: '运行中', description: '任务已启用并参与调度', type: 'success' },
+    [TbSkylineDatetaskSystemStatus.FINISH]: { label: '已完成', description: '任务已执行完成', type: 'cyan' }
 })
 
 /** 系统任务完整字段 DTO。 */

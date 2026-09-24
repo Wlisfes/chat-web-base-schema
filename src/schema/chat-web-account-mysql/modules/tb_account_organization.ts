@@ -25,9 +25,9 @@ export enum TbAccountOrganizationType {
 }
 
 export const TbAccountOrganizationTypeDefinition = defineEnumMetadata(TbAccountOrganizationType, '组织类型', {
-    [TbAccountOrganizationType.COMPANY]: { label: '公司', description: '组织架构的公司或法人主体节点' },
-    [TbAccountOrganizationType.DEPARTMENT]: { label: '部门', description: '正式部门节点' },
-    [TbAccountOrganizationType.TEAM]: { label: '团队', description: '项目组等非正式团队节点' }
+    [TbAccountOrganizationType.COMPANY]: { label: '公司', description: '组织架构的公司或法人主体节点', type: 'geekblue' },
+    [TbAccountOrganizationType.DEPARTMENT]: { label: '部门', description: '正式部门节点', type: 'blue' },
+    [TbAccountOrganizationType.TEAM]: { label: '团队', description: '项目组等非正式团队节点', type: 'cyan' }
 })
 
 /** 组织节点状态。 */
@@ -37,8 +37,8 @@ export enum TbAccountOrganizationStatus {
 }
 
 export const TbAccountOrganizationStatusDefinition = defineEnumMetadata(TbAccountOrganizationStatus, '组织状态', {
-    [TbAccountOrganizationStatus.DISABLED]: { label: '禁用', description: '组织节点不可再用于新增授权或成员关系' },
-    [TbAccountOrganizationStatus.ENABLED]: { label: '启用', description: '组织节点正常使用' }
+    [TbAccountOrganizationStatus.DISABLED]: { label: '禁用', description: '组织节点不可再用于新增授权或成员关系', type: 'error' },
+    [TbAccountOrganizationStatus.ENABLED]: { label: '启用', description: '组织节点正常使用', type: 'success' }
 })
 
 /** 组织架构节点的完整字段 DTO。 */

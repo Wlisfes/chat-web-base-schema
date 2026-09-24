@@ -20,8 +20,8 @@ export enum TbFinanceCountryStatus {
 }
 
 export const TbFinanceCountryStatusDefinition = defineEnumMetadata(TbFinanceCountryStatus, '国家/地区状态', {
-    [TbFinanceCountryStatus.DISABLE]: { label: '禁用', description: '国家/地区不可用于新业务' },
-    [TbFinanceCountryStatus.ENABLE]: { label: '启用', description: '国家/地区可正常使用' }
+    [TbFinanceCountryStatus.DISABLE]: { label: '禁用', description: '国家/地区不可用于新业务', type: 'error' },
+    [TbFinanceCountryStatus.ENABLE]: { label: '启用', description: '国家/地区可正常使用', type: 'success' }
 })
 
 export class TbFinanceCountryDto extends DataBaseDto {

@@ -35,8 +35,8 @@ export enum TbCrmConsumerStatus {
 }
 
 export const TbCrmConsumerStatusDefinition = defineEnumMetadata(TbCrmConsumerStatus, '客户状态', {
-    [TbCrmConsumerStatus.DISABLE]: { label: '禁用', description: '客户账号不可用' },
-    [TbCrmConsumerStatus.ENABLE]: { label: '启用', description: '客户账号正常使用' }
+    [TbCrmConsumerStatus.DISABLE]: { label: '禁用', description: '客户账号不可用', type: 'error' },
+    [TbCrmConsumerStatus.ENABLE]: { label: '启用', description: '客户账号正常使用', type: 'success' }
 })
 
 export enum TbCrmConsumerPayMode {
@@ -45,8 +45,8 @@ export enum TbCrmConsumerPayMode {
 }
 
 export const TbCrmConsumerPayModeDefinition = defineEnumMetadata(TbCrmConsumerPayMode, '付款模式', {
-    [TbCrmConsumerPayMode.POSTPAID]: { label: '后付', description: '账期后付费' },
-    [TbCrmConsumerPayMode.PREPAID]: { label: '预付', description: '账户预付费' }
+    [TbCrmConsumerPayMode.POSTPAID]: { label: '后付', description: '账期后付费', type: 'orange' },
+    [TbCrmConsumerPayMode.PREPAID]: { label: '预付', description: '账户预付费', type: 'cyan' }
 })
 
 export enum TbCrmConsumerClassType {
@@ -55,8 +55,8 @@ export enum TbCrmConsumerClassType {
 }
 
 export const TbCrmConsumerClassTypeDefinition = defineEnumMetadata(TbCrmConsumerClassType, '客户类型', {
-    [TbCrmConsumerClassType.COMMON]: { label: '普通客户', description: '普通业务客户' },
-    [TbCrmConsumerClassType.COOPERATE]: { label: '推广客户', description: '合作推广客户' }
+    [TbCrmConsumerClassType.COMMON]: { label: '普通客户', description: '普通业务客户', type: 'blue' },
+    [TbCrmConsumerClassType.COOPERATE]: { label: '推广客户', description: '合作推广客户', type: 'purple' }
 })
 
 export enum TbCrmConsumerStage {
@@ -70,13 +70,13 @@ export enum TbCrmConsumerStage {
 }
 
 export const TbCrmConsumerStageDefinition = defineEnumMetadata(TbCrmConsumerStage, '客户阶段', {
-    [TbCrmConsumerStage.AUTHENTICATE]: { label: '认证阶段', description: '客户正在认证' },
-    [TbCrmConsumerStage.CHARGE]: { label: '充值阶段', description: '客户准备充值' },
-    [TbCrmConsumerStage.CLUETRAIL]: { label: '线索阶段', description: '客户处于线索跟进' },
-    [TbCrmConsumerStage.COOPERATE]: { label: '价值阶段', description: '客户已形成稳定价值' },
-    [TbCrmConsumerStage.INTENTION]: { label: '意向阶段', description: '客户已有合作意向' },
-    [TbCrmConsumerStage.PRODUCTION]: { label: '生产阶段', description: '客户已进入生产' },
-    [TbCrmConsumerStage.TESTING]: { label: '测试阶段', description: '客户正在业务测试' }
+    [TbCrmConsumerStage.AUTHENTICATE]: { label: '认证阶段', description: '客户正在认证', type: 'blue' },
+    [TbCrmConsumerStage.CHARGE]: { label: '充值阶段', description: '客户准备充值', type: 'orange' },
+    [TbCrmConsumerStage.CLUETRAIL]: { label: '线索阶段', description: '客户处于线索跟进', type: 'default' },
+    [TbCrmConsumerStage.COOPERATE]: { label: '价值阶段', description: '客户已形成稳定价值', type: 'purple' },
+    [TbCrmConsumerStage.INTENTION]: { label: '意向阶段', description: '客户已有合作意向', type: 'cyan' },
+    [TbCrmConsumerStage.PRODUCTION]: { label: '生产阶段', description: '客户已进入生产', type: 'green' },
+    [TbCrmConsumerStage.TESTING]: { label: '测试阶段', description: '客户正在业务测试', type: 'geekblue' }
 })
 
 export enum TbCrmConsumerAuthStatus {
@@ -87,10 +87,10 @@ export enum TbCrmConsumerAuthStatus {
 }
 
 export const TbCrmConsumerAuthStatusDefinition = defineEnumMetadata(TbCrmConsumerAuthStatus, '认证状态', {
-    [TbCrmConsumerAuthStatus.PENDING]: { label: '认证中', description: '认证资料审核中' },
-    [TbCrmConsumerAuthStatus.REJECTED]: { label: '认证失败', description: '认证资料未通过' },
-    [TbCrmConsumerAuthStatus.UNVERIFIED]: { label: '未认证', description: '尚未提交认证' },
-    [TbCrmConsumerAuthStatus.VERIFIED]: { label: '已认证', description: '认证已通过' }
+    [TbCrmConsumerAuthStatus.PENDING]: { label: '认证中', description: '认证资料审核中', type: 'warning' },
+    [TbCrmConsumerAuthStatus.REJECTED]: { label: '认证失败', description: '认证资料未通过', type: 'error' },
+    [TbCrmConsumerAuthStatus.UNVERIFIED]: { label: '未认证', description: '尚未提交认证', type: 'default' },
+    [TbCrmConsumerAuthStatus.VERIFIED]: { label: '已认证', description: '认证已通过', type: 'success' }
 })
 
 export enum TbCrmConsumerSource {
@@ -99,8 +99,8 @@ export enum TbCrmConsumerSource {
 }
 
 export const TbCrmConsumerSourceDefinition = defineEnumMetadata(TbCrmConsumerSource, '注册来源', {
-    [TbCrmConsumerSource.MANUAL]: { label: '手动创建', description: '管理端人工创建' },
-    [TbCrmConsumerSource.PLATFORM]: { label: '平台注册', description: '客户从平台注册' }
+    [TbCrmConsumerSource.MANUAL]: { label: '手动创建', description: '管理端人工创建', type: 'orange' },
+    [TbCrmConsumerSource.PLATFORM]: { label: '平台注册', description: '客户从平台注册', type: 'blue' }
 })
 
 export class TbCrmConsumerDto extends DataBaseDto {

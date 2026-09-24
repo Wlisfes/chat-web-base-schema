@@ -19,8 +19,8 @@ export enum TbFinanceCurrencyStatus {
 }
 
 export const TbFinanceCurrencyStatusDefinition = defineEnumMetadata(TbFinanceCurrencyStatus, '币种状态', {
-    [TbFinanceCurrencyStatus.DISABLE]: { label: '禁用', description: '币种不可用于新业务' },
-    [TbFinanceCurrencyStatus.ENABLE]: { label: '启用', description: '币种可正常使用' }
+    [TbFinanceCurrencyStatus.DISABLE]: { label: '禁用', description: '币种不可用于新业务', type: 'error' },
+    [TbFinanceCurrencyStatus.ENABLE]: { label: '启用', description: '币种可正常使用', type: 'success' }
 })
 
 export class TbFinanceCurrencyDto extends DataBaseDto {

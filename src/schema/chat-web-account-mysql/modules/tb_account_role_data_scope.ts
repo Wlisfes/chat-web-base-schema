@@ -24,11 +24,15 @@ export enum TbAccountRoleDataScopeType {
 }
 
 export const TbAccountRoleDataScopeTypeDefinition = defineEnumMetadata(TbAccountRoleDataScopeType, '数据范围类型', {
-    [TbAccountRoleDataScopeType.ALL]: { label: '全部数据', description: '不限制组织或数据所有人' },
-    [TbAccountRoleDataScopeType.SELF]: { label: '仅本人', description: '只允许访问本人拥有的数据' },
-    [TbAccountRoleDataScopeType.ORGANIZATION]: { label: '本组织', description: '允许访问用户主组织的数据' },
-    [TbAccountRoleDataScopeType.ORGANIZATION_TREE]: { label: '本组织及下级', description: '允许访问用户主组织及全部下级组织的数据' },
-    [TbAccountRoleDataScopeType.CUSTOM]: { label: '自定义组织', description: '允许访问显式授权的组织，可逐项包含下级组织' }
+    [TbAccountRoleDataScopeType.ALL]: { label: '全部数据', description: '不限制组织或数据所有人', type: 'purple' },
+    [TbAccountRoleDataScopeType.SELF]: { label: '仅本人', description: '只允许访问本人拥有的数据', type: 'cyan' },
+    [TbAccountRoleDataScopeType.ORGANIZATION]: { label: '本组织', description: '允许访问用户主组织的数据', type: 'blue' },
+    [TbAccountRoleDataScopeType.ORGANIZATION_TREE]: {
+        label: '本组织及下级',
+        description: '允许访问用户主组织及全部下级组织的数据',
+        type: 'geekblue'
+    },
+    [TbAccountRoleDataScopeType.CUSTOM]: { label: '自定义组织', description: '允许访问显式授权的组织，可逐项包含下级组织', type: 'orange' }
 })
 
 /** 数据范围规则状态。 */
@@ -38,8 +42,8 @@ export enum TbAccountRoleDataScopeStatus {
 }
 
 export const TbAccountRoleDataScopeStatusDefinition = defineEnumMetadata(TbAccountRoleDataScopeStatus, '数据范围规则状态', {
-    [TbAccountRoleDataScopeStatus.DISABLED]: { label: '禁用', description: '规则不参与数据权限计算' },
-    [TbAccountRoleDataScopeStatus.ENABLED]: { label: '启用', description: '规则正常参与数据权限计算' }
+    [TbAccountRoleDataScopeStatus.DISABLED]: { label: '禁用', description: '规则不参与数据权限计算', type: 'error' },
+    [TbAccountRoleDataScopeStatus.ENABLED]: { label: '启用', description: '规则正常参与数据权限计算', type: 'success' }
 })
 
 /** 角色针对业务资源的数据范围规则完整字段 DTO。 */

@@ -39,9 +39,9 @@ export enum TbCrmSmsQuoteStatus {
 }
 
 export const TbCrmSmsQuoteStatusDefinition = defineEnumMetadata(TbCrmSmsQuoteStatus, '短信报价状态', {
-    [TbCrmSmsQuoteStatus.DELETED]: { label: '已删除', description: '报价已停止使用' },
-    [TbCrmSmsQuoteStatus.EFFECTIVE]: { label: '已生效', description: '报价当前有效' },
-    [TbCrmSmsQuoteStatus.PENDING]: { label: '待生效', description: '报价等待生效时间' }
+    [TbCrmSmsQuoteStatus.DELETED]: { label: '已删除', description: '报价已停止使用', type: 'default' },
+    [TbCrmSmsQuoteStatus.EFFECTIVE]: { label: '已生效', description: '报价当前有效', type: 'success' },
+    [TbCrmSmsQuoteStatus.PENDING]: { label: '待生效', description: '报价等待生效时间', type: 'warning' }
 })
 
 export class TbCrmSmsQuoteDto extends DataBaseByDto {

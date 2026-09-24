@@ -31,9 +31,9 @@ export enum TbAccountMenuType {
 }
 
 export const TbAccountMenuTypeDefinition = defineEnumMetadata(TbAccountMenuType, '菜单类型', {
-    [TbAccountMenuType.DIRECTORY]: { label: '目录', description: '只用于组织下级菜单的目录节点' },
-    [TbAccountMenuType.MENU]: { label: '菜单', description: '可导航到页面的菜单节点' },
-    [TbAccountMenuType.BUTTON]: { label: '按钮', description: '不参与导航、用于绑定后端权限码的操作节点' }
+    [TbAccountMenuType.DIRECTORY]: { label: '目录', description: '只用于组织下级菜单的目录节点', type: 'geekblue' },
+    [TbAccountMenuType.MENU]: { label: '菜单', description: '可导航到页面的菜单节点', type: 'blue' },
+    [TbAccountMenuType.BUTTON]: { label: '按钮', description: '不参与导航、用于绑定后端权限码的操作节点', type: 'cyan' }
 })
 
 /** 菜单节点状态。 */
@@ -43,8 +43,8 @@ export enum TbAccountMenuStatus {
 }
 
 export const TbAccountMenuStatusDefinition = defineEnumMetadata(TbAccountMenuStatus, '菜单状态', {
-    [TbAccountMenuStatus.DISABLED]: { label: '禁用', description: '菜单及权限码不参与授权计算' },
-    [TbAccountMenuStatus.ENABLED]: { label: '启用', description: '菜单及权限码正常参与授权计算' }
+    [TbAccountMenuStatus.DISABLED]: { label: '禁用', description: '菜单及权限码不参与授权计算', type: 'error' },
+    [TbAccountMenuStatus.ENABLED]: { label: '启用', description: '菜单及权限码正常参与授权计算', type: 'success' }
 })
 
 /** 菜单显示状态。 */
@@ -54,8 +54,8 @@ export enum TbAccountMenuVisible {
 }
 
 export const TbAccountMenuVisibleDefinition = defineEnumMetadata(TbAccountMenuVisible, '菜单显示状态', {
-    [TbAccountMenuVisible.HIDE]: { label: '隐藏', description: '菜单不在前端导航中展示' },
-    [TbAccountMenuVisible.SHOW]: { label: '显示', description: '菜单在前端导航中正常展示' }
+    [TbAccountMenuVisible.HIDE]: { label: '隐藏', description: '菜单不在前端导航中展示', type: 'default' },
+    [TbAccountMenuVisible.SHOW]: { label: '显示', description: '菜单在前端导航中正常展示', type: 'success' }
 })
 
 /** 系统菜单、页面和按钮的完整字段 DTO。 */

@@ -1,4 +1,4 @@
-import { FeignBody, FeignClient, FeignGet, FeignHeader, FeignPost, FeignQuery } from '../feign.decorator'
+import { FeignBody, FeignClient, FeignHeader, FeignPost } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
 import {
     CrmConsumerPageResponseDto,
@@ -31,28 +31,28 @@ export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCr
     constructor(service?: CrmTypes.FeignClientCrmImplementation, configService?: ConfigService) {
         super(service, configService)
     }
-    @FeignGet('/consumer/resolve', {
+    @FeignPost('/consumer/resolve', {
         operation: { summary: '供内部服务按客户主键获取客户详情' },
-        request: { source: 'query', type: CrmResolveConsumerRequestDto },
+        request: { source: 'body', type: CrmResolveConsumerRequestDto },
         response: { type: CrmConsumerResponseDto, description: '客户详情' }
     })
     async resolveConsumer(
         @FeignHeader('authorization') _authorization: string,
-        @FeignQuery('keyId') _keyId: number
+        @FeignBody() _input: CrmTypes.CrmResolveConsumerInput
     ): Promise<CrmTypes.CrmConsumer> {
-        return this.dispatch('resolveConsumer', _authorization, _keyId)
+        return this.dispatch('resolveConsumer', _authorization, _input)
     }
 
-    @FeignGet('/consumer/select', {
+    @FeignPost('/consumer/select', {
         operation: { summary: '供内部服务筛选客户下拉数据' },
-        request: { source: 'query', type: CrmSelectConsumerRequestDto },
+        request: { source: 'body', type: CrmSelectConsumerRequestDto },
         response: { type: CrmConsumerResponseDto, isArray: true, description: '客户下拉列表' }
     })
     async selectConsumers(
         @FeignHeader('authorization') _authorization: string,
-        @FeignQuery('name') _name?: string
+        @FeignBody() _input: CrmTypes.CrmSelectConsumerInput
     ): Promise<CrmTypes.CrmConsumerSelect[]> {
-        return this.dispatch('selectConsumers', _authorization, _name)
+        return this.dispatch('selectConsumers', _authorization, _input)
     }
 
     @FeignPost('/consumer/create', {

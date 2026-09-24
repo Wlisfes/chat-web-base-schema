@@ -3,7 +3,7 @@ export interface FinanceFeignImplementation {
     /**按国家/地区主键批量获取短信基础价格**/
     batchSmsRates(authorization: string, input: FinanceSmsRateBatchRequest): Promise<FinanceSmsRate[]>
     /**按币种获取最新汇率**/
-    resolveCurrencyExchange(authorization: string, currency: string): Promise<FinanceCurrencyExchange>
+    resolveCurrencyExchange(authorization: string, input: FinanceCurrencyExchangeResolveRequest): Promise<FinanceCurrencyExchange>
     /**触发财务服务拉取并同步最新币种汇率**/
     syncCurrencyExchange(authorization: string): Promise<FinanceCurrencyExchangeSyncResponse>
 }
@@ -54,6 +54,12 @@ export interface FinanceCurrencyExchangeSyncResponse {
     count: number
     /**已同步的币种汇率列表。*/
     list: FinanceCurrencyExchangeSyncItem[]
+}
+
+/**按币种查询最新汇率的请求。*/
+export interface FinanceCurrencyExchangeResolveRequest {
+    /**币种编码。*/
+    currency: string
 }
 
 /**按国家/地区主键批量查询短信基础价格的请求。*/

@@ -170,6 +170,12 @@
 - String business enums use `varchar`. Numeric 0/1 business enums use `tinyint(1)`. Reuse the generated enum comment in Swagger, TypeORM, and SQL.
 - Nullable database fields do not use `| null` in TypeScript in this repository.
 
+### Feign contract
+
+- Every service-to-service Feign method uses `@FeignPost` with a `@FeignBody` DTO; `@FeignGet` and `@FeignQuery` remain available in the runtime but must not be used in service contracts, so that request shapes stay declarative and extensible without breaking route signatures.
+- Each `chat-web-<service>-service-feign` folder exposes an `index.ts` that re-exports its DTO, interface, and client controller; `src/feign/index.ts` aggregates the folders instead of individual files.
+- Feign method names mirror the route action, for example `/chunk/column` maps to `columnChunkOptions`, and their request and response DTO names use the same action word.
+
 ### DTO, validation, and Swagger
 
 - Complete table DTO fields must match Entity fields exactly and extend `DataBaseDto` or `DataBaseByDto` for common fields.

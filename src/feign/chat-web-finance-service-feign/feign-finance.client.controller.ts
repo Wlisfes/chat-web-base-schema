@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config'
-import { FeignBody, FeignClient, FeignGet, FeignHeader, FeignPost, FeignQuery } from '../feign.decorator'
+import { FeignBody, FeignClient, FeignHeader, FeignPost } from '../feign.decorator'
 import { FeignWebClient } from '../feign.web.client'
 import type * as FinanceTypes from './feign-finance.interface'
 
@@ -33,12 +33,12 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
     }
 
     /**按币种获取最新汇率**/
-    @FeignGet('/currency/exchange/resolve')
+    @FeignPost('/currency/exchange/resolve')
     async resolveCurrencyExchange(
         @FeignHeader('authorization') _authorization: string,
-        @FeignQuery('currency') _currency: string
+        @FeignBody() _input: FinanceTypes.FinanceCurrencyExchangeResolveRequest
     ): Promise<FinanceTypes.FinanceCurrencyExchange> {
-        return this.dispatch('resolveCurrencyExchange', _authorization, _currency)
+        return this.dispatch('resolveCurrencyExchange', _authorization, _input)
     }
 
     /**触发财务服务拉取并同步最新币种汇率**/

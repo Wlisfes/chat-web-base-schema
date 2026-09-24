@@ -21,8 +21,8 @@ export type CrmSelectConsumerInput = CrmSelectConsumerRequestDto
 export type CrmListConsumerInput = CrmListConsumerRequestDto
 
 export interface FeignClientCrmImplementation {
-    resolveConsumer(authorization: string, keyId: number): Promise<CrmConsumer>
-    selectConsumers(authorization: string, name?: string): Promise<CrmConsumerSelect[]>
+    resolveConsumer(authorization: string, input: CrmResolveConsumerInput): Promise<CrmConsumer>
+    selectConsumers(authorization: string, input: CrmSelectConsumerInput): Promise<CrmConsumerSelect[]>
     createConsumer(authorization: string, input: CrmCreateConsumerInput): Promise<CrmConsumer>
     updateConsumer(authorization: string, input: CrmUpdateConsumerInput): Promise<CrmConsumer>
     updateConsumerStatus(authorization: string, input: CrmUpdateConsumerStatusInput): Promise<CrmConsumer>

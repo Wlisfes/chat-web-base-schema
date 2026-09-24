@@ -42,7 +42,7 @@ export class SkylineChunkOptionGroupDto {
 }
 
 /** 按枚举类型编码批量查询枚举字典选项的请求。 */
-export class SkylineBatchChunkOptionRequestDto {
+export class SkylineColumnChunkOptionRequestDto {
     @ApiProperty({
         description: '枚举所属模块；不传表示不限制模块',
         required: false,

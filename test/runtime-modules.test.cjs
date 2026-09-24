@@ -419,11 +419,11 @@ test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查�
     const service = factory.create(FeignClientFinanceManager)
 
     await service.batchSmsRates('Bearer service-token', { countryKeyIds: [1, 2] })
-    await service.resolveCurrencyExchange('Bearer service-token', 'CNY')
+    await service.resolveCurrencyExchange('Bearer service-token', { currency: 'CNY' })
 
     assert.deepEqual(requests, [
         { url: 'http://gateway.internal:5000/feign/finance/rates/sms/batch', method: 'POST' },
-        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolve?currency=CNY', method: 'GET' }
+        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolve', method: 'POST' }
     ])
 })
 

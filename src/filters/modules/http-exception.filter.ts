@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter, ExecutionContext, HttpStatus, Logger } from '@nestjs/common'
+import { ArgumentsHost, Catch, ExceptionFilter, ExecutionContext, HttpException, HttpStatus, Logger } from '@nestjs/common'
 import type { ApiResponse } from '@/types'
 import { createApiResponse } from '@/utils/modules/response'
 import { getActiveExecutionMethod, resolveRequestId } from '@/utils/modules/request-context'
@@ -13,6 +13,7 @@ import {
 } from '@/filters/modules/exception-response'
 import { PRESERVE_HTTP_STATUS_METADATA, PRESERVE_HTTP_STATUS_REQUEST } from '@/filters/modules/preserve-http-status.decorator'
 import { getActiveTraceContext } from '@/runtime/observability'
+import { sanitizeRequestLogValue } from '@/runtime/logging/request-logging.middleware'
 
 interface HttpRequestLike {
     [PRESERVE_HTTP_STATUS_REQUEST]?: boolean
@@ -22,6 +23,11 @@ interface HttpRequestLike {
     headers?: Record<string, string | string[] | undefined>
     logId?: string
     executionMethod?: string
+    routeMethod?: string
+    query?: unknown
+    params?: unknown
+    body?: unknown
+    user?: { uid?: unknown; number?: unknown; name?: unknown }
 }
 
 interface HttpResponseLike {
@@ -29,6 +35,18 @@ interface HttpResponseLike {
     status(code: number): HttpResponseLike
     setHeader(name: string, value: string): unknown
     json(body: ApiResponse): unknown
+}
+
+function hasContent(value: unknown): boolean {
+    if (value === undefined || value === null || value === '') return false
+    return typeof value !== 'object' || Object.keys(value).length > 0
+}
+
+/** ValidationPipe 会返回全部校验失败信息，响应只展示第一条，日志保留完整列表。 */
+function resolveExceptionErrors(exception: unknown): string[] {
+    const response = exception instanceof HttpException ? exception.getResponse() : undefined
+    const message = typeof response === 'object' && response !== null ? (response as { message?: unknown }).message : undefined
+    return Array.isArray(message) ? message.filter((item): item is string => typeof item === 'string') : []
 }
 
 @Catch()
@@ -45,14 +63,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const body = createApiResponse(resolveExceptionData(exception), { code: status, message, logId })
         const method = request.method ?? 'UNKNOWN'
         const url = resolvePublicRequestUrl(request)
-        const routeMethod = this.resolveRouteMethod(host)
+        const routeMethod = this.resolveRouteMethod(host, request)
         const executionMethod = resolveExceptionExecutionMethod(
             exception,
             normalizeServiceExecutionMethod(getActiveExecutionMethod() ?? request.executionMethod) ?? routeMethod
         )
         const traceId = getActiveTraceContext().traceId
         const location = executionMethod ? ` [位置=${executionMethod}]` : ''
-        const logMessage = `${method} ${url} -> ${status} ${message} [${logId}]${location}${traceId ? ` [traceId=${traceId}]` : ''}`
+        const details = this.createLogDetails(request, exception)
+        const logMessage = `${method} ${url} -> ${status} ${message}${location}${traceId ? ` [traceId=${traceId}]` : ''}${
+            details ? ` ${details}` : ''
+        }`
 
         request.logId = logId
         if (executionMethod) request.executionMethod = executionMethod
@@ -63,13 +84,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
 
         if (status !== HttpStatus.OK) {
-            this.logger.error(
-                logMessage,
-                status >= HttpStatus.INTERNAL_SERVER_ERROR && exception instanceof Error ? exception.stack : undefined,
-                executionMethod || undefined
-            )
+            const stack = status >= HttpStatus.INTERNAL_SERVER_ERROR && exception instanceof Error ? exception.stack : undefined
+            // Nest 会把多余的 undefined 参数当作消息打印成单独一行 undefined，因此只传入实际存在的 stack/context。
+            if (stack) this.logger.error(logMessage, stack, ...(executionMethod ? [executionMethod] : []))
+            else if (executionMethod) this.logger.error(logMessage, undefined, executionMethod)
+            else this.logger.error(logMessage)
+        } else if (executionMethod) {
+            this.logger.log(logMessage, executionMethod)
         } else {
-            this.logger.log(logMessage, executionMethod || undefined)
+            this.logger.log(logMessage)
         }
 
         if (!response.headersSent) {
@@ -78,13 +101,32 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
     }
 
-    /** 异步驱动错误的堆栈可能只剩 node_modules 帧，此时用当前命中的路由处理器作为定位兜底。 */
-    private resolveRouteMethod(host: ArgumentsHost): string {
+    /**
+     * 异步驱动错误的堆栈可能只剩 node_modules 帧，此时用当前命中的路由处理器作为定位兜底。
+     * Nest 传给异常过滤器的 ArgumentsHost 不携带 handler，因此优先读取拦截器提前写入请求的路由方法。
+     */
+    private resolveRouteMethod(host: ArgumentsHost, request: HttpRequestLike): string {
+        if (request.routeMethod) return request.routeMethod
         const context = host as ExecutionContext
         const handler = context.getHandler?.()
         const controller = context.getClass?.()
         if (typeof handler !== 'function' || typeof controller !== 'function' || !controller.name || !handler.name) return ''
         return `${controller.name}.${handler.name}`
+    }
+
+    /** 拼出脱敏后的入参、当前用户和全部校验错误，业务服务日志无需再回网关查找请求内容。 */
+    private createLogDetails(request: HttpRequestLike, exception: unknown): string {
+        const details: Record<string, unknown> = {}
+        const errors = resolveExceptionErrors(exception)
+        if (errors.length > 1) details.errors = errors
+        if (hasContent(request.query)) details.query = sanitizeRequestLogValue(request.query)
+        if (hasContent(request.params)) details.params = sanitizeRequestLogValue(request.params)
+        if (hasContent(request.body)) details.body = sanitizeRequestLogValue(request.body)
+        const user = request.user
+        if (user && (user.uid !== undefined || user.number !== undefined || user.name !== undefined)) {
+            details.user = { uid: user.uid, number: user.number, name: user.name }
+        }
+        return Object.keys(details).length ? JSON.stringify(details) : ''
     }
 
     private shouldPreserveHttpStatus(host: ArgumentsHost, request: HttpRequestLike): boolean {

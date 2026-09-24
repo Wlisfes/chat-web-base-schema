@@ -9,12 +9,20 @@ interface HttpRequestLike {
     headers: Record<string, string | string[] | undefined>
     logId?: string
     executionMethod?: string
+    routeMethod?: string
 }
 
 interface HttpResponseLike {
     headersSent?: boolean
     getHeader(name: string): string | number | string[] | undefined
     setHeader(name: string, value: string): unknown
+}
+
+/** 拦截器早于管道执行；提前记录 Controller.method，参数校验失败时异常过滤器仍能定位接口。 */
+function resolveRouteMethod(context: ExecutionContext): string | undefined {
+    const controller = context.getClass?.()
+    const handler = context.getHandler?.()
+    return controller?.name && handler?.name ? `${controller.name}.${handler.name}` : undefined
 }
 
 @Injectable()
@@ -30,6 +38,7 @@ export class TransformInterceptor implements NestInterceptor {
         const logId = resolveRequestId(request.logId ?? request.headers['x-request-id'])
 
         request.logId = logId
+        request.routeMethod = resolveRouteMethod(context)
         request.headers['x-request-id'] = logId
         if (!response.headersSent) response.setHeader('x-request-id', logId)
 

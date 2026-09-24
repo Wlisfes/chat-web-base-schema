@@ -157,7 +157,7 @@ test('HttpExceptionFilter falls back to the matched route handler when the stack
 
     assert.equal(loggedContext, 'TestController.defaultHandler')
     assert.equal(request.executionMethod, 'TestController.defaultHandler')
-    assert.match(loggedMessage, /\[位置=TestController\.defaultHandler\]/)
+    assert.match(loggedMessage, /执行方法:\[TestController\.defaultHandler\]/)
 })
 
 test('HttpExceptionFilter logs the public gateway URL', () => {
@@ -330,7 +330,7 @@ test('HttpExceptionFilter 校验失败日志包含路由位置、完整入参和
     const [message, stack, context] = loggedArgs
     assert.equal(stack, undefined)
     assert.equal(context, 'UserController.httpBaseUserUpdate')
-    assert.match(message, /^POST \/api\/account\/user\/update -> 400 手机号格式错误 \[位置=UserController\.httpBaseUserUpdate\]/)
+    assert.match(message, /^POST \/api\/account\/user\/update -> 400 手机号格式错误 执行方法:\[UserController\.httpBaseUserUpdate\]/)
     const details = JSON.parse(message.slice(message.indexOf(' {') + 1))
     assert.deepEqual(details.errors, ['手机号格式错误', '邮箱格式错误'])
     assert.deepEqual(details.body, { phone: '123', email: 'bad', password: '[已隐藏]' })

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_chunk` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `pid` int NULL COMMENT '父枚举项主键；根节点为空',
     `module` varchar(32) NOT NULL DEFAULT 'CHUNK_SYSTEM' COMMENT '枚举所属模块：CHUNK_SYSTEM=系统；CHUNK_CRM=CRM；CHUNK_SRM=SRM',
-    `type` varchar(128) NOT NULL COMMENT '枚举类型编码',
+    `type` varchar(128) NOT NULL COMMENT '枚举类型编码，对应主表 tb_skyline_chunk_module.type',
     `name` varchar(128) NOT NULL COMMENT '枚举项显示名称',
     `value` varchar(128) NOT NULL COMMENT '枚举项业务值',
     `json` text NOT NULL DEFAULT ('{}') COMMENT '枚举项扩展配置，默认空对象',

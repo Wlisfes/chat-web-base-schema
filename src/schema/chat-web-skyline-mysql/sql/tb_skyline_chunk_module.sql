@@ -15,18 +15,18 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_chunk_module` (
     UNIQUE KEY `uk_tb_skyline_chunk_module_module_type` (`module`, `type`),
     KEY `idx_tb_skyline_chunk_module_module` (`module`)
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 1023001
+  AUTO_INCREMENT = 1001
   DEFAULT CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_unicode_ci
   COMMENT = 'Skyline 枚举分类表';
 
--- 系统枚举分类：职位。子表项主键已占用 1024100-1024164，本表从 1023000 起号。
--- 回滚：DELETE FROM `tb_skyline_chunk_module` WHERE `key_id` = 1023000;
+-- 系统枚举分类：职位。本表主键从 1000 起号，后续新增数据从 1001 开始自增。
+-- 回滚：DELETE FROM `tb_skyline_chunk_module` WHERE `key_id` = 1000;
 
 INSERT INTO `tb_skyline_chunk_module` (`key_id`, `module`, `type`, `name`, `kind`, `remark`, `allow_delete`, `allow_update`, `create_by`, `modify_by`)
 SELECT `seed`.`key_id`, `seed`.`module`, `seed`.`type`, `seed`.`name`, `seed`.`kind`, `seed`.`remark`, `seed`.`allow_delete`, `seed`.`allow_update`, `seed`.`create_by`, `seed`.`modify_by`
 FROM (
-    SELECT 1023000 AS `key_id`, 'CHUNK_SYSTEM' AS `module`, 'CHUNK_ACCOUNT_POSITION' AS `type`, '职位' AS `name`, 'select' AS `kind`, '账号职位' AS `remark`, 0 AS `allow_delete`, 1 AS `allow_update`, '0' AS `create_by`, '0' AS `modify_by`
+    SELECT 1000 AS `key_id`, 'CHUNK_SYSTEM' AS `module`, 'CHUNK_ACCOUNT_POSITION' AS `type`, '职位' AS `name`, 'select' AS `kind`, '账号职位' AS `remark`, 0 AS `allow_delete`, 1 AS `allow_update`, '0' AS `create_by`, '0' AS `modify_by`
 ) AS `seed`
 WHERE NOT EXISTS (
     SELECT 1

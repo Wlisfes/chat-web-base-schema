@@ -2,6 +2,7 @@ import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, WithJsonColumn, defineEnumMetadata } from '@/utils'
+import { TbSkylineChunkModule, TbSkylineChunkModuleDefinition } from './tb_skyline_chunk_module'
 
 /** tb_skyline_chunk 的数据库字段名。 */
 export enum TbSkylineChunkColumn {
@@ -19,19 +20,6 @@ export enum TbSkylineChunkColumn {
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
-
-/** 枚举项所属业务模块，用于管理端按模块展示字典数据。 */
-export enum TbSkylineChunkModule {
-    CHUNK_SYSTEM = 'CHUNK_SYSTEM',
-    CHUNK_CRM = 'CHUNK_CRM',
-    CHUNK_SRM = 'CHUNK_SRM'
-}
-
-export const TbSkylineChunkModuleDefinition = defineEnumMetadata(TbSkylineChunkModule, '枚举所属模块', {
-    [TbSkylineChunkModule.CHUNK_SYSTEM]: { label: '系统', description: '系统管理模块使用的枚举项', type: 'geekblue' },
-    [TbSkylineChunkModule.CHUNK_CRM]: { label: 'CRM', description: 'CRM 客户关系管理模块使用的枚举项', type: 'blue' },
-    [TbSkylineChunkModule.CHUNK_SRM]: { label: 'SRM', description: 'SRM 供应商关系管理模块使用的枚举项', type: 'cyan' }
-})
 
 /** 枚举项启用状态。 */
 export enum TbSkylineChunkStatus {
@@ -61,7 +49,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module: TbSkylineChunkModule
 
-    @ApiProperty({ description: '枚举类型编码', example: 'CHUNK_DATETASK_STATUS' })
+    @ApiProperty({ description: '枚举类型编码，对应主表 tb_skyline_chunk_module.type', example: 'CHUNK_DATETASK_STATUS' })
     @IsString({ message: '枚举类型编码必须是字符串' })
     @IsNotEmpty({ message: '枚举类型编码必填' })
     @MaxLength(128, { message: '枚举类型编码长度不能超过128位' })
@@ -79,7 +67,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
     @MaxLength(128, { message: '枚举项业务值长度不能超过128位' })
     value: string
 
-    @ApiProperty({ description: '枚举项扩展配置', type: Object, required: false, example: { type: 'success' } })
+    @ApiProperty({ description: '枚举项扩展配置，默认空对象', type: Object, required: false, example: {} })
     @IsOptional()
     @IsObject({ message: '枚举项扩展配置必须是对象' })
     json: Record<string, unknown>
@@ -126,7 +114,13 @@ export class TbSkylineChunk extends DataBaseAdapter {
     })
     module: TbSkylineChunkModule
 
-    @Column({ name: TbSkylineChunkColumn.TYPE, type: 'varchar', length: 128, nullable: false, comment: '枚举类型编码' })
+    @Column({
+        name: TbSkylineChunkColumn.TYPE,
+        type: 'varchar',
+        length: 128,
+        nullable: false,
+        comment: '枚举类型编码，对应主表 tb_skyline_chunk_module.type'
+    })
     type: string
 
     @Column({ name: TbSkylineChunkColumn.NAME, type: 'varchar', length: 128, nullable: false, comment: '枚举项显示名称' })
@@ -135,7 +129,7 @@ export class TbSkylineChunk extends DataBaseAdapter {
     @Column({ name: TbSkylineChunkColumn.VALUE, type: 'varchar', length: 128, nullable: false, comment: '枚举项业务值' })
     value: string
 
-    @WithJsonColumn({ name: TbSkylineChunkColumn.JSON, nullable: true, comment: '枚举项扩展配置' })
+    @WithJsonColumn({ name: TbSkylineChunkColumn.JSON, nullable: false, comment: '枚举项扩展配置，默认空对象' })
     json: Record<string, unknown>
 
     @Column({ name: TbSkylineChunkColumn.SORT, type: 'int', nullable: false, default: 0, comment: '枚举项排序值' })

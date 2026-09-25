@@ -231,6 +231,14 @@ validateTable({
 })
 
 validateTable({
+    entity: skylineSchema.TbSkylineChunkModuleEntity,
+    dto: skylineSchema.TbSkylineChunkModuleDto,
+    columns: skylineSchema.TbSkylineChunkModuleColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_chunk_module.sql'),
+    enumComments: [skylineSchema.TbSkylineChunkModuleDefinition.comment, skylineSchema.TbSkylineChunkModuleKindDefinition.comment]
+})
+
+validateTable({
     entity: accountSchema.TbAccountOrganization,
     dto: accountSchema.TbAccountOrganizationDto,
     columns: accountSchema.TbAccountOrganizationColumn,

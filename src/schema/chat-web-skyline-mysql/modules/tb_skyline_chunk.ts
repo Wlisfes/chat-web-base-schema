@@ -79,7 +79,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
     @MaxLength(128, { message: '枚举项业务值长度不能超过128位' })
     value: string
 
-    @ApiProperty({ description: '枚举项扩展配置', type: Object, required: false, example: { type: 'success' } })
+    @ApiProperty({ description: '枚举项扩展配置，默认空对象', type: Object, required: false, example: {} })
     @IsOptional()
     @IsObject({ message: '枚举项扩展配置必须是对象' })
     json: Record<string, unknown>
@@ -135,7 +135,7 @@ export class TbSkylineChunk extends DataBaseAdapter {
     @Column({ name: TbSkylineChunkColumn.VALUE, type: 'varchar', length: 128, nullable: false, comment: '枚举项业务值' })
     value: string
 
-    @WithJsonColumn({ name: TbSkylineChunkColumn.JSON, nullable: true, comment: '枚举项扩展配置' })
+    @WithJsonColumn({ name: TbSkylineChunkColumn.JSON, nullable: false, comment: '枚举项扩展配置，默认空对象' })
     json: Record<string, unknown>
 
     @Column({ name: TbSkylineChunkColumn.SORT, type: 'int', nullable: false, default: 0, comment: '枚举项排序值' })

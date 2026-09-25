@@ -223,6 +223,14 @@ validateTable({
 })
 
 validateTable({
+    entity: skylineSchema.TbSkylineDatetaskLog,
+    dto: skylineSchema.TbSkylineDatetaskLogDto,
+    columns: skylineSchema.TbSkylineDatetaskLogColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_datetask_log.sql'),
+    enumComments: [skylineSchema.TbSkylineDatetaskLogStatusDefinition.comment]
+})
+
+validateTable({
     entity: accountSchema.TbAccountOrganization,
     dto: accountSchema.TbAccountOrganizationDto,
     columns: accountSchema.TbAccountOrganizationColumn,

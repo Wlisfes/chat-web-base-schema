@@ -1,6 +1,6 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 /** tb_skyline_chunk_module 的数据库字段名。 */
@@ -11,8 +11,6 @@ export enum TbSkylineChunkModuleColumn {
     NAME = 'name',
     KIND = 'kind',
     REMARK = 'remark',
-    ALLOW_DELETE = 'allow_delete',
-    ALLOW_UPDATE = 'allow_update',
     CREATE_BY = 'create_by',
     MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
@@ -80,14 +78,6 @@ export class TbSkylineChunkModuleDto extends DataBaseByDto {
     @IsString({ message: '枚举分类备注必须是字符串' })
     @MaxLength(256, { message: '枚举分类备注长度不能超过256位' })
     remark: string
-
-    @ApiProperty({ description: '是否允许删除此枚举分类', example: false, default: false })
-    @IsBoolean({ message: '允许删除标识必须是布尔值' })
-    allowDelete: boolean
-
-    @ApiProperty({ description: '是否允许更新此枚举分类', example: true, default: false })
-    @IsBoolean({ message: '允许更新标识必须是布尔值' })
-    allowUpdate: boolean
 }
 
 @Index('uk_tb_skyline_chunk_module_module_type', ['module', 'type'], { unique: true })
@@ -128,22 +118,4 @@ export class TbSkylineChunkModuleEntity extends DataBaseByAdapter {
 
     @Column({ name: TbSkylineChunkModuleColumn.REMARK, type: 'varchar', length: 256, nullable: true, comment: '枚举分类备注' })
     remark: string
-
-    @Column({
-        name: TbSkylineChunkModuleColumn.ALLOW_DELETE,
-        type: 'boolean',
-        nullable: false,
-        default: false,
-        comment: '是否允许删除此枚举分类'
-    })
-    allowDelete: boolean
-
-    @Column({
-        name: TbSkylineChunkModuleColumn.ALLOW_UPDATE,
-        type: 'boolean',
-        nullable: false,
-        default: false,
-        comment: '是否允许更新此枚举分类'
-    })
-    allowUpdate: boolean
 }

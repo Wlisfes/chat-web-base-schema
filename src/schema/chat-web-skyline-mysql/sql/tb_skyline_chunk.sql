@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_chunk` (
     `status` varchar(32) NOT NULL DEFAULT 'enable' COMMENT '枚举项状态：disable=禁用（枚举项不可用于业务选择）；enable=启用（枚举项可正常用于业务选择）',
     `allow_delete` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否允许删除此枚举项',
     `allow_update` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否允许更新此枚举项',
+    `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
+    `modify_by` varchar(19) NULL COMMENT '更新账号UID',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
@@ -26,8 +28,8 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_chunk` (
 -- 职位主数据迁入系统枚举，主键从 1024100 起号。
 -- 回滚：DELETE FROM `tb_skyline_chunk` WHERE `key_id` BETWEEN 1024100 AND 1024164;
 
-INSERT INTO `tb_skyline_chunk` (`key_id`, `pid`, `module`, `type`, `name`, `value`, `json`, `sort`, `status`, `allow_delete`, `allow_update`)
-SELECT `seed`.`key_id`, `seed`.`pid`, `seed`.`module`, `seed`.`type`, `seed`.`name`, `seed`.`value`, `seed`.`json`, `seed`.`sort`, `seed`.`status`, `seed`.`allow_delete`, `seed`.`allow_update`
+INSERT INTO `tb_skyline_chunk` (`key_id`, `pid`, `module`, `type`, `name`, `value`, `json`, `sort`, `status`, `allow_delete`, `allow_update`, `create_by`, `modify_by`)
+SELECT `seed`.`key_id`, `seed`.`pid`, `seed`.`module`, `seed`.`type`, `seed`.`name`, `seed`.`value`, `seed`.`json`, `seed`.`sort`, `seed`.`status`, `seed`.`allow_delete`, `seed`.`allow_update`, '0', '0'
 FROM (
     SELECT 1024100 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SYSTEM' AS `module`, 'CHUNK_ACCOUNT_POSITION' AS `type`, '外贸业务员' AS `name`, '1001' AS `value`, '{}' AS `json`, 10 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`
     UNION ALL SELECT 1024101 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SYSTEM' AS `module`, 'CHUNK_ACCOUNT_POSITION' AS `type`, '短信运营' AS `name`, '1002' AS `value`, '{}' AS `json`, 20 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`

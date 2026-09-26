@@ -26,6 +26,11 @@ export class PageDto {
     size: number = 50
 }
 
+/**分页参数解构**/
+export function fetchUntiePagination(base: PageDto) {
+    return { page: base.page ?? 1, size: base.size ?? 50 }
+}
+
 /**
  * @deprecated 请使用 `PageDto`。保留该名称是为了兼容已发布共享包的消费方，
  * 其字段和校验规则与 `PageDto` 完全一致。

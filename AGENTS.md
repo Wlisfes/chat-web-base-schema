@@ -133,6 +133,7 @@
     - 当 `PATCH` 达到 `99` 时进位：`MINOR + 1` 且 `PATCH` 归 `0`（例如 `1.0.99` → `1.1.0`）
     - 不得发布已经存在的版本号，不得跳号、降版本或使用预发布标签
 - `chat-web-base-schema` 由 `main` 上的 Publish 流水线自动计算版本、发布到 GitHub Packages、回写 `package.json` 并打 `vX.Y.Z` 标签；Agent 不得在本地修改共享包版本号，也不得执行 `npm publish`。
+- 其他服务需要联调未发布的改动时，使用 `yarn local:link <服务名>` 构建并把产物（`dist`、`docs`、SQL、`package.json`）复制到服务 `node_modules`，`yarn local:unlink <服务名>` 恢复 npm 版本，`yarn local:status` 查看各服务来源；实现位于 `scripts/local-link.cjs`，不得改为软链接方式，新增发布内容时需同步维护脚本的复制清单。
 - 其他服务和管理端在合并 `main` 发布前，由 Agent 将 `package.json` 的 `version` 改为下一个修订号，提交信息使用 `chore(release): vX.Y.Z`，并同步打 `vX.Y.Z` 标签；Docker 镜像仍按 Git SHA 构建部署。
 
 ## 本仓库专属补充规约

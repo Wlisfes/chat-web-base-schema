@@ -125,7 +125,10 @@
         "test": "node --test test/*.test.cjs",
         "verify": "yarn format:check && yarn typecheck && yarn build && yarn validate:schema && yarn test",
         "prepublishOnly": "yarn verify",
-        "deploy": "node scripts/deploy-branch.cjs"
+        "deploy": "node scripts/deploy-branch.cjs",
+        "local:link": "yarn build && node scripts/local-link.cjs link",
+        "local:unlink": "node scripts/local-link.cjs unlink",
+        "local:status": "node scripts/local-link.cjs status"
     },
     "peerDependencies": {
         "@nestjs/common": ">=11 <12",

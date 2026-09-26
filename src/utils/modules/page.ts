@@ -28,7 +28,7 @@ export class PageDto {
 
 /**分页参数解构**/
 export function fetchUntiePagination(base: PageDto) {
-    return { page: base.page ?? 1, size: base.size ?? 50 }
+    return { ...base, page: base.page ?? 1, size: base.size ?? 50 }
 }
 
 /**

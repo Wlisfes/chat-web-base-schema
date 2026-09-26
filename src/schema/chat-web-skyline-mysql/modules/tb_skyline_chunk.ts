@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, Min } from 'class-validator'
-import { DataBaseAdapter, DataBaseDto, WithJsonColumn, defineEnumMetadata } from '@/utils'
+import { DataBaseByAdapter, DataBaseByDto, WithJsonColumn, defineEnumMetadata } from '@/utils'
 import { TbSkylineChunkModule, TbSkylineChunkModuleDefinition } from './tb_skyline_chunk_module'
 
 /** tb_skyline_chunk 的数据库字段名。 */
@@ -17,6 +17,8 @@ export enum TbSkylineChunkColumn {
     STATUS = 'status',
     ALLOW_DELETE = 'allow_delete',
     ALLOW_UPDATE = 'allow_update',
+    CREATE_BY = 'create_by',
+    MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
@@ -33,7 +35,7 @@ export const TbSkylineChunkStatusDefinition = defineEnumMetadata(TbSkylineChunkS
 })
 
 /** 枚举项完整字段 DTO；后端状态和其他下拉枚举统一通过此表持久化。 */
-export class TbSkylineChunkDto extends DataBaseDto {
+export class TbSkylineChunkDto extends DataBaseByDto {
     @ApiProperty({ description: '父枚举项主键；根节点为空', example: 1, required: false, nullable: true })
     @IsOptional()
     @IsInt({ message: '父枚举项主键必须是整数' })
@@ -100,7 +102,7 @@ export class TbSkylineChunkDto extends DataBaseDto {
 @Index('idx_tb_skyline_chunk_type_sort', ['type', 'sort'])
 @Index('idx_tb_skyline_chunk_status', ['status'])
 @Entity({ name: 'tb_skyline_chunk', comment: 'Skyline 后端枚举字典表' })
-export class TbSkylineChunk extends DataBaseAdapter {
+export class TbSkylineChunk extends DataBaseByAdapter {
     @Column({ name: TbSkylineChunkColumn.PID, type: 'int', nullable: true, comment: '父枚举项主键；根节点为空' })
     pid: number
 

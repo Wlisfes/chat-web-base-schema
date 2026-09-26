@@ -18,7 +18,7 @@ export class TbAccountUserPositionDto extends DataBaseDto {
     @Length(1, 19, { message: '账号UID长度不能超过19位' })
     userUid: string
 
-    @ApiProperty({ description: '职位主键', example: 1 })
+    @ApiProperty({ description: '职位主键（Skyline 枚举 CHUNK_ACCOUNT_POSITION 的 value）', example: 1024100 })
     @IsInt({ message: '职位主键必须是整数' })
     @Min(1, { message: '职位主键必须大于0' })
     positionKeyId: number

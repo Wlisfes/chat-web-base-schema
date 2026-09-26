@@ -310,7 +310,10 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
     class AccountFeignController extends FeignClientAccountManager {}
     const controller = new AccountFeignController(
         {
-            async httpBaseAccountBatchUserResolver(authorization, input) {
+            async httpBaseAccountColumnUserResolver(authorization, input) {
+                return { authorization, input }
+            },
+            async httpBaseAccountUserResolver(authorization, input) {
                 return { authorization, input }
             }
         },
@@ -321,21 +324,36 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
     assert.equal(AccountFeignController.prototype.httpBaseCrmConsumerResolver, undefined)
 
     // 服务间路由带 /feign/<服务名> 前缀，网关不改写，因此不会与公开业务路由冲突。
-    const httpBaseAccountBatchUserResolver = AccountFeignController.prototype.httpBaseAccountBatchUserResolver
-    assert.equal(Reflect.getMetadata(PATH_METADATA, httpBaseAccountBatchUserResolver), '/feign/account/user/batch/resolve')
-    assert.equal(Reflect.getMetadata(METHOD_METADATA, httpBaseAccountBatchUserResolver), RequestMethod.POST)
-    assert.equal(Reflect.getMetadata('auth:is-public', httpBaseAccountBatchUserResolver), true)
+    const httpBaseAccountColumnUserResolver = AccountFeignController.prototype.httpBaseAccountColumnUserResolver
+    assert.equal(Reflect.getMetadata(PATH_METADATA, httpBaseAccountColumnUserResolver), '/feign/account/user/column/resolve')
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, httpBaseAccountColumnUserResolver), RequestMethod.POST)
+    assert.equal(Reflect.getMetadata('auth:is-public', httpBaseAccountColumnUserResolver), true)
     assert.equal(
-        Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'httpBaseAccountBatchUserResolver')['6:0'].data,
+        Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'httpBaseAccountColumnUserResolver')['6:0'].data,
         'authorization'
     )
-    assert.deepEqual(await controller.httpBaseAccountBatchUserResolver('Bearer service-token', { uids: ['1'] }), {
+    assert.deepEqual(await controller.httpBaseAccountColumnUserResolver('Bearer service-token', { uids: ['1'] }), {
         authorization: 'Bearer service-token',
         input: { uids: ['1'] }
     })
 
+    const httpBaseAccountUserResolver = AccountFeignController.prototype.httpBaseAccountUserResolver
+    assert.equal(Reflect.getMetadata(PATH_METADATA, httpBaseAccountUserResolver), '/feign/account/user/resolve')
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, httpBaseAccountUserResolver), RequestMethod.POST)
+    assert.equal(Reflect.getMetadata('auth:is-public', httpBaseAccountUserResolver), true)
+    assert.equal(
+        Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'httpBaseAccountUserResolver')['6:0'].data,
+        'authorization'
+    )
+    assert.equal(AccountFeignController.prototype.httpBaseAccountBatchUserResolver, undefined)
+    assert.deepEqual(await controller.httpBaseAccountUserResolver('Bearer service-token', { uid: '1' }), {
+        authorization: 'Bearer service-token',
+        input: { uid: '1' }
+    })
+
     /** 业务 Feign 的 Authorization 位承载服务凭据，凭据不匹配必须拒绝。 */
-    await assert.rejects(() => controller.httpBaseAccountBatchUserResolver('Bearer user-token', { uids: ['1'] }), UnauthorizedException)
+    await assert.rejects(() => controller.httpBaseAccountColumnUserResolver('Bearer user-token', { uids: ['1'] }), UnauthorizedException)
+    await assert.rejects(() => controller.httpBaseAccountUserResolver('Bearer user-token', { uid: '1' }), UnauthorizedException)
 })
 
 test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorization', () => {

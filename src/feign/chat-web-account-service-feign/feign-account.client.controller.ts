@@ -25,16 +25,29 @@ export class FeignClientAccountManager extends FeignWebClient<AccountTypes.Feign
         super(service, configService)
     }
 
-    /**批量把账号 UID 还原为展示摘要**/
-    @FeignPost('/user/batch/resolve', {
-        operation: { summary: '供内部服务批量把账号 UID 还原为展示摘要' },
-        request: { source: 'body', type: AccountDto.AccountUserBatchDto },
+    /**按列表批量把账号 UID 还原为展示摘要**/
+    @FeignPost('/user/column/resolve', {
+        operation: { summary: '供内部服务按列表批量把账号 UID 还原为展示摘要' },
+        request: { source: 'body', type: AccountDto.AccountColumnUserResolverDto },
         response: { type: AccountDto.AccountUserSummaryResponseDto, isArray: true, description: '账号展示摘要列表' }
     })
-    async httpBaseAccountBatchUserResolver(
+    async httpBaseAccountColumnUserResolver(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: AccountDto.AccountUserBatchDto
+        @FeignBody() _input: AccountDto.AccountColumnUserResolverDto
     ): Promise<AccountTypes.AccountUserSummary[]> {
-        return this.dispatch('httpBaseAccountBatchUserResolver', _authorization, _input)
+        return this.dispatch('httpBaseAccountColumnUserResolver', _authorization, _input)
+    }
+
+    /**按账号 UID 还原单个展示摘要**/
+    @FeignPost('/user/resolve', {
+        operation: { summary: '供内部服务按账号 UID 还原单个展示摘要' },
+        request: { source: 'body', type: AccountDto.AccountUserResolverDto },
+        response: { type: AccountDto.AccountUserSummaryResponseDto, description: '账号展示摘要' }
+    })
+    async httpBaseAccountUserResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: AccountDto.AccountUserResolverDto
+    ): Promise<AccountTypes.AccountUserSummary> {
+        return this.dispatch('httpBaseAccountUserResolver', _authorization, _input)
     }
 }

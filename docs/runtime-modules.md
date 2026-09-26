@@ -227,6 +227,24 @@ Business Feign clients always set `serviceTokenKey`; the Authorization position
 carries the caller service credential, not an end-user token. Callers build that
 header with `resolveFeignServiceAuthorization(configService)` so cross-service
 base queries are not subject to permission codes or data-scope filtering.
+List responses that need operator names use `appendAccountUserOptions` instead of
+copying Account Feign lookup code into each service. It deduplicates UIDs across all
+requested fields, batches calls by the Account limit of 100, uses the service
+credential, and appends `<field>Options`; missing accounts keep `{ uid }`. The system
+account UID `0` (`ACCOUNT_SYSTEM_UID`) is never sent to Account and always resolves to
+`{ uid: '0', name: '系统' }`:
+
+```ts
+const list = await appendAccountUserOptions(accountFeignClient, configService, records, ['createBy', 'modifyBy'])
+// 默认返回 uid、number、name、avatar；按需扩展白名单字段
+const detail = await appendAccountUserOptions(accountFeignClient, configService, records, ['modifyBy'], {
+    fields: ['uid', 'name', 'phone']
+})
+```
+
+Extendable fields are limited to `ACCOUNT_USER_RESOLVER_FIELDS`. Sensitive columns such as
+`password` are never exposed.
+
 Access-token introspection is not a business Feign concern and is served by the
 auth service internal protocol instead.
 When a client exposes internal routes, set `prefix: '/feign/<service>'` to apply

@@ -14,6 +14,7 @@ const {
 const { AuthSessionService } = require('../dist/src/runtime/auth-session')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
+    appendAccountUserOptions,
     FeignClient,
     FeignClientAccountManager,
     FeignClientCrmManager,
@@ -366,6 +367,85 @@ test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorizati
         'Bearer service-token'
     )
     assert.throws(() => resolveFeignServiceAuthorization(config()), ServiceUnavailableException)
+})
+
+test('账号操作人还原工具按字段去重、分批调用并保留缺失账号 uid', async () => {
+    const calls = []
+    const client = {
+        async httpBaseAccountColumnUserResolver(authorization, input) {
+            calls.push({ authorization, uids: input.uids, fields: input.fields })
+            return input.uids
+                .filter(uid => uid !== 'missing')
+                .map(uid => ({ uid, number: `N${uid}`, name: `U${uid}`, avatar: uid === '1' ? 'a.png' : '' }))
+        }
+    }
+    const extra = Array.from({ length: 100 }, (_, index) => ({ createBy: String(index + 10), modifyBy: '' }))
+    const list = await appendAccountUserOptions(
+        client,
+        config({ gateway: { feign: { service_token: 'service-token' } } }),
+        [{ id: 1, createBy: '1', modifyBy: 'missing' }, { id: 2, createBy: '1', modifyBy: undefined }, ...extra],
+        ['createBy', 'modifyBy']
+    )
+
+    assert.equal(calls.length, 2)
+    assert.equal(
+        calls.every(call => call.authorization === 'Bearer service-token'),
+        true
+    )
+    assert.equal(calls.flatMap(call => call.uids).length, 102)
+    assert.deepEqual(list[0].createByOptions, { uid: '1', number: 'N1', name: 'U1', avatar: 'a.png' })
+    assert.deepEqual(list[0].modifyByOptions, { uid: 'missing' })
+    assert.equal(list[1].modifyByOptions, undefined)
+    assert.deepEqual(list[2].createByOptions, { uid: '10', number: 'N10', name: 'U10' })
+    assert.equal(calls[0].fields, undefined)
+})
+
+test('账号操作人还原工具把系统账号 0 固定还原为系统且不请求 Account', async () => {
+    const calls = []
+    const client = {
+        async httpBaseAccountColumnUserResolver(_authorization, input) {
+            calls.push(input.uids)
+            return input.uids.map(uid => ({ uid, name: `U${uid}` }))
+        }
+    }
+    const list = await appendAccountUserOptions(
+        client,
+        config({ gateway: { feign: { service_token: 'service-token' } } }),
+        [
+            { createBy: '0', modifyBy: '1' },
+            { createBy: '0', modifyBy: '0' }
+        ],
+        ['createBy', 'modifyBy']
+    )
+
+    assert.deepEqual(calls, [['1']])
+    assert.deepEqual(list[0].createByOptions, { uid: '0', name: '系统' })
+    assert.deepEqual(list[0].modifyByOptions, { uid: '1', name: 'U1' })
+    assert.deepEqual(list[1].modifyByOptions, { uid: '0', name: '系统' })
+
+    const empty = await appendAccountUserOptions(client, config(), [{ createBy: '0' }], ['createBy'])
+    assert.equal(calls.length, 1)
+    assert.deepEqual(empty[0].createByOptions, { uid: '0', name: '系统' })
+})
+
+test('账号操作人还原工具支持扩展返回字段', async () => {
+    let received
+    const client = {
+        async httpBaseAccountColumnUserResolver(_authorization, input) {
+            received = input
+            return [{ uid: '1', name: '张三', phone: '13800000000' }]
+        }
+    }
+    const [item] = await appendAccountUserOptions(
+        client,
+        config({ gateway: { feign: { service_token: 'service-token' } } }),
+        [{ modifyBy: '1' }],
+        ['modifyBy'],
+        { fields: ['uid', 'name', 'phone'] }
+    )
+
+    assert.deepEqual(received, { uids: ['1'], fields: ['uid', 'name', 'phone'] })
+    assert.deepEqual(item.modifyByOptions, { uid: '1', name: '张三', phone: '13800000000' })
 })
 
 test('业务 Feign 客户端统一读取 Gateway 地址和超时并在启动时校验配置', () => {

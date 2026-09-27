@@ -274,14 +274,14 @@ validateTable({
 })
 
 validateTable({
-    entity: accountSchema.TbAccountMenu,
-    dto: accountSchema.TbAccountMenuDto,
-    columns: accountSchema.TbAccountMenuColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_menu.sql'),
+    entity: accountSchema.TbAccountSheet,
+    dto: accountSchema.TbAccountSheetDto,
+    columns: accountSchema.TbAccountSheetColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_sheet.sql'),
     enumComments: [
-        accountSchema.TbAccountMenuTypeDefinition.comment,
-        accountSchema.TbAccountMenuStatusDefinition.comment,
-        accountSchema.TbAccountMenuVisibleDefinition.comment
+        accountSchema.TbAccountSheetTypeDefinition.comment,
+        accountSchema.TbAccountSheetStatusDefinition.comment,
+        accountSchema.TbAccountSheetVisibleDefinition.comment
     ]
 })
 
@@ -301,10 +301,10 @@ validateTable({
 })
 
 validateTable({
-    entity: accountSchema.TbAccountRoleMenu,
-    dto: accountSchema.TbAccountRoleMenuDto,
-    columns: accountSchema.TbAccountRoleMenuColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_menu.sql')
+    entity: accountSchema.TbAccountRoleSheet,
+    dto: accountSchema.TbAccountRoleSheetDto,
+    columns: accountSchema.TbAccountRoleSheetColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_sheet.sql')
 })
 
 validateTable({

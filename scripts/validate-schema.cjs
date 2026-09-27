@@ -235,7 +235,11 @@ validateTable({
     dto: skylineSchema.TbSkylineChunkModuleDto,
     columns: skylineSchema.TbSkylineChunkModuleColumn,
     sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_chunk_module.sql'),
-    enumComments: [skylineSchema.TbSkylineChunkModuleDefinition.comment, skylineSchema.TbSkylineChunkModuleKindDefinition.comment]
+    enumComments: [
+        skylineSchema.TbSkylineChunkModuleDefinition.comment,
+        skylineSchema.TbSkylineChunkModuleKindDefinition.comment,
+        skylineSchema.TbSkylineChunkModuleTypeDefinition.comment
+    ]
 })
 
 validateTable({

@@ -262,10 +262,11 @@ validateTable({
 })
 
 validateTable({
-    entity: accountSchema.TbAccountUserPosition,
-    dto: accountSchema.TbAccountUserPositionDto,
-    columns: accountSchema.TbAccountUserPositionColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user_position.sql')
+    entity: accountSchema.TbAccountChunk,
+    dto: accountSchema.TbAccountChunkDto,
+    columns: accountSchema.TbAccountChunkColumn,
+    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_chunk.sql'),
+    enumComments: [accountSchema.TbAccountChunkLinkNameDefinition.comment]
 })
 
 validateTable({

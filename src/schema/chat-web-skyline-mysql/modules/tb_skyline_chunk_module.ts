@@ -52,13 +52,13 @@ export class TbSkylineChunkModuleDto extends DataBaseByDto {
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module: TbSkylineChunkModule
 
-    @ApiProperty({ description: '枚举类型编码，对应子表 tb_skyline_chunk.type', example: 'CHUNK_ACCOUNT_POSITION' })
+    @ApiProperty({ description: '枚举类型编码，对应子表 tb_skyline_chunk.type', example: 'CHUNK_ACCOUNT_POST' })
     @IsString({ message: '枚举类型编码必须是字符串' })
     @IsNotEmpty({ message: '枚举类型编码必填' })
     @MaxLength(128, { message: '枚举类型编码长度不能超过128位' })
     type: string
 
-    @ApiProperty({ description: '枚举分类名称', example: '职位' })
+    @ApiProperty({ description: '枚举分类名称', example: '岗位' })
     @IsString({ message: '枚举分类名称必须是字符串' })
     @IsNotEmpty({ message: '枚举分类名称必填' })
     @MaxLength(128, { message: '枚举分类名称长度不能超过128位' })
@@ -73,7 +73,7 @@ export class TbSkylineChunkModuleDto extends DataBaseByDto {
     @IsEnum(TbSkylineChunkModuleKind, { message: '枚举字段类型格式错误' })
     kind: TbSkylineChunkModuleKind
 
-    @ApiProperty({ description: '枚举分类备注', example: '账号职位', required: false })
+    @ApiProperty({ description: '枚举分类备注', example: '账号岗位', required: false })
     @IsOptional()
     @IsString({ message: '枚举分类备注必须是字符串' })
     @MaxLength(256, { message: '枚举分类备注长度不能超过256位' })

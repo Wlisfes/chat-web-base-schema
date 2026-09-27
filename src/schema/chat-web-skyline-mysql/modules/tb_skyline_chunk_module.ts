@@ -43,7 +43,8 @@ export const TbSkylineChunkModuleKindDefinition = defineEnumMetadata(TbSkylineCh
 
 /** 枚举类型编码：CHUNK_<模块>_<服务>_<业务表>_<业务字段>，主表 tb_skyline_chunk_module 与子表 tb_skyline_chunk 共用。 */
 export enum TbSkylineChunkModuleType {
-    CHUNK_SYSTEM_ACCOUNT_USER_POST = 'CHUNK_SYSTEM_ACCOUNT_USER_POST'
+    CHUNK_SYSTEM_ACCOUNT_USER_POST = 'CHUNK_SYSTEM_ACCOUNT_USER_POST',
+    CHUNK_SYSTEM_ACCOUNT_USER_LEVEL = 'CHUNK_SYSTEM_ACCOUNT_USER_LEVEL'
 }
 
 export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineChunkModuleType, '枚举类型编码', {
@@ -51,6 +52,11 @@ export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineCh
         label: '用户岗位',
         description: 'Account 账号岗位，仅一级枚举项，适用于普通下拉选择',
         type: 'blue'
+    },
+    [TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_LEVEL]: {
+        label: '用户职级',
+        description: 'Account 账号职级，P1-P8 专业序列、M1-M8 管理序列，仅一级枚举项',
+        type: 'purple'
     }
 })
 

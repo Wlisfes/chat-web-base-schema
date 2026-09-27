@@ -15,7 +15,8 @@ export enum TbAccountChunkColumn {
 
 /** 枚举关联类型：<业务表>.<业务字段>，同一业务记录可按类型分别维护多组枚举关联。 */
 export enum TbAccountChunkLinkName {
-    USER_POST = 'tb_account_user.post'
+    USER_POST = 'tb_account_user.post',
+    USER_LEVEL = 'tb_account_user.level'
 }
 
 export const TbAccountChunkLinkNameDefinition = defineEnumMetadata(TbAccountChunkLinkName, '枚举关联类型', {
@@ -23,6 +24,11 @@ export const TbAccountChunkLinkNameDefinition = defineEnumMetadata(TbAccountChun
         label: '账号岗位',
         description: 'link_id 为账号UID，chunk_id 为 Skyline 枚举 CHUNK_SYSTEM_ACCOUNT_USER_POST 主键',
         type: 'info'
+    },
+    [TbAccountChunkLinkName.USER_LEVEL]: {
+        label: '账号职级',
+        description: 'link_id 为账号UID，chunk_id 为 Skyline 枚举 CHUNK_SYSTEM_ACCOUNT_USER_LEVEL 主键',
+        type: 'purple'
     }
 })
 

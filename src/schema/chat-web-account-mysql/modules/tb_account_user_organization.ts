@@ -9,7 +9,7 @@ export enum TbAccountUserOrganizationColumn {
     USER_UID = 'user_uid',
     ORGANIZATION_KEY_ID = 'organization_key_id',
     IS_PRIMARY = 'is_primary',
-    POSITION_NAME = 'position_name',
+    POST_NAME = 'post_name',
     STATUS = 'status',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
@@ -47,7 +47,7 @@ export class TbAccountUserOrganizationDto extends DataBaseDto {
     @IsOptional()
     @IsString({ message: '岗位名称必须是字符串' })
     @MaxLength(64, { message: '岗位名称长度不能超过64位' })
-    positionName: string
+    postName: string
 
     @ApiProperty({
         description: TbAccountUserOrganizationStatusDefinition.comment,
@@ -79,13 +79,13 @@ export class TbAccountUserOrganization extends DataBaseAdapter {
     isPrimary: boolean
 
     @Column({
-        name: TbAccountUserOrganizationColumn.POSITION_NAME,
+        name: TbAccountUserOrganizationColumn.POST_NAME,
         type: 'varchar',
         length: 64,
         nullable: true,
         comment: '用户在该组织中的岗位名称'
     })
-    positionName: string
+    postName: string
 
     @Column({
         name: TbAccountUserOrganizationColumn.STATUS,

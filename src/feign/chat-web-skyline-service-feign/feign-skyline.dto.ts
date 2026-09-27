@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { ArrayNotEmpty, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
-import { TbSkylineChunkModule } from '@/schema/chat-web-skyline-mysql'
+import { TbSkylineChunkModule, TbSkylineChunkModuleType } from '@/schema/chat-web-skyline-mysql'
 
 /** Skyline 枚举字典选项；value、label、description 与前后端统一的下拉协议保持一致。 */
 export class SkylineChunkOptionDto {
@@ -31,8 +31,13 @@ export class SkylineChunkOptionDto {
 
 /** 按枚举类型编码分组的枚举字典选项。 */
 export class SkylineChunkOptionGroupDto {
-    @ApiProperty({ description: '枚举类型编码', example: 'CHUNK_DATETASK_STATUS' })
-    type: string
+    @ApiProperty({
+        description: '枚举类型编码',
+        enum: TbSkylineChunkModuleType,
+        enumName: 'TbSkylineChunkModuleType',
+        example: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST
+    })
+    type: TbSkylineChunkModuleType
 
     @ApiProperty({ description: '该类型下根级枚举项数量', example: 2 })
     count: number
@@ -53,12 +58,17 @@ export class SkylineColumnChunkOptionRequestDto {
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module?: TbSkylineChunkModule
 
-    @ApiProperty({ description: '枚举类型编码列表', type: [String], example: ['CHUNK_DATETASK_STATUS'] })
+    @ApiProperty({
+        description: '枚举类型编码列表',
+        enum: TbSkylineChunkModuleType,
+        enumName: 'TbSkylineChunkModuleType',
+        isArray: true,
+        example: [TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST]
+    })
     @IsArray({ message: '枚举类型编码列表必须是数组' })
     @ArrayNotEmpty({ message: '枚举类型编码列表不能为空' })
-    @IsString({ each: true, message: '枚举类型编码必须是字符串' })
-    @MaxLength(128, { each: true, message: '枚举类型编码长度不能超过128位' })
-    types: string[]
+    @IsEnum(TbSkylineChunkModuleType, { each: true, message: '枚举类型编码格式错误' })
+    types: TbSkylineChunkModuleType[]
 }
 
 /** 按枚举业务值解析单个枚举字典选项的请求。 */
@@ -73,11 +83,14 @@ export class SkylineChunkOptionResolverRequestDto {
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module?: TbSkylineChunkModule
 
-    @ApiProperty({ description: '枚举类型编码', example: 'CHUNK_DATETASK_STATUS' })
-    @IsString({ message: '枚举类型编码必须是字符串' })
-    @IsNotEmpty({ message: '枚举类型编码必填' })
-    @MaxLength(128, { message: '枚举类型编码长度不能超过128位' })
-    type: string
+    @ApiProperty({
+        description: '枚举类型编码',
+        enum: TbSkylineChunkModuleType,
+        enumName: 'TbSkylineChunkModuleType',
+        example: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST
+    })
+    @IsEnum(TbSkylineChunkModuleType, { message: '枚举类型编码格式错误' })
+    type: TbSkylineChunkModuleType
 
     @ApiProperty({ description: '枚举项业务值', example: 'running' })
     @IsString({ message: '枚举项业务值必须是字符串' })

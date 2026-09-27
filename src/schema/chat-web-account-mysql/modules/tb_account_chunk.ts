@@ -21,7 +21,7 @@ export enum TbAccountChunkLinkName {
 export const TbAccountChunkLinkNameDefinition = defineEnumMetadata(TbAccountChunkLinkName, '枚举关联类型', {
     [TbAccountChunkLinkName.USER_POST]: {
         label: '账号岗位',
-        description: 'link_id 为账号UID，chunk_id 为 Skyline 枚举 CHUNK_ACCOUNT_POST 主键',
+        description: 'link_id 为账号UID，chunk_id 为 Skyline 枚举 CHUNK_SYSTEM_ACCOUNT_USER_POST 主键',
         type: 'info'
     }
 })

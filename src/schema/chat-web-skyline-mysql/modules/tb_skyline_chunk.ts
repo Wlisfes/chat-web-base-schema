@@ -2,7 +2,12 @@ import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, WithJsonColumn, defineEnumMetadata } from '@/utils'
-import { TbSkylineChunkModule, TbSkylineChunkModuleDefinition } from './tb_skyline_chunk_module'
+import {
+    TbSkylineChunkModule,
+    TbSkylineChunkModuleDefinition,
+    TbSkylineChunkModuleType,
+    TbSkylineChunkModuleTypeDefinition
+} from './tb_skyline_chunk_module'
 
 /** tb_skyline_chunk 的数据库字段名。 */
 export enum TbSkylineChunkColumn {
@@ -51,11 +56,14 @@ export class TbSkylineChunkDto extends DataBaseByDto {
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module: TbSkylineChunkModule
 
-    @ApiProperty({ description: '枚举类型编码，对应主表 tb_skyline_chunk_module.type', example: 'CHUNK_DATETASK_STATUS' })
-    @IsString({ message: '枚举类型编码必须是字符串' })
-    @IsNotEmpty({ message: '枚举类型编码必填' })
-    @MaxLength(128, { message: '枚举类型编码长度不能超过128位' })
-    type: string
+    @ApiProperty({
+        description: TbSkylineChunkModuleTypeDefinition.comment,
+        enum: TbSkylineChunkModuleType,
+        enumName: 'TbSkylineChunkModuleType',
+        example: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST
+    })
+    @IsEnum(TbSkylineChunkModuleType, { message: '枚举类型编码格式错误' })
+    type: TbSkylineChunkModuleType
 
     @ApiProperty({ description: '枚举项显示名称', example: '运行中' })
     @IsString({ message: '枚举项显示名称必须是字符串' })
@@ -121,9 +129,9 @@ export class TbSkylineChunk extends DataBaseByAdapter {
         type: 'varchar',
         length: 128,
         nullable: false,
-        comment: '枚举类型编码，对应主表 tb_skyline_chunk_module.type'
+        comment: TbSkylineChunkModuleTypeDefinition.comment
     })
-    type: string
+    type: TbSkylineChunkModuleType
 
     @Column({ name: TbSkylineChunkColumn.NAME, type: 'varchar', length: 128, nullable: false, comment: '枚举项显示名称' })
     name: string

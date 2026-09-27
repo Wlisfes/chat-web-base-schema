@@ -41,6 +41,19 @@ export const TbSkylineChunkModuleKindDefinition = defineEnumMetadata(TbSkylineCh
     [TbSkylineChunkModuleKind.TREE]: { label: '树形选项', description: '支持多级枚举项，适用于树形选择', type: 'cyan' }
 })
 
+/** 枚举类型编码：CHUNK_<模块>_<服务>_<业务表>_<业务字段>，主表 tb_skyline_chunk_module 与子表 tb_skyline_chunk 共用。 */
+export enum TbSkylineChunkModuleType {
+    CHUNK_SYSTEM_ACCOUNT_USER_POST = 'CHUNK_SYSTEM_ACCOUNT_USER_POST'
+}
+
+export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineChunkModuleType, '枚举类型编码', {
+    [TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST]: {
+        label: '用户岗位',
+        description: 'Account 账号岗位，仅一级枚举项，适用于普通下拉选择',
+        type: 'blue'
+    }
+})
+
 /** 枚举分类完整字段 DTO；外层页面只展示分类，明细 CRUD 落在子表 tb_skyline_chunk。 */
 export class TbSkylineChunkModuleDto extends DataBaseByDto {
     @ApiProperty({
@@ -52,11 +65,14 @@ export class TbSkylineChunkModuleDto extends DataBaseByDto {
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module: TbSkylineChunkModule
 
-    @ApiProperty({ description: '枚举类型编码，对应子表 tb_skyline_chunk.type', example: 'CHUNK_ACCOUNT_POST' })
-    @IsString({ message: '枚举类型编码必须是字符串' })
-    @IsNotEmpty({ message: '枚举类型编码必填' })
-    @MaxLength(128, { message: '枚举类型编码长度不能超过128位' })
-    type: string
+    @ApiProperty({
+        description: TbSkylineChunkModuleTypeDefinition.comment,
+        enum: TbSkylineChunkModuleType,
+        enumName: 'TbSkylineChunkModuleType',
+        example: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST
+    })
+    @IsEnum(TbSkylineChunkModuleType, { message: '枚举类型编码格式错误' })
+    type: TbSkylineChunkModuleType
 
     @ApiProperty({ description: '枚举分类名称', example: '岗位' })
     @IsString({ message: '枚举分类名称必须是字符串' })
@@ -99,9 +115,9 @@ export class TbSkylineChunkModuleEntity extends DataBaseByAdapter {
         type: 'varchar',
         length: 128,
         nullable: false,
-        comment: '枚举类型编码，对应子表 tb_skyline_chunk.type'
+        comment: TbSkylineChunkModuleTypeDefinition.comment
     })
-    type: string
+    type: TbSkylineChunkModuleType
 
     @Column({ name: TbSkylineChunkModuleColumn.NAME, type: 'varchar', length: 128, nullable: false, comment: '枚举分类名称' })
     name: string

@@ -18,13 +18,13 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_chunk_module` (
   COLLATE = utf8mb4_unicode_ci
   COMMENT = 'Skyline 枚举分类表';
 
--- 系统枚举分类：职位。本表主键从 1000 起号，后续新增数据从 1001 开始自增。
+-- 系统枚举分类：岗位。本表主键从 1000 起号，后续新增数据从 1001 开始自增。
 -- 回滚：DELETE FROM `tb_skyline_chunk_module` WHERE `key_id` = 1000;
 
 INSERT INTO `tb_skyline_chunk_module` (`key_id`, `module`, `type`, `name`, `kind`, `remark`, `create_by`, `modify_by`)
 SELECT `seed`.`key_id`, `seed`.`module`, `seed`.`type`, `seed`.`name`, `seed`.`kind`, `seed`.`remark`, `seed`.`create_by`, `seed`.`modify_by`
 FROM (
-    SELECT 1000 AS `key_id`, 'CHUNK_SYSTEM' AS `module`, 'CHUNK_ACCOUNT_POSITION' AS `type`, '职位' AS `name`, 'select' AS `kind`, '账号职位' AS `remark`, '0' AS `create_by`, '0' AS `modify_by`
+    SELECT 1000 AS `key_id`, 'CHUNK_SYSTEM' AS `module`, 'CHUNK_ACCOUNT_POST' AS `type`, '岗位' AS `name`, 'select' AS `kind`, '账号岗位' AS `remark`, '0' AS `create_by`, '0' AS `modify_by`
 ) AS `seed`
 WHERE NOT EXISTS (
     SELECT 1

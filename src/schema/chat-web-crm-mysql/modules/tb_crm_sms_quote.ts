@@ -2,7 +2,7 @@ import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator'
-import { DataBaseByAdapter, DataBaseByDto, DateWithColumn, defineEnumMetadata } from '@/utils'
+import { DataBaseByAdapter, DataBaseByDto, DateWithColumn, defineEnumMetadata, BigintNumberTransformer } from '@/utils'
 
 export enum TbCrmSmsQuoteColumn {
     KEY_ID = 'key_id',
@@ -179,19 +179,43 @@ export class TbCrmSmsQuote extends DataBaseByAdapter {
     @Column({ name: TbCrmSmsQuoteColumn.MCC, type: 'varchar', length: 4, nullable: false, comment: '移动国家代码' })
     mcc: string
 
-    @Column({ name: TbCrmSmsQuoteColumn.UP_USD, type: 'bigint', nullable: false, comment: '上行短信售价USD（放大百万倍存储）' })
+    @Column({
+        name: TbCrmSmsQuoteColumn.UP_USD,
+        type: 'bigint',
+        transformer: BigintNumberTransformer,
+        nullable: false,
+        comment: '上行短信售价USD（放大百万倍存储）'
+    })
     upUsd: number
 
-    @Column({ name: TbCrmSmsQuoteColumn.DOWN_USD, type: 'bigint', nullable: false, comment: '下行短信售价USD（放大百万倍存储）' })
+    @Column({
+        name: TbCrmSmsQuoteColumn.DOWN_USD,
+        type: 'bigint',
+        transformer: BigintNumberTransformer,
+        nullable: false,
+        comment: '下行短信售价USD（放大百万倍存储）'
+    })
     downUsd: number
 
     @Column({ name: TbCrmSmsQuoteColumn.CURRENCY, type: 'varchar', length: 16, nullable: false, comment: '报价币种' })
     currency: string
 
-    @Column({ name: TbCrmSmsQuoteColumn.UP_LOCAL, type: 'bigint', nullable: false, comment: '上行短信本币售价（放大百万倍存储）' })
+    @Column({
+        name: TbCrmSmsQuoteColumn.UP_LOCAL,
+        type: 'bigint',
+        transformer: BigintNumberTransformer,
+        nullable: false,
+        comment: '上行短信本币售价（放大百万倍存储）'
+    })
     upLocal: number
 
-    @Column({ name: TbCrmSmsQuoteColumn.DOWN_LOCAL, type: 'bigint', nullable: false, comment: '下行短信本币售价（放大百万倍存储）' })
+    @Column({
+        name: TbCrmSmsQuoteColumn.DOWN_LOCAL,
+        type: 'bigint',
+        transformer: BigintNumberTransformer,
+        nullable: false,
+        comment: '下行短信本币售价（放大百万倍存储）'
+    })
     downLocal: number
 
     @Column({

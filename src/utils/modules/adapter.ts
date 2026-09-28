@@ -21,6 +21,15 @@ export function DateWithColumn(
     })
 }
 
+/**
+ * bigint 数值转换器：连接开启了 bigNumberStrings，bigint 默认以字符串返回，这里统一转成 number。
+ * 仅用于不超过 Number.MAX_SAFE_INTEGER 的数值字段，例如放大百万倍存储的金额。
+ */
+export const BigintNumberTransformer = {
+    to: (value: unknown) => value,
+    from: (value: string | number | null | undefined): number | null => (isEmpty(value) ? null : Number(value))
+}
+
 /** JSON 字段装饰器。 */
 export function WithJsonColumn<TValue = Record<string, unknown>>(data: ColumnOptions): PropertyDecorator {
     return Column({

@@ -8,7 +8,7 @@ export enum TbFinanceCurrencyExchangeColumn {
     KEY_ID = 'key_id',
     CURRENCY = 'currency',
     RATE = 'rate',
-    RATE_DATE = 'date',
+    DATE = 'date',
     CREATE_BY = 'create_by',
     MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
@@ -30,11 +30,11 @@ export class TbFinanceCurrencyExchangeDto extends DataBaseByDto {
 
     @ApiProperty({ description: '汇率日期', example: '2026-08-18' })
     @IsDateString({}, { message: '汇率日期格式错误' })
-    rateDate: string
+    date: string
 }
 
-@Index('uk_tb_finance_currency_exchange_currency_date', ['currency', 'rateDate'], { unique: true })
-@Index('idx_tb_finance_currency_exchange_rate_date', ['rateDate'])
+@Index('uk_tb_finance_currency_exchange_currency_date', ['currency', 'date'], { unique: true })
+@Index('idx_tb_finance_currency_exchange_rate_date', ['date'])
 @Entity({ name: 'tb_finance_currency_exchange', comment: '财务币种汇率表' })
 export class TbFinanceCurrencyExchange extends DataBaseByAdapter {
     @Column({ name: TbFinanceCurrencyExchangeColumn.CURRENCY, type: 'varchar', length: 16, nullable: false, comment: '币种编码' })
@@ -50,7 +50,6 @@ export class TbFinanceCurrencyExchange extends DataBaseByAdapter {
     })
     rate: number
 
-    // 数据库列名统一为 date，属性名保留 rateDate 以兼容既有服务间接口。
-    @Column({ name: TbFinanceCurrencyExchangeColumn.RATE_DATE, type: 'date', nullable: false, comment: '汇率日期' })
-    rateDate: string
+    @Column({ name: TbFinanceCurrencyExchangeColumn.DATE, type: 'date', nullable: false, comment: '汇率日期' })
+    date: string
 }

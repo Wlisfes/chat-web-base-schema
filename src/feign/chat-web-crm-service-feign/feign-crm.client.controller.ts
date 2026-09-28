@@ -74,16 +74,16 @@ export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCr
     }
 
     /**更新客户启用状态**/
-    @FeignPost('/consumer/update/status', {
+    @FeignPost('/consumer/status/update', {
         operation: { summary: '供内部服务更新客户状态' },
         request: { source: 'body', type: CrmDto.CrmUpdateConsumerStatusRequestDto },
         response: { type: CrmDto.CrmConsumerResponseDto, description: '客户详情' }
     })
-    async httpBaseCrmUpdateConsumerStatus(
+    async httpBaseCrmConsumerStatusUpdate(
         @FeignHeader('authorization') _authorization: string,
         @FeignBody() _input: CrmTypes.CrmUpdateConsumerStatusInput
     ): Promise<CrmTypes.CrmConsumer> {
-        return this.dispatch('httpBaseCrmUpdateConsumerStatus', _authorization, _input)
+        return this.dispatch('httpBaseCrmConsumerStatusUpdate', _authorization, _input)
     }
 
     /**分页查询客户列表**/

@@ -30,7 +30,7 @@ export interface FeignClientCrmImplementation {
     /**更新客户基础信息**/
     httpBaseCrmUpdateConsumer(authorization: string, input: CrmUpdateConsumerInput): Promise<CrmConsumer>
     /**更新客户启用状态**/
-    httpBaseCrmUpdateConsumerStatus(authorization: string, input: CrmUpdateConsumerStatusInput): Promise<CrmConsumer>
+    httpBaseCrmConsumerStatusUpdate(authorization: string, input: CrmUpdateConsumerStatusInput): Promise<CrmConsumer>
     /**分页查询客户列表**/
     httpBaseCrmColumnConsumer(authorization: string, input: CrmListConsumerInput): Promise<CrmConsumerPage>
 }

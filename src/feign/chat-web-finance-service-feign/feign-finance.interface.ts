@@ -36,7 +36,7 @@ export interface FinanceCurrencyExchange {
     /**基于 USD 的汇率。*/
     rate: number
     /**汇率日期。*/
-    rateDate: string
+    date: string
 }
 
 /**汇率同步结果项。*/

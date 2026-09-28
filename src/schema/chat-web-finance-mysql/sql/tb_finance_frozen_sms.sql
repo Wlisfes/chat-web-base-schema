@@ -12,4 +12,8 @@ CREATE TABLE IF NOT EXISTS `tb_finance_frozen_sms` (
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_finance_frozen_sms_code_mcc` (`code`, `mcc`),
     KEY `idx_tb_finance_frozen_sms_code` (`code`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '财务短信基础价格表';
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1000
+  DEFAULT CHARACTER SET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci
+  COMMENT = '财务短信基础价格表';

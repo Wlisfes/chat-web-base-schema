@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator'
-import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
+import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbFinanceCountryColumn {
     KEY_ID = 'key_id',
@@ -10,6 +10,8 @@ export enum TbFinanceCountryColumn {
     CN_NAME = 'cn_name',
     EN_NAME = 'en_name',
     STATUS = 'status',
+    CREATE_BY = 'create_by',
+    MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
@@ -24,7 +26,7 @@ export const TbFinanceCountryStatusDefinition = defineEnumMetadata(TbFinanceCoun
     [TbFinanceCountryStatus.ENABLE]: { label: '启用', description: '国家/地区可正常使用', type: 'success' }
 })
 
-export class TbFinanceCountryDto extends DataBaseDto {
+export class TbFinanceCountryDto extends DataBaseByDto {
     @ApiProperty({ description: '国家/地区国际区号', example: '86' })
     @IsString({ message: '国家/地区编码必须是字符串' })
     @IsNotEmpty({ message: '国家/地区编码必填' })
@@ -62,7 +64,7 @@ export class TbFinanceCountryDto extends DataBaseDto {
 @Index('uk_tb_finance_country_code_mcc', ['code', 'mcc'], { unique: true })
 @Index('idx_tb_finance_country_status', ['status'])
 @Entity({ name: 'tb_finance_country', comment: '财务国家地区表' })
-export class TbFinanceCountry extends DataBaseAdapter {
+export class TbFinanceCountry extends DataBaseByAdapter {
     @Column({ name: TbFinanceCountryColumn.CODE, type: 'varchar', length: 10, nullable: false, comment: '国家/地区国际区号' })
     code: string
 

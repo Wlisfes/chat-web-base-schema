@@ -2,18 +2,20 @@ import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsDateString, IsNotEmpty, IsNumber, IsString, MaxLength, Min } from 'class-validator'
-import { DataBaseAdapter, DataBaseDto } from '@/utils'
+import { DataBaseByAdapter, DataBaseByDto } from '@/utils'
 
 export enum TbFinanceCurrencyExchangeColumn {
     KEY_ID = 'key_id',
     CURRENCY = 'currency',
     RATE = 'rate',
     RATE_DATE = 'date',
+    CREATE_BY = 'create_by',
+    MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
 
-export class TbFinanceCurrencyExchangeDto extends DataBaseDto {
+export class TbFinanceCurrencyExchangeDto extends DataBaseByDto {
     @ApiProperty({ description: '币种编码', example: 'CNY' })
     @IsString({ message: '币种编码必须是字符串' })
     @IsNotEmpty({ message: '币种编码必填' })
@@ -34,7 +36,7 @@ export class TbFinanceCurrencyExchangeDto extends DataBaseDto {
 @Index('uk_tb_finance_currency_exchange_currency_date', ['currency', 'rateDate'], { unique: true })
 @Index('idx_tb_finance_currency_exchange_rate_date', ['rateDate'])
 @Entity({ name: 'tb_finance_currency_exchange', comment: '财务币种汇率表' })
-export class TbFinanceCurrencyExchange extends DataBaseAdapter {
+export class TbFinanceCurrencyExchange extends DataBaseByAdapter {
     @Column({ name: TbFinanceCurrencyExchangeColumn.CURRENCY, type: 'varchar', length: 16, nullable: false, comment: '币种编码' })
     currency: string
 

@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator'
-import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
+import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbFinanceCurrencyColumn {
     KEY_ID = 'key_id',
@@ -9,6 +9,8 @@ export enum TbFinanceCurrencyColumn {
     NAME = 'name',
     SYMBOL = 'symbol',
     STATUS = 'status',
+    CREATE_BY = 'create_by',
+    MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
@@ -23,7 +25,7 @@ export const TbFinanceCurrencyStatusDefinition = defineEnumMetadata(TbFinanceCur
     [TbFinanceCurrencyStatus.ENABLE]: { label: '启用', description: '币种可正常使用', type: 'success' }
 })
 
-export class TbFinanceCurrencyDto extends DataBaseDto {
+export class TbFinanceCurrencyDto extends DataBaseByDto {
     @ApiProperty({ description: '币种编码', example: 'USD' })
     @IsString({ message: '币种编码必须是字符串' })
     @IsNotEmpty({ message: '币种编码必填' })
@@ -55,7 +57,7 @@ export class TbFinanceCurrencyDto extends DataBaseDto {
 @Index('uk_tb_finance_currency_currency', ['currency'], { unique: true })
 @Index('idx_tb_finance_currency_status', ['status'])
 @Entity({ name: 'tb_finance_currency', comment: '财务币种表' })
-export class TbFinanceCurrency extends DataBaseAdapter {
+export class TbFinanceCurrency extends DataBaseByAdapter {
     @Column({ name: TbFinanceCurrencyColumn.CURRENCY, type: 'varchar', length: 16, nullable: false, comment: '币种编码' })
     currency: string
 

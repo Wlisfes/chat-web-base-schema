@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS `tb_finance_country` (
     `cn_name` varchar(64) NOT NULL COMMENT '中文名称',
     `en_name` varchar(64) NOT NULL COMMENT '英文名称',
     `status` varchar(32) NOT NULL COMMENT '国家/地区状态：disable=禁用（国家/地区不可用于新业务）；enable=启用（国家/地区可正常使用）',
+    `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
+    `modify_by` varchar(19) NULL COMMENT '更新账号UID',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),

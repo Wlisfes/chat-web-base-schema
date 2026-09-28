@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS `tb_finance_currency_exchange` (
     `currency` varchar(16) NOT NULL COMMENT '币种编码',
     `rate` decimal(16, 6) NOT NULL COMMENT '基于 USD 的汇率',
     `date` date NOT NULL COMMENT '汇率日期',
+    `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
+    `modify_by` varchar(19) NULL COMMENT '更新账号UID',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),

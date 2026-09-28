@@ -2,7 +2,7 @@ import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsEnum, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, Length, Matches, MaxLength, Min } from 'class-validator'
-import { DataBaseAdapter, DataBaseDto, DateWithColumn, WithJsonColumn, defineEnumMetadata } from '@/utils'
+import { DataBaseByAdapter, DataBaseByDto, DateWithColumn, WithJsonColumn, defineEnumMetadata } from '@/utils'
 
 /** tb_skyline_datetask_log 的数据库字段名。 */
 export enum TbSkylineDatetaskLogColumn {
@@ -11,10 +11,13 @@ export enum TbSkylineDatetaskLogColumn {
     TASK_ID = 'task_id',
     TASK_NAME = 'task_name',
     STATUS = 'status',
+    TRIGGER_TYPE = 'trigger_type',
     DURATION = 'duration',
     START_TIME = 'start_time',
     END_TIME = 'end_time',
     RESULT = 'result',
+    CREATE_BY = 'create_by',
+    MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
@@ -32,8 +35,19 @@ export const TbSkylineDatetaskLogStatusDefinition = defineEnumMetadata(TbSkyline
     [TbSkylineDatetaskLogStatus.FAILED]: { label: '执行失败', description: '任务执行失败', type: 'error' }
 })
 
+/** 任务执行触发方式。 */
+export enum TbSkylineDatetaskLogTrigger {
+    SYSTEM = 'system',
+    MANUAL = 'manual'
+}
+
+export const TbSkylineDatetaskLogTriggerDefinition = defineEnumMetadata(TbSkylineDatetaskLogTrigger, '触发方式', {
+    [TbSkylineDatetaskLogTrigger.SYSTEM]: { label: '系统执行', description: '按照 Cron 表达式由系统自动调度执行', type: 'geekblue' },
+    [TbSkylineDatetaskLogTrigger.MANUAL]: { label: '手动执行', description: '由管理员在管理端手动触发执行', type: 'orange' }
+})
+
 /** 任务执行日志完整字段 DTO。 */
-export class TbSkylineDatetaskLogDto extends DataBaseDto {
+export class TbSkylineDatetaskLogDto extends DataBaseByDto {
     @ApiProperty({ description: '执行记录ID，单次执行唯一', example: '2149446185344106496:1756771200000:1' })
     @IsString({ message: '执行记录ID必须是字符串' })
     @IsNotEmpty({ message: '执行记录ID必填' })
@@ -62,6 +76,15 @@ export class TbSkylineDatetaskLogDto extends DataBaseDto {
     @IsEnum(TbSkylineDatetaskLogStatus, { message: '执行状态格式错误' })
     status: TbSkylineDatetaskLogStatus
 
+    @ApiProperty({
+        description: TbSkylineDatetaskLogTriggerDefinition.comment,
+        enum: TbSkylineDatetaskLogTrigger,
+        enumName: 'TbSkylineDatetaskLogTrigger',
+        example: TbSkylineDatetaskLogTrigger.SYSTEM
+    })
+    @IsEnum(TbSkylineDatetaskLogTrigger, { message: '触发方式格式错误' })
+    triggerType: TbSkylineDatetaskLogTrigger
+
     @ApiProperty({ description: '执行耗时（毫秒）', example: 1250 })
     @Type(() => Number)
     @IsInt({ message: '执行耗时必须是整数' })
@@ -85,7 +108,7 @@ export class TbSkylineDatetaskLogDto extends DataBaseDto {
 @Index('uk_tb_skyline_datetask_log_execution_id', ['executionId'], { unique: true })
 @Index('idx_tb_skyline_datetask_log_task_id_start_time', ['taskId', 'startTime'])
 @Entity({ name: 'tb_skyline_datetask_log', comment: 'Skyline 定时任务执行日志表' })
-export class TbSkylineDatetaskLog extends DataBaseAdapter {
+export class TbSkylineDatetaskLog extends DataBaseByAdapter {
     @Column({
         name: TbSkylineDatetaskLogColumn.EXECUTION_ID,
         type: 'varchar',
@@ -110,6 +133,16 @@ export class TbSkylineDatetaskLog extends DataBaseAdapter {
         comment: TbSkylineDatetaskLogStatusDefinition.comment
     })
     status: TbSkylineDatetaskLogStatus
+
+    @Column({
+        name: TbSkylineDatetaskLogColumn.TRIGGER_TYPE,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        default: TbSkylineDatetaskLogTrigger.SYSTEM,
+        comment: TbSkylineDatetaskLogTriggerDefinition.comment
+    })
+    triggerType: TbSkylineDatetaskLogTrigger
 
     @Column({ name: TbSkylineDatetaskLogColumn.DURATION, type: 'int', nullable: false, default: 0, comment: '执行耗时（毫秒）' })
     duration: number

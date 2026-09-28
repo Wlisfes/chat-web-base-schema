@@ -227,7 +227,7 @@ validateTable({
     dto: skylineSchema.TbSkylineDatetaskLogDto,
     columns: skylineSchema.TbSkylineDatetaskLogColumn,
     sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_datetask_log.sql'),
-    enumComments: [skylineSchema.TbSkylineDatetaskLogStatusDefinition.comment]
+    enumComments: [skylineSchema.TbSkylineDatetaskLogStatusDefinition.comment, skylineSchema.TbSkylineDatetaskLogTriggerDefinition.comment]
 })
 
 validateTable({

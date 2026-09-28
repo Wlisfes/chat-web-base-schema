@@ -11,7 +11,9 @@ test('系统任务编号必须是 1 至 19 位数字字符串', () => {
         taskName: '汇率同步定时任务',
         handler: 'datetask-sync-exchange-rate',
         type: 'system',
-        status: 'running'
+        status: 'running',
+        createBy: '0',
+        modifyBy: '0'
     })
     assert.equal(validateSync(valid).length, 0)
 

@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, Length, Matches, MaxLength } from 'class-validator'
-import { DataBaseAdapter, DataBaseDto, DateWithColumn, WithJsonColumn, defineEnumMetadata } from '@/utils'
+import { DataBaseByAdapter, DataBaseByDto, DateWithColumn, WithJsonColumn, defineEnumMetadata } from '@/utils'
 
 /** tb_skyline_datetask_system 的数据库字段名。 */
 export enum TbSkylineDatetaskSystemColumn {
@@ -16,6 +16,8 @@ export enum TbSkylineDatetaskSystemColumn {
     BODY = 'body',
     LAST_TIME = 'last_time',
     NEXT_TIME = 'next_time',
+    CREATE_BY = 'create_by',
+    MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
@@ -49,7 +51,7 @@ export const TbSkylineDatetaskSystemStatusDefinition = defineEnumMetadata(TbSkyl
 })
 
 /** 系统任务完整字段 DTO。 */
-export class TbSkylineDatetaskSystemDto extends DataBaseDto {
+export class TbSkylineDatetaskSystemDto extends DataBaseByDto {
     @ApiProperty({ description: '任务ID，系统内唯一的19位数字字符串', example: '2149446185344106496' })
     @IsString({ message: '任务ID必须是字符串' })
     @IsNotEmpty({ message: '任务ID必填' })
@@ -117,7 +119,7 @@ export class TbSkylineDatetaskSystemDto extends DataBaseDto {
 @Index('uk_tb_skyline_datetask_system_task_id', ['taskId'], { unique: true })
 @Index('idx_tb_skyline_datetask_system_status', ['status'])
 @Entity({ name: 'tb_skyline_datetask_system', comment: 'Skyline 系统定时任务表' })
-export class TbSkylineDatetaskSystem extends DataBaseAdapter {
+export class TbSkylineDatetaskSystem extends DataBaseByAdapter {
     @Column({ name: TbSkylineDatetaskSystemColumn.TASK_ID, type: 'varchar', length: 19, nullable: false, update: false, comment: '任务ID' })
     taskId: string
 

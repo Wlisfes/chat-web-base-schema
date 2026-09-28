@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator'
-import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
+import { DataBaseAdapter, DataBaseDto, defineEnumMetadata, BigintNumberTransformer } from '@/utils'
 
 export enum TbCrmConsumerColumn {
     KEY_ID = 'key_id',
@@ -262,24 +262,40 @@ export class TbCrmConsumer extends DataBaseAdapter {
     })
     classType: TbCrmConsumerClassType
 
-    @Column({ name: TbCrmConsumerColumn.BALANCE, type: 'bigint', nullable: false, default: 0, comment: '余额（放大百万倍存储）' })
+    @Column({
+        name: TbCrmConsumerColumn.BALANCE,
+        type: 'bigint',
+        transformer: BigintNumberTransformer,
+        nullable: false,
+        default: 0,
+        comment: '余额（放大百万倍存储）'
+    })
     balance: number
 
     @Column({
         name: TbCrmConsumerColumn.BALANCE_USD,
         type: 'bigint',
+        transformer: BigintNumberTransformer,
         nullable: false,
         default: 0,
         comment: 'USD余额（放大百万倍存储）'
     })
     balanceUsd: number
 
-    @Column({ name: TbCrmConsumerColumn.CREDIT, type: 'bigint', nullable: false, default: 0, comment: '信用额度（放大百万倍存储）' })
+    @Column({
+        name: TbCrmConsumerColumn.CREDIT,
+        type: 'bigint',
+        transformer: BigintNumberTransformer,
+        nullable: false,
+        default: 0,
+        comment: '信用额度（放大百万倍存储）'
+    })
     credit: number
 
     @Column({
         name: TbCrmConsumerColumn.CREDIT_USD,
         type: 'bigint',
+        transformer: BigintNumberTransformer,
         nullable: false,
         default: 0,
         comment: 'USD信用额度（放大百万倍存储）'

@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS `tb_finance_frozen_sms` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
+    `country_key_id` int NOT NULL COMMENT '国家/地区主键',
     `code` varchar(10) NOT NULL COMMENT '国家/地区国际区号',
     `mcc` varchar(4) NOT NULL COMMENT '移动国家代码',
     `up_usd` bigint NOT NULL COMMENT '上行短信价格（放大百万倍存储）',
@@ -10,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `tb_finance_frozen_sms` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
+    UNIQUE KEY `uk_tb_finance_frozen_sms_country_key_id` (`country_key_id`),
     UNIQUE KEY `uk_tb_finance_frozen_sms_code_mcc` (`code`, `mcc`),
     KEY `idx_tb_finance_frozen_sms_code` (`code`)
 ) ENGINE = InnoDB

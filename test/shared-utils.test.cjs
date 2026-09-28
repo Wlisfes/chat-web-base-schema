@@ -14,7 +14,7 @@ const {
     resolveRequestId
 } = require('../dist/src/utils')
 const { EnumOptionDto, EnumsResponseDto, ListResponseDto, PageListResponseDto, PageResponseDataDto } = require('../dist/src/decorator')
-const { DataBaseDto } = require('../dist/src/utils')
+const { BigintNumberTransformer, DataBaseDto } = require('../dist/src/utils')
 const requestContext = require('../dist/src/utils/modules/request-context')
 const accountSchema = require('../dist/src/schema/chat-web-account-mysql')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
@@ -179,4 +179,11 @@ test('公共请求地址还原网关服务前缀且避免重复拼接', () => {
         resolvePublicRequestUrl({ originalUrl: '/sheet/update', headers: { 'x-forwarded-prefix': 'https://malicious.example/api' } }),
         '/sheet/update'
     )
+})
+
+test('bigint 金额字段从数据库读取时转换为 number', () => {
+    assert.equal(BigintNumberTransformer.from('1008600'), 1008600)
+    assert.equal(BigintNumberTransformer.from('0'), 0)
+    assert.equal(BigintNumberTransformer.from(null), null)
+    assert.equal(BigintNumberTransformer.to(1008600), 1008600)
 })

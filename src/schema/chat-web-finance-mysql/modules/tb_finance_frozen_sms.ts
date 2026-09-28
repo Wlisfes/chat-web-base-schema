@@ -1,10 +1,12 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
-import { DataBaseByAdapter, DataBaseByDto } from '@/utils'
+import { DataBaseByAdapter, DataBaseByDto, BigintNumberTransformer } from '@/utils'
 
 export enum TbFinanceFrozenSmsColumn {
     KEY_ID = 'key_id',
+    COUNTRY_KEY_ID = 'country_key_id',
     CODE = 'code',
     MCC = 'mcc',
     UP_USD = 'up_usd',
@@ -17,6 +19,12 @@ export enum TbFinanceFrozenSmsColumn {
 }
 
 export class TbFinanceFrozenSmsDto extends DataBaseByDto {
+    @ApiProperty({ description: '国家/地区主键', example: 1000 })
+    @Type(() => Number)
+    @IsInt({ message: '国家/地区主键必须是整数' })
+    @Min(1, { message: '国家/地区主键必须大于0' })
+    countryKeyId: number
+
     @ApiProperty({ description: '国家/地区国际区号', example: '86' })
     @IsString({ message: '国家/地区编码必须是字符串' })
     @IsNotEmpty({ message: '国家/地区编码必填' })
@@ -46,20 +54,36 @@ export class TbFinanceFrozenSmsDto extends DataBaseByDto {
     remark: string
 }
 
+@Index('uk_tb_finance_frozen_sms_country_key_id', ['countryKeyId'], { unique: true })
 @Index('uk_tb_finance_frozen_sms_code_mcc', ['code', 'mcc'], { unique: true })
 @Index('idx_tb_finance_frozen_sms_code', ['code'])
 @Entity({ name: 'tb_finance_frozen_sms', comment: '财务短信基础价格表' })
 export class TbFinanceFrozenSms extends DataBaseByAdapter {
+    @Column({ name: TbFinanceFrozenSmsColumn.COUNTRY_KEY_ID, type: 'int', nullable: false, comment: '国家/地区主键' })
+    countryKeyId: number
+
     @Column({ name: TbFinanceFrozenSmsColumn.CODE, type: 'varchar', length: 10, nullable: false, comment: '国家/地区国际区号' })
     code: string
 
     @Column({ name: TbFinanceFrozenSmsColumn.MCC, type: 'varchar', length: 4, nullable: false, comment: '移动国家代码' })
     mcc: string
 
-    @Column({ name: TbFinanceFrozenSmsColumn.UP_USD, type: 'bigint', nullable: false, comment: '上行短信价格（放大百万倍存储）' })
+    @Column({
+        name: TbFinanceFrozenSmsColumn.UP_USD,
+        type: 'bigint',
+        transformer: BigintNumberTransformer,
+        nullable: false,
+        comment: '上行短信价格（放大百万倍存储）'
+    })
     upUsd: number
 
-    @Column({ name: TbFinanceFrozenSmsColumn.DOWN_USD, type: 'bigint', nullable: false, comment: '下行短信价格（放大百万倍存储）' })
+    @Column({
+        name: TbFinanceFrozenSmsColumn.DOWN_USD,
+        type: 'bigint',
+        transformer: BigintNumberTransformer,
+        nullable: false,
+        comment: '下行短信价格（放大百万倍存储）'
+    })
     downUsd: number
 
     @Column({ name: TbFinanceFrozenSmsColumn.REMARK, type: 'varchar', length: 1024, nullable: true, comment: '备注' })

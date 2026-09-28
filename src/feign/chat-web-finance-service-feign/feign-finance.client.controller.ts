@@ -24,12 +24,12 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
     }
 
     /**按国家/地区主键批量获取短信基础价格**/
-    @FeignPost('/rates/sms/batch')
-    async httpBaseFinanceBatchSmsRate(
+    @FeignPost('/frozen/sms/batch')
+    async httpBaseFinanceBatchFrozenSms(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: FinanceTypes.FinanceSmsRateBatchRequest
-    ): Promise<FinanceTypes.FinanceSmsRate[]> {
-        return this.dispatch('httpBaseFinanceBatchSmsRate', _authorization, _input)
+        @FeignBody() _input: FinanceTypes.FinanceFrozenSmsBatchRequest
+    ): Promise<FinanceTypes.FinanceFrozenSms[]> {
+        return this.dispatch('httpBaseFinanceBatchFrozenSms', _authorization, _input)
     }
 
     /**按币种获取最新汇率**/

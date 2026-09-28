@@ -166,10 +166,10 @@ validateTable({
 })
 
 validateTable({
-    entity: financeSchema.TbFinanceBasicSmsRate,
-    dto: financeSchema.TbFinanceBasicSmsRateDto,
-    columns: financeSchema.TbFinanceBasicSmsRateColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_basic_sms_rate.sql')
+    entity: financeSchema.TbFinanceFrozenSms,
+    dto: financeSchema.TbFinanceFrozenSmsDto,
+    columns: financeSchema.TbFinanceFrozenSmsColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_frozen_sms.sql')
 })
 
 validateTable({

@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_datetask_system` (
     `body` text NULL COMMENT '任务参数',
     `last_time` datetime(3) NULL COMMENT '上次执行时间',
     `next_time` datetime(3) NULL COMMENT '下次执行时间',
+    `create_by` varchar(19) NOT NULL DEFAULT '0' COMMENT '创建账号UID',
+    `modify_by` varchar(19) NULL DEFAULT '0' COMMENT '更新账号UID',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),

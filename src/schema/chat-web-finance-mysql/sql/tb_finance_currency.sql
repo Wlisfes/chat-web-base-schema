@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS `tb_finance_currency` (
     `name` varchar(64) NOT NULL COMMENT '币种名称',
     `symbol` varchar(8) NOT NULL COMMENT '币种符号',
     `status` varchar(32) NOT NULL COMMENT '币种状态：disable=禁用（币种不可用于新业务）；enable=启用（币种可正常使用）',
+    `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
+    `modify_by` varchar(19) NULL COMMENT '更新账号UID',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),

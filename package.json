@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.6.67",
+    "version": "1.6.68",
     "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {
@@ -170,6 +170,7 @@
         "@nestjs/platform-express": "^11.2.1",
         "@nestjs/swagger": "^11.4.6",
         "@nestjs/typeorm": "11.0.3",
+        "@types/big.js": "^6.2.2",
         "@types/cookie-parser": "^1.4.10",
         "@types/express": "^5.0.6",
         "@types/node": "^24.0.0",
@@ -189,6 +190,7 @@
     "dependencies": {
         "@opentelemetry/api": "^1.9.0",
         "@types/lodash": "^4.17.25",
+        "big.js": "^7.0.1",
         "class-validator": "^0.15.1",
         "cookie-parser": "^1.4.7",
         "dayjs": "^1.11.21",

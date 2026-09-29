@@ -173,17 +173,16 @@ validateTable({
 })
 
 validateTable({
-    entity: crmSchema.TbCrmConsumer,
-    dto: crmSchema.TbCrmConsumerDto,
-    columns: crmSchema.TbCrmConsumerColumn,
-    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_consumer.sql'),
+    entity: crmSchema.TbCrmUser,
+    dto: crmSchema.TbCrmUserDto,
+    columns: crmSchema.TbCrmUserColumn,
+    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_user.sql'),
     enumComments: [
-        crmSchema.TbCrmConsumerStatusDefinition.comment,
-        crmSchema.TbCrmConsumerPayModeDefinition.comment,
-        crmSchema.TbCrmConsumerClassTypeDefinition.comment,
-        crmSchema.TbCrmConsumerStageDefinition.comment,
-        crmSchema.TbCrmConsumerAuthStatusDefinition.comment,
-        crmSchema.TbCrmConsumerSourceDefinition.comment
+        crmSchema.TbCrmUserStatusDefinition.comment,
+        crmSchema.TbCrmUserPayModeDefinition.comment,
+        crmSchema.TbCrmUserClassTypeDefinition.comment,
+        crmSchema.TbCrmUserStageDefinition.comment,
+        crmSchema.TbCrmUserAuthStatusDefinition.comment
     ]
 })
 

@@ -5,7 +5,7 @@ import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbCrmSmsApplicationColumn {
     KEY_ID = 'key_id',
-    CONSUMER_KEY_ID = 'consumer_key_id',
+    USER_KEY_ID = 'user_key_id',
     OWNER_USER_UID = 'owner_user_uid',
     APP_ID = 'app_id',
     SECRET = 'secret',
@@ -49,7 +49,7 @@ export class TbCrmSmsApplicationDto extends DataBaseByDto {
     @ApiProperty({ description: 'CRM 客户主键', example: 5181000 })
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })
-    consumerKeyId: number
+    userKeyId: number
 
     @ApiProperty({ description: '归属账号UID', example: '2149446185344106496' })
     @IsString({ message: '归属账号UID必须是字符串' })
@@ -110,14 +110,14 @@ export class TbCrmSmsApplicationDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_crm_sms_application_app_id', ['appId'], { unique: true })
-@Index('uk_tb_crm_sms_application_consumer_alias', ['consumerKeyId', 'appAlias'], { unique: true })
-@Index('idx_tb_crm_sms_application_consumer_key_id', ['consumerKeyId'])
+@Index('uk_tb_crm_sms_application_user_alias', ['userKeyId', 'appAlias'], { unique: true })
+@Index('idx_tb_crm_sms_application_user_key_id', ['userKeyId'])
 @Index('idx_tb_crm_sms_application_owner_user_uid', ['ownerUserUid'])
 @Index('idx_tb_crm_sms_application_status', ['status'])
 @Entity({ name: 'tb_crm_sms_application', comment: 'CRM 客户短信应用表' })
 export class TbCrmSmsApplication extends DataBaseByAdapter {
-    @Column({ name: TbCrmSmsApplicationColumn.CONSUMER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
-    consumerKeyId: number
+    @Column({ name: TbCrmSmsApplicationColumn.USER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
+    userKeyId: number
 
     @Column({ name: TbCrmSmsApplicationColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '归属账号UID' })
     ownerUserUid: string

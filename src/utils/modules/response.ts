@@ -19,13 +19,17 @@ function resolveSuccessMessage(data: unknown): string {
 
 /** 创建前后端统一 API 响应。 */
 export function createApiResponse<T = unknown>(data: T, options: ApiResponseOptions = {}): ApiResponse<T> {
-    return {
+    const response: ApiResponse<T> = {
         data: data ?? null,
         code: options.code ?? HttpStatus.OK,
         message: options.message ?? resolveSuccessMessage(data),
         logId: resolveRequestId(options.logId ?? getActiveRequestId()),
         timestamp: moment().format(RESPONSE_TIMESTAMP_FORMAT)
     }
+    if (options.url) {
+        response.url = options.url
+    }
+    return response
 }
 
 /** 判断返回值是否已经是统一 API 响应，避免被拦截器重复包装。 */

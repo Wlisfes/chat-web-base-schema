@@ -15,6 +15,13 @@ export class ApiResponseDocumentDto {
     @ApiProperty({ description: '服务端响应时间', example: '2026-08-23 12:00:00' })
     timestamp: string
 
+    @ApiProperty({
+        description: '异常请求的接口地址，仅错误响应返回',
+        required: false,
+        example: 'POST /api/skyline/deploy/chunk/column/option'
+    })
+    url?: string
+
     @ApiProperty({ description: '业务响应数据', nullable: true, example: null })
     data: unknown
 }

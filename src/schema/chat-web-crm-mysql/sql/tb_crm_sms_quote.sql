@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `tb_crm_sms_quote` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `user_key_id` int NOT NULL COMMENT 'CRM 客户主键',
-    `application_key_id` int NOT NULL COMMENT 'CRM 短信应用主键',
+    `app_key_id` int NOT NULL COMMENT 'CRM 短信应用主键',
     `app_id` varchar(32) NOT NULL COMMENT '应用ID快照',
     `user_alias` varchar(64) NULL COMMENT '客户别名快照',
     `app_alias` varchar(64) NOT NULL COMMENT '应用别名快照',
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `tb_crm_sms_quote` (
     `exchange_date` date NOT NULL COMMENT '汇率日期',
     `effective_time` datetime(3) NOT NULL COMMENT '生效时间',
     `expiry_time` datetime(3) NULL COMMENT '失效时间',
-    `status` varchar(32) NOT NULL COMMENT '短信报价状态：deleted=已删除（报价已停止使用）；effective=已生效（报价当前有效）；pending=待生效（报价等待生效时间）',
+    `status` varchar(32) NOT NULL COMMENT '短信报价状态：deleted=已作废（报价被手动作废或在生效前被替换）；effective=已生效（报价当前有效）；expired=已失效（报价已到失效时间）；pending=待生效（报价等待生效时间）',
     `published_time` datetime(3) NOT NULL COMMENT '发布时间',
     `remark` varchar(1024) NULL COMMENT '备注',
     `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `tb_crm_sms_quote` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
-    KEY `idx_tb_crm_sms_quote_user_app` (`user_key_id`, `application_key_id`),
+    KEY `idx_tb_crm_sms_quote_user_app` (`user_key_id`, `app_key_id`),
     KEY `idx_tb_crm_sms_quote_country_key_id` (`country_key_id`),
     KEY `idx_tb_crm_sms_quote_status_effective_time` (`status`, `effective_time`),
     KEY `idx_tb_crm_sms_quote_published_time` (`published_time`)

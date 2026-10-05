@@ -116,7 +116,8 @@ test('HttpExceptionFilter returns HTTP 200 and keeps the business error code', (
     filter.catch(new BadRequestException(['名称不能为空']), createHttpContext(response))
 
     assert.equal(response.statusCode, 200)
-    assert.deepEqual(Object.keys(response.body), ['data', 'code', 'message', 'logId', 'timestamp'])
+    assert.deepEqual(Object.keys(response.body), ['data', 'code', 'message', 'logId', 'timestamp', 'url'])
+    assert.equal(response.body.url, 'POST /users')
     assert.equal(response.body.data, null)
     assert.equal(response.body.code, 400)
     assert.equal(response.body.message, '名称不能为空')

@@ -10,4 +10,8 @@ CREATE TABLE IF NOT EXISTS `tb_finance_brand` (
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_finance_brand_name` (`name`),
     KEY `idx_tb_finance_brand_status` (`status`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '财务品牌表';
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1001
+  DEFAULT CHARACTER SET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci
+  COMMENT = '财务品牌表';

@@ -7,7 +7,7 @@ import { PageDto } from '@/utils'
 
 /** CRM 客户服务间响应摘要。 */
 export class CrmConsumerResponseDto extends Schema.TbCrmUserDto {
-    @ApiProperty({ description: '财务品牌主键', example: 1 })
+    @ApiProperty({ description: '财务品牌主键', example: 1001 })
     brandId: number
 }
 
@@ -31,7 +31,7 @@ export class CrmConsumerSelectResponseDto {
     @ApiProperty({ description: '客户别名', required: false, example: 'demo' })
     alias?: string
 
-    @ApiProperty({ description: '财务品牌主键', example: 1 })
+    @ApiProperty({ description: '财务品牌主键', example: 1001 })
     brandId: number
 
     @ApiProperty({ description: '财务币种编码', example: 'USD' })
@@ -66,7 +66,7 @@ export class CrmCreateConsumerRequestDto {
     @MaxLength(64, { message: '客户别名长度不能超过64位' })
     alias?: string
 
-    @ApiProperty({ description: '财务品牌主键', example: 1 })
+    @ApiProperty({ description: '财务品牌主键', example: 1001 })
     @Type(() => Number)
     @IsInt({ message: '财务品牌主键必须是整数' })
     @Min(1, { message: '财务品牌主键必须大于0' })
@@ -160,7 +160,7 @@ export class CrmListConsumerRequestDto extends IntersectionType(
     PageDto,
     PartialType(PickType(Schema.TbCrmUserDto, ['name', 'status', 'currency', 'payMode', 'authStatus', 'source'] as const))
 ) {
-    @ApiProperty({ description: '财务品牌主键', required: false, example: 1 })
+    @ApiProperty({ description: '财务品牌主键', required: false, example: 1001 })
     @IsOptional()
     @Type(() => Number)
     @IsInt({ message: '财务品牌主键必须是整数' })

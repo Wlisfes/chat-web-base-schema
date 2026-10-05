@@ -63,6 +63,8 @@ export interface ApiResponse<T = unknown> {
     message: string
     logId: string
     timestamp: string
+    /** 异常请求的接口地址，格式为 `METHOD /api/...`，仅错误响应返回。 */
+    url?: string
 }
 
 /** 创建统一 API 响应时可覆盖的元数据。 */
@@ -70,4 +72,5 @@ export interface ApiResponseOptions {
     code?: number
     message?: string
     logId?: string
+    url?: string
 }

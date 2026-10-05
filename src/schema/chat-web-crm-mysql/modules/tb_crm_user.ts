@@ -110,7 +110,7 @@ export class TbCrmUserDto extends DataBaseDto {
     @MaxLength(64, { message: '客户别名长度不能超过64位' })
     alias: string
 
-    @ApiProperty({ description: '财务品牌主键', example: 1 })
+    @ApiProperty({ description: '财务品牌主键', example: 1001 })
     @IsInt({ message: '财务品牌主键必须是整数' })
     @Min(1, { message: '财务品牌主键必须大于0' })
     brandKeyId: number

@@ -54,9 +54,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const status = resolveExceptionStatus(exception)
         const message = resolveExceptionMessage(exception, status)
         const logId = resolveRequestId(request.logId ?? request.headers?.['x-request-id'])
-        const body = createApiResponse(resolveExceptionData(exception), { code: status, message, logId })
         const method = request.method ?? 'UNKNOWN'
         const url = resolvePublicRequestUrl(request)
+        const body = createApiResponse(resolveExceptionData(exception), { code: status, message, logId, url: `${method} ${url}` })
         const routeMethod = this.resolveRouteMethod(host, request)
         const executionMethod = resolveExceptionExecutionMethod(
             exception,

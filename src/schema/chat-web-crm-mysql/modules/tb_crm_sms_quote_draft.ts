@@ -8,7 +8,7 @@ export enum TbCrmSmsQuoteDraftColumn {
     KEY_ID = 'key_id',
     DRAFT_BATCH_ID = 'draft_batch_id',
     USER_KEY_ID = 'user_key_id',
-    APPLICATION_KEY_ID = 'application_key_id',
+    APP_KEY_ID = 'app_key_id',
     APP_ID = 'app_id',
     USER_ALIAS = 'user_alias',
     APP_ALIAS = 'app_alias',
@@ -25,7 +25,6 @@ export enum TbCrmSmsQuoteDraftColumn {
     EFFECTIVE_TIME = 'effective_time',
     EXPIRY_TIME = 'expiry_time',
     SOURCE = 'source',
-    STATUS = 'status',
     REMARK = 'remark',
     CREATE_BY = 'create_by',
     MODIFY_BY = 'modify_by',
@@ -43,16 +42,6 @@ export const TbCrmSmsQuoteDraftSourceDefinition = defineEnumMetadata(TbCrmSmsQuo
     [TbCrmSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制', type: 'blue' }
 })
 
-export enum TbCrmSmsQuoteDraftStatus {
-    ACTIVE = 'active',
-    DELETED = 'deleted'
-}
-
-export const TbCrmSmsQuoteDraftStatusDefinition = defineEnumMetadata(TbCrmSmsQuoteDraftStatus, '报价草稿状态', {
-    [TbCrmSmsQuoteDraftStatus.ACTIVE]: { label: '编辑中', description: '草稿可以继续编辑', type: 'warning' },
-    [TbCrmSmsQuoteDraftStatus.DELETED]: { label: '已删除', description: '草稿已被移除', type: 'default' }
-})
-
 export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @ApiProperty({ description: '草稿批次ID', example: '4b5be331-04bc-494b-9192-e7f62a377f52' })
     @IsUUID('4', { message: '草稿批次ID格式错误' })
@@ -66,7 +55,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @ApiProperty({ description: 'CRM 短信应用主键', example: 1 })
     @IsInt({ message: '短信应用主键必须是整数' })
     @Min(1, { message: '短信应用主键必须大于0' })
-    applicationKeyId: number
+    appKeyId: number
 
     @ApiProperty({ description: '应用ID快照', example: 'SMS9F2A8B31' })
     @IsString({ message: '应用ID必须是字符串' })
@@ -156,14 +145,6 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @IsEnum(TbCrmSmsQuoteDraftSource, { message: '报价来源格式错误' })
     source: TbCrmSmsQuoteDraftSource
 
-    @ApiProperty({
-        description: TbCrmSmsQuoteDraftStatusDefinition.comment,
-        enum: TbCrmSmsQuoteDraftStatus,
-        enumName: 'TbCrmSmsQuoteDraftStatus'
-    })
-    @IsEnum(TbCrmSmsQuoteDraftStatus, { message: '报价草稿状态格式错误' })
-    status: TbCrmSmsQuoteDraftStatus
-
     @ApiProperty({ description: '备注', required: false, example: '客户专属报价草稿' })
     @IsOptional()
     @IsString({ message: '备注必须是字符串' })
@@ -172,8 +153,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_crm_sms_quote_draft_batch_country', ['draftBatchId', 'countryKeyId'], { unique: true })
-@Index('idx_tb_crm_sms_quote_draft_user_app', ['userKeyId', 'applicationKeyId'])
-@Index('idx_tb_crm_sms_quote_draft_status', ['status'])
+@Index('idx_tb_crm_sms_quote_draft_user_app', ['userKeyId', 'appKeyId'])
 @Index('idx_tb_crm_sms_quote_draft_create_by', ['createBy'])
 @Entity({ name: 'tb_crm_sms_quote_draft', comment: 'CRM 短信报价草稿表' })
 export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
@@ -183,8 +163,8 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     @Column({ name: TbCrmSmsQuoteDraftColumn.USER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
     userKeyId: number
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.APPLICATION_KEY_ID, type: 'int', nullable: false, comment: 'CRM 短信应用主键' })
-    applicationKeyId: number
+    @Column({ name: TbCrmSmsQuoteDraftColumn.APP_KEY_ID, type: 'int', nullable: false, comment: 'CRM 短信应用主键' })
+    appKeyId: number
 
     @Column({ name: TbCrmSmsQuoteDraftColumn.APP_ID, type: 'varchar', length: 32, nullable: false, comment: '应用ID快照' })
     appId: string
@@ -282,15 +262,6 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
         comment: TbCrmSmsQuoteDraftSourceDefinition.comment
     })
     source: TbCrmSmsQuoteDraftSource
-
-    @Column({
-        name: TbCrmSmsQuoteDraftColumn.STATUS,
-        type: 'varchar',
-        length: 32,
-        nullable: false,
-        comment: TbCrmSmsQuoteDraftStatusDefinition.comment
-    })
-    status: TbCrmSmsQuoteDraftStatus
 
     @Column({ name: TbCrmSmsQuoteDraftColumn.REMARK, type: 'varchar', length: 1024, nullable: true, comment: '备注' })
     remark: string

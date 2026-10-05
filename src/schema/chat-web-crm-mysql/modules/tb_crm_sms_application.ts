@@ -46,7 +46,7 @@ export const TbCrmSmsApplicationTypeDefinition = defineEnumMetadata(TbCrmSmsAppl
 })
 
 export class TbCrmSmsApplicationDto extends DataBaseByDto {
-    @ApiProperty({ description: 'CRM 客户主键', example: 5181000 })
+    @ApiProperty({ description: 'CRM 客户主键', example: 10241000 })
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })
     userKeyId: number

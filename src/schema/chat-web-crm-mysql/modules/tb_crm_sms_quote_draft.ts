@@ -7,10 +7,10 @@ import { DataBaseByAdapter, DataBaseByDto, DateWithColumn, defineEnumMetadata, B
 export enum TbCrmSmsQuoteDraftColumn {
     KEY_ID = 'key_id',
     DRAFT_BATCH_ID = 'draft_batch_id',
-    CONSUMER_KEY_ID = 'consumer_key_id',
+    USER_KEY_ID = 'user_key_id',
     APPLICATION_KEY_ID = 'application_key_id',
     APP_ID = 'app_id',
-    CONSUMER_ALIAS = 'consumer_alias',
+    USER_ALIAS = 'user_alias',
     APP_ALIAS = 'app_alias',
     COUNTRY_KEY_ID = 'country_key_id',
     CODE = 'code',
@@ -61,7 +61,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @ApiProperty({ description: 'CRM 客户主键', example: 5181000 })
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })
-    consumerKeyId: number
+    userKeyId: number
 
     @ApiProperty({ description: 'CRM 短信应用主键', example: 1 })
     @IsInt({ message: '短信应用主键必须是整数' })
@@ -78,7 +78,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @IsOptional()
     @IsString({ message: '客户别名必须是字符串' })
     @MaxLength(64, { message: '客户别名长度不能超过64位' })
-    consumerAlias: string
+    userAlias: string
 
     @ApiProperty({ description: '应用别名快照', example: 'LYNKS-OTP' })
     @IsString({ message: '应用别名必须是字符串' })
@@ -172,7 +172,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_crm_sms_quote_draft_batch_country', ['draftBatchId', 'countryKeyId'], { unique: true })
-@Index('idx_tb_crm_sms_quote_draft_consumer_app', ['consumerKeyId', 'applicationKeyId'])
+@Index('idx_tb_crm_sms_quote_draft_user_app', ['userKeyId', 'applicationKeyId'])
 @Index('idx_tb_crm_sms_quote_draft_status', ['status'])
 @Index('idx_tb_crm_sms_quote_draft_create_by', ['createBy'])
 @Entity({ name: 'tb_crm_sms_quote_draft', comment: 'CRM 短信报价草稿表' })
@@ -180,8 +180,8 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     @Column({ name: TbCrmSmsQuoteDraftColumn.DRAFT_BATCH_ID, type: 'varchar', length: 36, nullable: false, comment: '草稿批次ID' })
     draftBatchId: string
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.CONSUMER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
-    consumerKeyId: number
+    @Column({ name: TbCrmSmsQuoteDraftColumn.USER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
+    userKeyId: number
 
     @Column({ name: TbCrmSmsQuoteDraftColumn.APPLICATION_KEY_ID, type: 'int', nullable: false, comment: 'CRM 短信应用主键' })
     applicationKeyId: number
@@ -189,8 +189,8 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     @Column({ name: TbCrmSmsQuoteDraftColumn.APP_ID, type: 'varchar', length: 32, nullable: false, comment: '应用ID快照' })
     appId: string
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.CONSUMER_ALIAS, type: 'varchar', length: 64, nullable: true, comment: '客户别名快照' })
-    consumerAlias: string
+    @Column({ name: TbCrmSmsQuoteDraftColumn.USER_ALIAS, type: 'varchar', length: 64, nullable: true, comment: '客户别名快照' })
+    userAlias: string
 
     @Column({ name: TbCrmSmsQuoteDraftColumn.APP_ALIAS, type: 'varchar', length: 64, nullable: false, comment: '应用别名快照' })
     appAlias: string

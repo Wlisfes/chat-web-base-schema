@@ -19,11 +19,8 @@ export class CrmConsumerPageResponseDto extends PageResponseDataDto {
 
 /** CRM 客户下拉服务间响应。 */
 export class CrmConsumerSelectResponseDto {
-    @ApiProperty({ description: '客户主键', example: 5181000 })
+    @ApiProperty({ description: '客户主键', example: 10241000 })
     keyId: number
-
-    @ApiProperty({ description: '客户 UID', example: '2149446185344106496' })
-    uid: string
 
     @ApiProperty({ description: '归属账号 UID', example: '2149446185344106496' })
     ownerUserUid: string
@@ -130,7 +127,7 @@ export class CrmCreateConsumerRequestDto {
 
 /** CRM 客户更新服务间请求。 */
 export class CrmUpdateConsumerRequestDto extends CrmCreateConsumerRequestDto {
-    @ApiProperty({ description: '客户主键', example: 5181000 })
+    @ApiProperty({ description: '客户主键', example: 10241000 })
     @Type(() => Number)
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })
@@ -139,7 +136,7 @@ export class CrmUpdateConsumerRequestDto extends CrmCreateConsumerRequestDto {
 
 /** CRM 客户状态更新服务间请求。 */
 export class CrmUpdateConsumerStatusRequestDto extends PickType(Schema.TbCrmUserDto, ['status'] as const) {
-    @ApiProperty({ description: '客户主键', example: 5181000 })
+    @ApiProperty({ description: '客户主键', example: 10241000 })
     @Type(() => Number)
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })
@@ -148,7 +145,7 @@ export class CrmUpdateConsumerStatusRequestDto extends PickType(Schema.TbCrmUser
 
 /** CRM 客户详情服务间请求。 */
 export class CrmResolveConsumerRequestDto extends PickType(Schema.TbCrmUserDto, ['keyId'] as const) {
-    @ApiProperty({ description: '客户主键', example: 5181000 })
+    @ApiProperty({ description: '客户主键', example: 10241000 })
     @Type(() => Number)
     @IsInt({ message: '客户主键必须是整数' })
     @Min(1, { message: '客户主键必须大于0' })

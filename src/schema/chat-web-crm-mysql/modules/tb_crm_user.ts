@@ -5,7 +5,6 @@ import { DataBaseAdapter, DataBaseDto, defineEnumMetadata, BigintNumberTransform
 
 export enum TbCrmUserColumn {
     KEY_ID = 'key_id',
-    UID = 'uid',
     OWNER_USER_UID = 'owner_user_uid',
     NAME = 'name',
     ALIAS = 'alias',
@@ -94,11 +93,6 @@ export const TbCrmUserAuthStatusDefinition = defineEnumMetadata(TbCrmUserAuthSta
 })
 
 export class TbCrmUserDto extends DataBaseDto {
-    @ApiProperty({ description: '客户UID', example: '2149446185344106496' })
-    @IsString({ message: '客户UID必须是字符串' })
-    @Length(1, 19, { message: '客户UID长度不能超过19位' })
-    uid: string
-
     @ApiProperty({ description: '归属账号UID', example: '2149446185344106496' })
     @IsString({ message: '归属账号UID必须是字符串' })
     @Length(1, 19, { message: '归属账号UID长度不能超过19位' })
@@ -194,16 +188,12 @@ export class TbCrmUserDto extends DataBaseDto {
     remark: string
 }
 
-@Index('uk_tb_crm_user_uid', ['uid'], { unique: true })
 @Index('idx_tb_crm_user_owner_user_uid', ['ownerUserUid'])
 @Index('idx_tb_crm_user_brand_key_id', ['brandKeyId'])
 @Index('idx_tb_crm_user_status', ['status'])
 @Index('idx_tb_crm_user_currency', ['currency'])
 @Entity({ name: 'tb_crm_user', comment: '外部客户账号表' })
 export class TbCrmUser extends DataBaseAdapter {
-    @Column({ name: TbCrmUserColumn.UID, type: 'varchar', length: 19, nullable: false, comment: '客户UID' })
-    uid: string
-
     @Column({ name: TbCrmUserColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '归属账号UID' })
     ownerUserUid: string
 

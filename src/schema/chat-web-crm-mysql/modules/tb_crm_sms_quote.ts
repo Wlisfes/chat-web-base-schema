@@ -7,7 +7,7 @@ import { DataBaseByAdapter, DataBaseByDto, DateWithColumn, defineEnumMetadata, B
 export enum TbCrmSmsQuoteColumn {
     KEY_ID = 'key_id',
     USER_KEY_ID = 'user_key_id',
-    APPLICATION_KEY_ID = 'application_key_id',
+    APP_KEY_ID = 'app_key_id',
     APP_ID = 'app_id',
     USER_ALIAS = 'user_alias',
     APP_ALIAS = 'app_alias',
@@ -35,12 +35,14 @@ export enum TbCrmSmsQuoteColumn {
 export enum TbCrmSmsQuoteStatus {
     DELETED = 'deleted',
     EFFECTIVE = 'effective',
+    EXPIRED = 'expired',
     PENDING = 'pending'
 }
 
 export const TbCrmSmsQuoteStatusDefinition = defineEnumMetadata(TbCrmSmsQuoteStatus, '短信报价状态', {
-    [TbCrmSmsQuoteStatus.DELETED]: { label: '已删除', description: '报价已停止使用', type: 'default' },
+    [TbCrmSmsQuoteStatus.DELETED]: { label: '已作废', description: '报价被手动作废或在生效前被替换', type: 'default' },
     [TbCrmSmsQuoteStatus.EFFECTIVE]: { label: '已生效', description: '报价当前有效', type: 'success' },
+    [TbCrmSmsQuoteStatus.EXPIRED]: { label: '已失效', description: '报价已到失效时间', type: 'error' },
     [TbCrmSmsQuoteStatus.PENDING]: { label: '待生效', description: '报价等待生效时间', type: 'warning' }
 })
 
@@ -53,7 +55,7 @@ export class TbCrmSmsQuoteDto extends DataBaseByDto {
     @ApiProperty({ description: 'CRM 短信应用主键', example: 1 })
     @IsInt({ message: '短信应用主键必须是整数' })
     @Min(1, { message: '短信应用主键必须大于0' })
-    applicationKeyId: number
+    appKeyId: number
 
     @ApiProperty({ description: '应用ID快照', example: 'SMS9F2A8B31' })
     @IsString({ message: '应用ID必须是字符串' })
@@ -149,7 +151,7 @@ export class TbCrmSmsQuoteDto extends DataBaseByDto {
     remark: string
 }
 
-@Index('idx_tb_crm_sms_quote_user_app', ['userKeyId', 'applicationKeyId'])
+@Index('idx_tb_crm_sms_quote_user_app', ['userKeyId', 'appKeyId'])
 @Index('idx_tb_crm_sms_quote_country_key_id', ['countryKeyId'])
 @Index('idx_tb_crm_sms_quote_status_effective_time', ['status', 'effectiveTime'])
 @Index('idx_tb_crm_sms_quote_published_time', ['publishedTime'])
@@ -158,8 +160,8 @@ export class TbCrmSmsQuote extends DataBaseByAdapter {
     @Column({ name: TbCrmSmsQuoteColumn.USER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
     userKeyId: number
 
-    @Column({ name: TbCrmSmsQuoteColumn.APPLICATION_KEY_ID, type: 'int', nullable: false, comment: 'CRM 短信应用主键' })
-    applicationKeyId: number
+    @Column({ name: TbCrmSmsQuoteColumn.APP_KEY_ID, type: 'int', nullable: false, comment: 'CRM 短信应用主键' })
+    appKeyId: number
 
     @Column({ name: TbCrmSmsQuoteColumn.APP_ID, type: 'varchar', length: 32, nullable: false, comment: '应用ID快照' })
     appId: string

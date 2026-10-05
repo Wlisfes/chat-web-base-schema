@@ -187,11 +187,11 @@ validateTable({
 })
 
 validateTable({
-    entity: crmSchema.TbCrmSmsApplication,
-    dto: crmSchema.TbCrmSmsApplicationDto,
-    columns: crmSchema.TbCrmSmsApplicationColumn,
-    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_application.sql'),
-    enumComments: [crmSchema.TbCrmSmsApplicationStatusDefinition.comment, crmSchema.TbCrmSmsApplicationTypeDefinition.comment]
+    entity: crmSchema.TbCrmSmsApp,
+    dto: crmSchema.TbCrmSmsAppDto,
+    columns: crmSchema.TbCrmSmsAppColumn,
+    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_app.sql'),
+    enumComments: [crmSchema.TbCrmSmsAppStatusDefinition.comment, crmSchema.TbCrmSmsAppTypeDefinition.comment]
 })
 
 validateTable({
@@ -199,7 +199,7 @@ validateTable({
     dto: crmSchema.TbCrmSmsQuoteDraftDto,
     columns: crmSchema.TbCrmSmsQuoteDraftColumn,
     sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_quote_draft.sql'),
-    enumComments: [crmSchema.TbCrmSmsQuoteDraftSourceDefinition.comment, crmSchema.TbCrmSmsQuoteDraftStatusDefinition.comment]
+    enumComments: [crmSchema.TbCrmSmsQuoteDraftSourceDefinition.comment]
 })
 
 validateTable({

@@ -4,6 +4,24 @@ import { TbAccountUserEmploymentStatus, TbAccountUserStatus } from '@/schema/cha
 import { ACCOUNT_USER_RESOLVER_FIELDS } from './feign-account.constants'
 import type * as AccountTypes from './feign-account.interface'
 
+/** 账号所属组织摘要的 Feign 响应文档模型。 */
+export class AccountUserOrganizationSummaryResponseDto {
+    @ApiProperty({ description: '组织主键', example: 1 })
+    keyId: number
+
+    @ApiProperty({ description: '组织名称', example: '研发中心' })
+    name: string
+
+    @ApiProperty({ description: '组织编码', example: 'RD' })
+    code: string
+
+    @ApiProperty({ description: '是否主组织', example: true })
+    isPrimary: boolean
+
+    @ApiProperty({ description: '组织内岗位名称', required: false, example: '前端开发工程师' })
+    postName?: string
+}
+
 /** 账号展示摘要的 Feign 响应文档模型；除 uid 外的字段都按请求 fields 返回。 */
 export class AccountUserSummaryResponseDto {
     @ApiProperty({ description: '账号 UID', example: '2149446185344106496' })
@@ -34,6 +52,13 @@ export class AccountUserSummaryResponseDto {
         example: 'employed'
     })
     employmentStatus?: TbAccountUserEmploymentStatus
+
+    @ApiProperty({
+        description: '账号所属组织，仅请求 organizations 时返回；只包含启用的成员关系和启用的组织',
+        required: false,
+        type: [AccountUserOrganizationSummaryResponseDto]
+    })
+    organizations?: AccountUserOrganizationSummaryResponseDto[]
 }
 
 /** 列表操作人展示选项的响应文档模型；字段集合与请求 fields 一致，账号不存在时只返回 uid。 */

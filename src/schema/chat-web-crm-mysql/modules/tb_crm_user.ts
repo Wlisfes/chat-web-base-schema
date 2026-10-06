@@ -69,13 +69,13 @@ export enum TbCrmUserStage {
 }
 
 export const TbCrmUserStageDefinition = defineEnumMetadata(TbCrmUserStage, '客户阶段', {
+    [TbCrmUserStage.CLUETRAIL]: { label: '线索阶段', description: '客户处于线索跟进', type: 'default' },
+    [TbCrmUserStage.INTENTION]: { label: '意向阶段', description: '客户已有合作意向', type: 'cyan' },
     [TbCrmUserStage.AUTHENTICATE]: { label: '认证阶段', description: '客户正在认证', type: 'blue' },
     [TbCrmUserStage.CHARGE]: { label: '充值阶段', description: '客户准备充值', type: 'orange' },
-    [TbCrmUserStage.CLUETRAIL]: { label: '线索阶段', description: '客户处于线索跟进', type: 'default' },
-    [TbCrmUserStage.COOPERATE]: { label: '价值阶段', description: '客户已形成稳定价值', type: 'purple' },
-    [TbCrmUserStage.INTENTION]: { label: '意向阶段', description: '客户已有合作意向', type: 'cyan' },
+    [TbCrmUserStage.TESTING]: { label: '测试阶段', description: '客户正在业务测试', type: 'geekblue' },
     [TbCrmUserStage.PRODUCTION]: { label: '生产阶段', description: '客户已进入生产', type: 'green' },
-    [TbCrmUserStage.TESTING]: { label: '测试阶段', description: '客户正在业务测试', type: 'geekblue' }
+    [TbCrmUserStage.COOPERATE]: { label: '价值阶段', description: '客户已形成稳定价值', type: 'purple' }
 })
 
 export enum TbCrmUserAuthStatus {
@@ -86,9 +86,9 @@ export enum TbCrmUserAuthStatus {
 }
 
 export const TbCrmUserAuthStatusDefinition = defineEnumMetadata(TbCrmUserAuthStatus, '认证状态', {
+    [TbCrmUserAuthStatus.UNVERIFIED]: { label: '未认证', description: '尚未提交认证', type: 'default' },
     [TbCrmUserAuthStatus.PENDING]: { label: '认证中', description: '认证资料审核中', type: 'warning' },
     [TbCrmUserAuthStatus.REJECTED]: { label: '认证失败', description: '认证资料未通过', type: 'error' },
-    [TbCrmUserAuthStatus.UNVERIFIED]: { label: '未认证', description: '尚未提交认证', type: 'default' },
     [TbCrmUserAuthStatus.VERIFIED]: { label: '已认证', description: '认证已通过', type: 'success' }
 })
 

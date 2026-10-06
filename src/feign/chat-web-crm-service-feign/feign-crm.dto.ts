@@ -6,10 +6,7 @@ import { PageResponseDataDto } from '@/decorator'
 import { PageDto } from '@/utils'
 
 /** CRM 客户服务间响应摘要。 */
-export class CrmConsumerResponseDto extends Schema.TbCrmUserDto {
-    @ApiProperty({ description: '财务品牌主键', example: 1001 })
-    brandId: number
-}
+export class CrmConsumerResponseDto extends Schema.TbCrmUserDto {}
 
 /** CRM 客户分页响应。 */
 export class CrmConsumerPageResponseDto extends PageResponseDataDto {
@@ -32,7 +29,7 @@ export class CrmConsumerSelectResponseDto {
     alias?: string
 
     @ApiProperty({ description: '财务品牌主键', example: 1001 })
-    brandId: number
+    brandKeyId: number
 
     @ApiProperty({ description: '财务币种编码', example: 'USD' })
     currency: string
@@ -70,7 +67,7 @@ export class CrmCreateConsumerRequestDto {
     @Type(() => Number)
     @IsInt({ message: '财务品牌主键必须是整数' })
     @Min(1, { message: '财务品牌主键必须大于0' })
-    brandId: number
+    brandKeyId: number
 
     @ApiProperty({ description: '财务币种编码', example: 'USD' })
     @IsString({ message: '财务币种编码必须是字符串' })
@@ -165,5 +162,5 @@ export class CrmListConsumerRequestDto extends IntersectionType(
     @Type(() => Number)
     @IsInt({ message: '财务品牌主键必须是整数' })
     @Min(1, { message: '财务品牌主键必须大于0' })
-    brandId?: number
+    brandKeyId?: number
 }

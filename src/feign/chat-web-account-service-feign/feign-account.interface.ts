@@ -4,6 +4,20 @@ import type { ACCOUNT_USER_RESOLVER_FIELDS } from './feign-account.constants'
 /**账号批量还原允许返回的字段。*/
 export type AccountUserField = (typeof ACCOUNT_USER_RESOLVER_FIELDS)[number]
 
+/**账号所属组织摘要，仅返回启用的成员关系和启用的组织。*/
+export interface AccountUserOrganizationSummary {
+    /**组织主键。*/
+    keyId: number
+    /**组织名称。*/
+    name: string
+    /**组织编码。*/
+    code: string
+    /**是否主组织。*/
+    isPrimary: boolean
+    /**组织内岗位名称。*/
+    postName?: string
+}
+
 /**账号服务用户展示摘要，供跨服务把操作人 UID 还原为可读信息使用；扩展字段只在请求 fields 时返回。*/
 export interface AccountUserSummary {
     /**账号 UID。*/
@@ -22,6 +36,8 @@ export interface AccountUserSummary {
     status?: TbAccountUserStatus
     /**员工在职状态，仅请求 employmentStatus 时返回。*/
     employmentStatus?: TbAccountUserEmploymentStatus
+    /**账号所属组织，仅请求 organizations 时返回。*/
+    organizations?: AccountUserOrganizationSummary[]
 }
 
 /**列表展示使用的账号选项；字段集合与请求 fields 一致，账号不存在时只保留 uid。*/

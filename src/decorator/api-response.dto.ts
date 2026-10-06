@@ -18,7 +18,7 @@ export class ApiResponseDocumentDto {
     @ApiProperty({
         description: '异常请求的接口地址，仅错误响应返回',
         required: false,
-        example: 'POST /api/skyline/deploy/chunk/column/option'
+        example: 'POST /api/skyline/deploy/chunk/option/column'
     })
     url?: string
 

@@ -36,7 +36,7 @@ export interface ApiServiceResponseOptions {
     status?: number
     /** 响应说明。 */
     description?: string
-    /** data 字段的 DTO 或基础类型。 */
+    /** data 字段的 DTO 或基础类型；同时传 schema 时仅用于注册 Swagger 引用模型。 */
     type?: DocumentType
     /** data 字段是否为数组。 */
     isArray?: boolean
@@ -174,7 +174,7 @@ function createSchemaExample(schema: DocumentSchema): unknown {
 
 function createResponseExample(response: ApiServiceResponseOptions): unknown {
     if (response.example !== undefined) return response.example
-    let data = response.type ? createModelExample(response.type) : createSchemaExample(response.schema ?? { type: 'object' })
+    let data = response.schema ? createSchemaExample(response.schema) : createModelExample(response.type ?? Object)
     if (response.isArray) data = [data]
     if (response.envelope === false) return data
     return {

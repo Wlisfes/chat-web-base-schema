@@ -27,13 +27,17 @@ export class FeignClientSkylineManager extends FeignWebClient<SkylineTypes.Feign
     @FeignPost('/chunk/column', {
         operation: { summary: '供内部服务按枚举类型编码批量获取枚举字典选项' },
         request: { source: 'body', type: SkylineDto.SkylineColumnChunkOptionRequestDto },
-        response: { type: SkylineDto.SkylineChunkOptionGroupDto, isArray: true, description: '按枚举类型编码分组的枚举字典选项' }
+        response: {
+            type: SkylineDto.SkylineChunkOptionGroupDto,
+            schema: SkylineDto.SkylineChunkOptionRecordSchema,
+            description: '以枚举类型编码为 key 的枚举字典选项分组'
+        }
     })
-    async httpBaseSkylineColumnChunkOption(
+    async httpBaseSkylineChunkOptionColumn(
         @FeignHeader('authorization') _authorization: string,
         @FeignBody() _input: SkylineTypes.SkylineColumnChunkOptionInput
-    ): Promise<SkylineTypes.SkylineChunkOptionGroup[]> {
-        return this.dispatch('httpBaseSkylineColumnChunkOption', _authorization, _input)
+    ): Promise<SkylineTypes.SkylineChunkOptionRecord> {
+        return this.dispatch('httpBaseSkylineChunkOptionColumn', _authorization, _input)
     }
 
     /**按枚举业务值解析单个启用状态的枚举字典选项**/

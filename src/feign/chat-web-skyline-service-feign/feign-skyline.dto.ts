@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, getSchemaPath } from '@nestjs/swagger'
 import { ArrayNotEmpty, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 import { TbSkylineChunkModule, TbSkylineChunkModuleType } from '@/schema/chat-web-skyline-mysql'
 
@@ -44,6 +44,30 @@ export class SkylineChunkOptionGroupDto {
 
     @ApiProperty({ description: '枚举项选项树', type: [SkylineChunkOptionDto] })
     options: SkylineChunkOptionDto[]
+}
+
+/** 以枚举类型编码为 key 的分组对象文档 Schema。 */
+export const SkylineChunkOptionRecordSchema = {
+    type: 'object' as const,
+    additionalProperties: { $ref: getSchemaPath(SkylineChunkOptionGroupDto) },
+    example: {
+        [TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST]: {
+            type: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST,
+            count: 1,
+            options: [
+                {
+                    value: '1001',
+                    label: '前端开发工程师',
+                    description: '前端开发工程师',
+                    keyId: 1001,
+                    pid: null,
+                    sort: 1,
+                    json: {},
+                    children: []
+                }
+            ]
+        }
+    }
 }
 
 /** 按枚举类型编码批量查询枚举字典选项的请求。 */

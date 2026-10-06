@@ -519,12 +519,18 @@ test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查�
     )
     const service = factory.create(FeignClientFinanceManager)
 
-    await service.httpBaseFinanceBatchFrozenSms('Bearer service-token', { countryKeyIds: [1, 2] })
+    await service.httpBaseFinanceColumnFrozenSmsResolver('Bearer service-token', { countryKeyIds: [1, 2] })
+    await service.httpBaseFinanceFrozenSmsResolver('Bearer service-token', { countryKeyId: 1 })
     await service.httpBaseFinanceCurrencyExchangeResolver('Bearer service-token', { currency: 'CNY' })
+    await service.httpBaseFinanceColumnBrandResolver('Bearer service-token', { keyIds: [1001] })
+    await service.httpBaseFinanceBrandResolver('Bearer service-token', { keyId: 1001 })
 
     assert.deepEqual(requests, [
-        { url: 'http://gateway.internal:5000/feign/finance/frozen/sms/batch', method: 'POST' },
-        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolve', method: 'POST' }
+        { url: 'http://gateway.internal:5000/feign/finance/frozen/sms/column/resolve', method: 'POST' },
+        { url: 'http://gateway.internal:5000/feign/finance/frozen/sms/resolve', method: 'POST' },
+        { url: 'http://gateway.internal:5000/feign/finance/currency/exchange/resolve', method: 'POST' },
+        { url: 'http://gateway.internal:5000/feign/finance/brand/column/resolve', method: 'POST' },
+        { url: 'http://gateway.internal:5000/feign/finance/brand/resolve', method: 'POST' }
     ])
 })
 

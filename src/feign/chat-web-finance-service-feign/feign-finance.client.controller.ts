@@ -23,13 +23,40 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
         super(service, configService)
     }
 
-    /**按国家/地区主键批量获取短信基础价格**/
-    @FeignPost('/frozen/sms/batch')
-    async httpBaseFinanceBatchFrozenSms(
+    /**按品牌主键批量获取品牌展示摘要**/
+    @FeignPost('/brand/column/resolve')
+    async httpBaseFinanceColumnBrandResolver(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: FinanceTypes.FinanceFrozenSmsBatchRequest
-    ): Promise<FinanceTypes.FinanceFrozenSms[]> {
-        return this.dispatch('httpBaseFinanceBatchFrozenSms', _authorization, _input)
+        @FeignBody() _input: FinanceTypes.FinanceColumnBrandResolverRequest
+    ): Promise<FinanceTypes.FinanceBrandSummary[]> {
+        return this.dispatch('httpBaseFinanceColumnBrandResolver', _authorization, _input)
+    }
+
+    /**按品牌主键获取单个品牌展示摘要**/
+    @FeignPost('/brand/resolve')
+    async httpBaseFinanceBrandResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: FinanceTypes.FinanceBrandResolverRequest
+    ): Promise<FinanceTypes.FinanceBrandSummary> {
+        return this.dispatch('httpBaseFinanceBrandResolver', _authorization, _input)
+    }
+
+    /**按国家/地区主键批量获取短信基础价格**/
+    @FeignPost('/frozen/sms/column/resolve')
+    async httpBaseFinanceColumnFrozenSmsResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: FinanceTypes.FinanceColumnFrozenSmsResolverRequest
+    ): Promise<FinanceTypes.FinanceFrozenSmsSummary[]> {
+        return this.dispatch('httpBaseFinanceColumnFrozenSmsResolver', _authorization, _input)
+    }
+
+    /**按国家/地区主键获取单个短信基础价格**/
+    @FeignPost('/frozen/sms/resolve')
+    async httpBaseFinanceFrozenSmsResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: FinanceTypes.FinanceFrozenSmsResolverRequest
+    ): Promise<FinanceTypes.FinanceFrozenSmsSummary> {
+        return this.dispatch('httpBaseFinanceFrozenSmsResolver', _authorization, _input)
     }
 
     /**按币种获取最新汇率**/

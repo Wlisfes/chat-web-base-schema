@@ -49,9 +49,9 @@ export class TbAccountOrganizationDto extends DataBaseDto {
     @Min(1, { message: '父组织主键必须大于0' })
     parentKeyId: number
 
-    @ApiProperty({ description: '组织编码', example: 'RD' })
+    @ApiProperty({ description: '组织编码；非必填', example: 'RD', required: false })
+    @IsOptional()
     @IsString({ message: '组织编码必须是字符串' })
-    @IsNotEmpty({ message: '组织编码必填' })
     @MaxLength(64, { message: '组织编码长度不能超过64位' })
     code: string
 
@@ -98,7 +98,7 @@ export class TbAccountOrganization extends DataBaseAdapter {
     @Column({ name: TbAccountOrganizationColumn.PARENT_KEY_ID, type: 'int', nullable: true, comment: '父组织主键' })
     parentKeyId: number
 
-    @Column({ name: TbAccountOrganizationColumn.CODE, type: 'varchar', length: 64, nullable: false, comment: '组织编码' })
+    @Column({ name: TbAccountOrganizationColumn.CODE, type: 'varchar', length: 64, nullable: true, comment: '组织编码' })
     code: string
 
     @Column({ name: TbAccountOrganizationColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '组织名称' })

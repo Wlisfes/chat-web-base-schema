@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `tb_account_organization` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `parent_key_id` int NULL COMMENT '父组织主键',
-    `code` varchar(64) NOT NULL COMMENT '组织编码',
+    `code` varchar(64) NULL COMMENT '组织编码',
     `name` varchar(64) NOT NULL COMMENT '组织名称',
     `type` varchar(32) NOT NULL COMMENT '组织类型：company=公司（组织架构的公司或法人主体节点）；department=部门（正式部门节点）；team=团队（项目组等非正式团队节点）',
     `leader_user_uid` varchar(19) NULL COMMENT '负责人账号UID',

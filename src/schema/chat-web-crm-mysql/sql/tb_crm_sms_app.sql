@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `tb_crm_sms_app` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `user_key_id` int NOT NULL COMMENT 'CRM 客户主键',
-    `app_id` varchar(32) NOT NULL COMMENT '应用ID',
+    `app_id` varchar(16) NOT NULL COMMENT '应用ID',
     `secret` varchar(255) NULL COMMENT '应用密钥（AES-256-GCM 加密存储）',
     `app_name` varchar(64) NOT NULL COMMENT '应用名称',
     `app_alias` varchar(64) NOT NULL COMMENT '应用别名',

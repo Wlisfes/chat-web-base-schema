@@ -50,10 +50,10 @@ export class TbCrmSmsAppDto extends DataBaseByDto {
     @Min(1, { message: '客户主键必须大于0' })
     userKeyId: number
 
-    @ApiProperty({ description: '应用ID', example: 'SMS9F2A8B31' })
+    @ApiProperty({ description: '应用ID，固定16位字母数字', example: 'V0o57nDC6fqg01wV' })
     @IsString({ message: '应用ID必须是字符串' })
     @IsNotEmpty({ message: '应用ID必填' })
-    @MaxLength(32, { message: '应用ID长度不能超过32位' })
+    @MaxLength(16, { message: '应用ID长度不能超过16位' })
     appId: string
 
     @ApiProperty({
@@ -117,7 +117,7 @@ export class TbCrmSmsApp extends DataBaseByAdapter {
     @Column({ name: TbCrmSmsAppColumn.USER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
     userKeyId: number
 
-    @Column({ name: TbCrmSmsAppColumn.APP_ID, type: 'varchar', length: 32, nullable: false, comment: '应用ID' })
+    @Column({ name: TbCrmSmsAppColumn.APP_ID, type: 'varchar', length: 16, nullable: false, comment: '应用ID' })
     appId: string
 
     @Column({

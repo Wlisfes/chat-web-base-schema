@@ -323,7 +323,7 @@ test('账号业务 Feign 客户端可被直接继承为服务端路由且不再�
     )
 
     assert.equal(AccountFeignController.prototype.introspect, undefined)
-    assert.equal(AccountFeignController.prototype.httpBaseCrmConsumerResolver, undefined)
+    assert.equal(AccountFeignController.prototype.httpBaseCrmUserResolver, undefined)
 
     // 服务间路由带 /feign/<服务名> 前缀，网关不改写，因此不会与公开业务路由冲突。
     const httpBaseAccountColumnUserResolver = AccountFeignController.prototype.httpBaseAccountColumnUserResolver

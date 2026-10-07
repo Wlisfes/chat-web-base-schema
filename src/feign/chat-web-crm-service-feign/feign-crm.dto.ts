@@ -1,21 +1,21 @@
 import { ApiProperty, IntersectionType, PartialType, PickType } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
+import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
 import * as Schema from '@/schema/chat-web-crm-mysql'
 import { PageResponseDataDto } from '@/decorator'
 import { PageDto } from '@/utils'
 
 /** CRM 客户服务间响应摘要。 */
-export class CrmConsumerResponseDto extends Schema.TbCrmUserDto {}
+export class CrmUserResponseDto extends Schema.TbCrmUserDto {}
 
 /** CRM 客户分页响应。 */
-export class CrmConsumerPageResponseDto extends PageResponseDataDto {
-    @ApiProperty({ description: '客户列表', type: [CrmConsumerResponseDto] })
-    list: CrmConsumerResponseDto[]
+export class CrmUserPageResponseDto extends PageResponseDataDto {
+    @ApiProperty({ description: '客户列表', type: [CrmUserResponseDto] })
+    list: CrmUserResponseDto[]
 }
 
 /** CRM 客户下拉服务间响应。 */
-export class CrmConsumerSelectResponseDto {
+export class CrmUserSelectResponseDto {
     @ApiProperty({ description: '客户主键', example: 10241000 })
     keyId: number
 
@@ -34,7 +34,7 @@ export class CrmConsumerSelectResponseDto {
     @ApiProperty({ description: '财务币种编码', example: 'USD' })
     currency: string
 
-    @ApiProperty({ description: '邮箱', example: 'consumer@example.com' })
+    @ApiProperty({ description: '邮箱', example: 'user@example.com' })
     email: string
 
     @ApiProperty({ description: '电话号码', required: false, example: '+8613800138000' })
@@ -45,7 +45,7 @@ export class CrmConsumerSelectResponseDto {
 }
 
 /** CRM 客户创建服务间请求。 */
-export class CrmCreateConsumerRequestDto {
+export class CrmCreateUserRequestDto {
     @ApiProperty({ description: '归属账号 UID', example: '2149446185344106496' })
     @IsString({ message: '归属账号UID必须是字符串' })
     @MaxLength(19, { message: '归属账号UID长度不能超过19位' })
@@ -74,7 +74,7 @@ export class CrmCreateConsumerRequestDto {
     @MaxLength(16, { message: '财务币种编码长度不能超过16位' })
     currency: string
 
-    @ApiProperty({ description: '邮箱', example: 'consumer@example.com' })
+    @ApiProperty({ description: '邮箱', example: 'user@example.com' })
     @IsString({ message: '邮箱必须是字符串' })
     @MaxLength(128, { message: '邮箱长度不能超过128位' })
     email: string
@@ -123,7 +123,7 @@ export class CrmCreateConsumerRequestDto {
 }
 
 /** CRM 客户更新服务间请求。 */
-export class CrmUpdateConsumerRequestDto extends CrmCreateConsumerRequestDto {
+export class CrmUpdateUserRequestDto extends CrmCreateUserRequestDto {
     @ApiProperty({ description: '客户主键', example: 10241000 })
     @Type(() => Number)
     @IsInt({ message: '客户主键必须是整数' })
@@ -132,7 +132,7 @@ export class CrmUpdateConsumerRequestDto extends CrmCreateConsumerRequestDto {
 }
 
 /** CRM 客户状态更新服务间请求。 */
-export class CrmUpdateConsumerStatusRequestDto extends PickType(Schema.TbCrmUserDto, ['status'] as const) {
+export class CrmUpdateUserStatusRequestDto extends PickType(Schema.TbCrmUserDto, ['status'] as const) {
     @ApiProperty({ description: '客户主键', example: 10241000 })
     @Type(() => Number)
     @IsInt({ message: '客户主键必须是整数' })
@@ -141,7 +141,7 @@ export class CrmUpdateConsumerStatusRequestDto extends PickType(Schema.TbCrmUser
 }
 
 /** CRM 客户详情服务间请求。 */
-export class CrmResolveConsumerRequestDto extends PickType(Schema.TbCrmUserDto, ['keyId'] as const) {
+export class CrmResolveUserRequestDto extends PickType(Schema.TbCrmUserDto, ['keyId'] as const) {
     @ApiProperty({ description: '客户主键', example: 10241000 })
     @Type(() => Number)
     @IsInt({ message: '客户主键必须是整数' })
@@ -149,11 +149,23 @@ export class CrmResolveConsumerRequestDto extends PickType(Schema.TbCrmUserDto, 
     keyId: number
 }
 
+/** CRM 客户批量详情服务间请求，单次最多 100 个主键。 */
+export class CrmColumnUserResolverRequestDto {
+    @ApiProperty({ description: '客户主键集合', type: Number, isArray: true, example: [10241000] })
+    @IsArray({ message: '客户主键集合必须是数组' })
+    @ArrayNotEmpty({ message: '客户主键集合不能为空' })
+    @ArrayMaxSize(100, { message: '客户主键集合单次最多100个' })
+    @Type(() => Number)
+    @IsInt({ each: true, message: '客户主键必须是整数' })
+    @Min(1, { each: true, message: '客户主键必须大于0' })
+    keyIds: number[]
+}
+
 /** CRM 客户下拉服务间请求。 */
-export class CrmSelectConsumerRequestDto extends PartialType(PickType(Schema.TbCrmUserDto, ['name'] as const)) {}
+export class CrmSelectUserRequestDto extends PartialType(PickType(Schema.TbCrmUserDto, ['name'] as const)) {}
 
 /** CRM 客户分页服务间请求。 */
-export class CrmListConsumerRequestDto extends IntersectionType(
+export class CrmListUserRequestDto extends IntersectionType(
     PageDto,
     PartialType(PickType(Schema.TbCrmUserDto, ['name', 'status', 'currency', 'payMode', 'authStatus', 'source'] as const))
 ) {

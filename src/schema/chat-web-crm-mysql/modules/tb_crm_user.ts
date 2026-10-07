@@ -50,12 +50,12 @@ export const TbCrmUserPayModeDefinition = defineEnumMetadata(TbCrmUserPayMode, '
 
 export enum TbCrmUserClassType {
     COMMON = 'common',
-    COOPERATE = 'cooperate'
+    CONSPIRE = 'conspire'
 }
 
 export const TbCrmUserClassTypeDefinition = defineEnumMetadata(TbCrmUserClassType, '客户类型', {
     [TbCrmUserClassType.COMMON]: { label: '普通客户', description: '普通业务客户', type: 'blue' },
-    [TbCrmUserClassType.COOPERATE]: { label: '推广客户', description: '合作推广客户', type: 'purple' }
+    [TbCrmUserClassType.CONSPIRE]: { label: '推广客户', description: '合作推广客户', type: 'purple' }
 })
 
 export enum TbCrmUserStage {

@@ -22,80 +22,93 @@ export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCr
         super(service, configService)
     }
     /**按客户主键获取客户详情**/
-    @FeignPost('/consumer/resolve', {
+    @FeignPost('/user/resolve', {
         operation: { summary: '供内部服务按客户主键获取客户详情' },
-        request: { source: 'body', type: CrmDto.CrmResolveConsumerRequestDto },
-        response: { type: CrmDto.CrmConsumerResponseDto, description: '客户详情' }
+        request: { source: 'body', type: CrmDto.CrmResolveUserRequestDto },
+        response: { type: CrmDto.CrmUserResponseDto, description: '客户详情' }
     })
-    async httpBaseCrmConsumerResolver(
+    async httpBaseCrmUserResolver(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmResolveConsumerInput
-    ): Promise<CrmTypes.CrmConsumer> {
-        return this.dispatch('httpBaseCrmConsumerResolver', _authorization, _input)
+        @FeignBody() _input: CrmTypes.CrmResolveUserInput
+    ): Promise<CrmTypes.CrmUser> {
+        return this.dispatch('httpBaseCrmUserResolver', _authorization, _input)
+    }
+
+    /**按客户主键批量获取客户详情**/
+    @FeignPost('/user/column/resolve', {
+        operation: { summary: '供内部服务按客户主键批量获取客户详情' },
+        request: { source: 'body', type: CrmDto.CrmColumnUserResolverRequestDto },
+        response: { type: CrmDto.CrmUserResponseDto, isArray: true, description: '客户详情列表' }
+    })
+    async httpBaseCrmColumnUserResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: CrmTypes.CrmColumnUserResolverInput
+    ): Promise<CrmTypes.CrmUser[]> {
+        return this.dispatch('httpBaseCrmColumnUserResolver', _authorization, _input)
     }
 
     /**按名称筛选客户下拉数据**/
-    @FeignPost('/consumer/select', {
+    @FeignPost('/user/select', {
         operation: { summary: '供内部服务筛选客户下拉数据' },
-        request: { source: 'body', type: CrmDto.CrmSelectConsumerRequestDto },
-        response: { type: CrmDto.CrmConsumerResponseDto, isArray: true, description: '客户下拉列表' }
+        request: { source: 'body', type: CrmDto.CrmSelectUserRequestDto },
+        response: { type: CrmDto.CrmUserResponseDto, isArray: true, description: '客户下拉列表' }
     })
-    async httpBaseCrmSelectConsumer(
+    async httpBaseCrmSelectUser(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmSelectConsumerInput
-    ): Promise<CrmTypes.CrmConsumerSelect[]> {
-        return this.dispatch('httpBaseCrmSelectConsumer', _authorization, _input)
+        @FeignBody() _input: CrmTypes.CrmSelectUserInput
+    ): Promise<CrmTypes.CrmUserSelect[]> {
+        return this.dispatch('httpBaseCrmSelectUser', _authorization, _input)
     }
 
     /**创建客户**/
-    @FeignPost('/consumer/create', {
+    @FeignPost('/user/create', {
         operation: { summary: '供内部服务创建客户' },
-        request: { source: 'body', type: CrmDto.CrmCreateConsumerRequestDto },
-        response: { type: CrmDto.CrmConsumerResponseDto, description: '客户详情' }
+        request: { source: 'body', type: CrmDto.CrmCreateUserRequestDto },
+        response: { type: CrmDto.CrmUserResponseDto, description: '客户详情' }
     })
-    async httpBaseCrmCreateConsumer(
+    async httpBaseCrmCreateUser(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmCreateConsumerInput
-    ): Promise<CrmTypes.CrmConsumer> {
-        return this.dispatch('httpBaseCrmCreateConsumer', _authorization, _input)
+        @FeignBody() _input: CrmTypes.CrmCreateUserInput
+    ): Promise<CrmTypes.CrmUser> {
+        return this.dispatch('httpBaseCrmCreateUser', _authorization, _input)
     }
 
     /**更新客户基础信息**/
-    @FeignPost('/consumer/update', {
+    @FeignPost('/user/update', {
         operation: { summary: '供内部服务更新客户' },
-        request: { source: 'body', type: CrmDto.CrmUpdateConsumerRequestDto },
-        response: { type: CrmDto.CrmConsumerResponseDto, description: '客户详情' }
+        request: { source: 'body', type: CrmDto.CrmUpdateUserRequestDto },
+        response: { type: CrmDto.CrmUserResponseDto, description: '客户详情' }
     })
-    async httpBaseCrmUpdateConsumer(
+    async httpBaseCrmUpdateUser(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmUpdateConsumerInput
-    ): Promise<CrmTypes.CrmConsumer> {
-        return this.dispatch('httpBaseCrmUpdateConsumer', _authorization, _input)
+        @FeignBody() _input: CrmTypes.CrmUpdateUserInput
+    ): Promise<CrmTypes.CrmUser> {
+        return this.dispatch('httpBaseCrmUpdateUser', _authorization, _input)
     }
 
     /**更新客户启用状态**/
-    @FeignPost('/consumer/status/update', {
+    @FeignPost('/user/status/update', {
         operation: { summary: '供内部服务更新客户状态' },
-        request: { source: 'body', type: CrmDto.CrmUpdateConsumerStatusRequestDto },
-        response: { type: CrmDto.CrmConsumerResponseDto, description: '客户详情' }
+        request: { source: 'body', type: CrmDto.CrmUpdateUserStatusRequestDto },
+        response: { type: CrmDto.CrmUserResponseDto, description: '客户详情' }
     })
-    async httpBaseCrmConsumerStatusUpdate(
+    async httpBaseCrmUserStatusUpdate(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmUpdateConsumerStatusInput
-    ): Promise<CrmTypes.CrmConsumer> {
-        return this.dispatch('httpBaseCrmConsumerStatusUpdate', _authorization, _input)
+        @FeignBody() _input: CrmTypes.CrmUpdateUserStatusInput
+    ): Promise<CrmTypes.CrmUser> {
+        return this.dispatch('httpBaseCrmUserStatusUpdate', _authorization, _input)
     }
 
     /**分页查询客户列表**/
-    @FeignPost('/consumer/column', {
+    @FeignPost('/user/column', {
         operation: { summary: '供内部服务分页查询客户' },
-        request: { source: 'body', type: CrmDto.CrmListConsumerRequestDto },
-        response: { type: CrmDto.CrmConsumerPageResponseDto, description: '客户分页数据' }
+        request: { source: 'body', type: CrmDto.CrmListUserRequestDto },
+        response: { type: CrmDto.CrmUserPageResponseDto, description: '客户分页数据' }
     })
-    async httpBaseCrmColumnConsumer(
+    async httpBaseCrmColumnUser(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmListConsumerInput
-    ): Promise<CrmTypes.CrmConsumerPage> {
-        return this.dispatch('httpBaseCrmColumnConsumer', _authorization, _input)
+        @FeignBody() _input: CrmTypes.CrmListUserInput
+    ): Promise<CrmTypes.CrmUserPage> {
+        return this.dispatch('httpBaseCrmColumnUser', _authorization, _input)
     }
 }

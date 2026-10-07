@@ -187,6 +187,13 @@ validateTable({
 })
 
 validateTable({
+    entity: crmSchema.TbCrmUserConfig,
+    dto: crmSchema.TbCrmUserConfigDto,
+    columns: crmSchema.TbCrmUserConfigColumn,
+    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_user_config.sql')
+})
+
+validateTable({
     entity: crmSchema.TbCrmSmsApp,
     dto: crmSchema.TbCrmSmsAppDto,
     columns: crmSchema.TbCrmSmsAppColumn,

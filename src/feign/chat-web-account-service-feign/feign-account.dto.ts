@@ -22,7 +22,7 @@ export class AccountUserOrganizationSummaryResponseDto {
     postName?: string
 }
 
-/** 账号展示摘要的 Feign 响应文档模型；除 uid 外的字段都按请求 fields 返回。 */
+/** 账号展示摘要的 Feign 响应文档模型；uid、number、name、avatar 默认返回，其余字段按请求 fields 返回。 */
 export class AccountUserSummaryResponseDto {
     @ApiProperty({ description: '账号 UID', example: '2149446185344106496' })
     uid: string
@@ -61,17 +61,17 @@ export class AccountUserSummaryResponseDto {
     organizations?: AccountUserOrganizationSummaryResponseDto[]
 }
 
-/** 列表操作人展示选项的响应文档模型；字段集合与请求 fields 一致，账号不存在时只返回 uid。 */
+/** 列表操作人展示选项的响应文档模型；字段集合为默认字段加请求 fields，账号不存在时只返回 uid。 */
 export class AccountUserOptionResponseDto extends AccountUserSummaryResponseDto {}
 
 /** 账号还原请求中可选的返回字段声明。 */
 class AccountUserFieldsDto {
     @ApiProperty({
-        description: '需要返回的账号字段，缺省返回 uid、number、name、avatar；uid 始终返回',
+        description: '需要额外返回的账号字段；uid、number、name、avatar 默认始终返回',
         required: false,
         enum: ACCOUNT_USER_RESOLVER_FIELDS,
         isArray: true,
-        example: ['uid', 'number', 'name', 'avatar']
+        example: ['organizations']
     })
     @IsOptional()
     @IsArray({ message: '账号返回字段必须是数组' })

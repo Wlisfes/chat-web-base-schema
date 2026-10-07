@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `tb_crm_user` (
     `phone` varchar(32) NULL COMMENT '电话号码',
     `status` varchar(32) NOT NULL COMMENT '客户状态：disable=禁用（客户账号不可用）；enable=启用（客户账号正常使用）',
     `pay_mode` varchar(32) NOT NULL COMMENT '付款模式：postpaid=后付（账期后付费）；prepaid=预付（账户预付费）',
-    `class_type` varchar(32) NOT NULL DEFAULT 'common' COMMENT '客户类型：common=普通客户（普通业务客户）；cooperate=推广客户（合作推广客户）',
+    `class_type` varchar(32) NOT NULL DEFAULT 'common' COMMENT '客户类型：common=普通客户（普通业务客户）；conspire=推广客户（合作推广客户）',
     `balance` bigint NOT NULL DEFAULT 0 COMMENT '余额（放大百万倍存储）',
     `balance_usd` bigint NOT NULL DEFAULT 0 COMMENT 'USD余额（放大百万倍存储）',
     `credit` bigint NOT NULL DEFAULT 0 COMMENT '信用额度（放大百万倍存储）',

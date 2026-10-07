@@ -15,6 +15,7 @@ const { AuthSessionService } = require('../dist/src/runtime/auth-session')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
     appendAccountUserOptions,
+    appendFinanceBrandOptions,
     FeignClient,
     FeignClientAccountManager,
     FeignClientCrmManager,
@@ -380,12 +381,15 @@ test('账号操作人还原工具按字段去重、分批调用并保留缺失�
         }
     }
     const extra = Array.from({ length: 100 }, (_, index) => ({ createBy: String(index + 10), modifyBy: '' }))
-    const list = await appendAccountUserOptions(
-        client,
-        config({ gateway: { feign: { service_token: 'service-token' } } }),
-        [{ id: 1, createBy: '1', modifyBy: 'missing' }, { id: 2, createBy: '1', modifyBy: undefined }, ...extra],
-        ['createBy', 'modifyBy']
-    )
+    const source = [{ id: 1, createBy: '1', modifyBy: 'missing' }, { id: 2, createBy: '1', modifyBy: undefined }, ...extra]
+    const first = source[0]
+    const list = await appendAccountUserOptions(client, config({ gateway: { feign: { service_token: 'service-token' } } }), source, [
+        'createBy',
+        'modifyBy'
+    ])
+
+    assert.equal(list, source)
+    assert.equal(list[0], first)
 
     assert.equal(calls.length, 2)
     assert.equal(
@@ -441,11 +445,30 @@ test('账号操作人还原工具支持扩展返回字段', async () => {
         config({ gateway: { feign: { service_token: 'service-token' } } }),
         [{ modifyBy: '1' }],
         ['modifyBy'],
-        { fields: ['uid', 'name', 'phone'] }
+        { fields: ['phone'] }
     )
 
-    assert.deepEqual(received, { uids: ['1'], fields: ['uid', 'name', 'phone'] })
+    assert.deepEqual(received, { uids: ['1'], fields: ['phone'] })
     assert.deepEqual(item.modifyByOptions, { uid: '1', name: '张三', phone: '13800000000' })
+})
+
+test('品牌还原工具直接在原列表项上追加选项', async () => {
+    const client = {
+        async httpBaseFinanceColumnBrandResolver(_authorization, input) {
+            return input.keyIds.filter(keyId => keyId !== 404).map(keyId => ({ keyId, name: `B${keyId}`, status: 'enable' }))
+        }
+    }
+    const source = [{ brandKeyId: 1001 }, { brandKeyId: 404 }, { brandKeyId: null }]
+    const first = source[0]
+    const list = await appendFinanceBrandOptions(client, config({ gateway: { feign: { service_token: 'service-token' } } }), source, [
+        'brandKeyId'
+    ])
+
+    assert.equal(list, source)
+    assert.equal(list[0], first)
+    assert.deepEqual(first.brandKeyIdOptions, { keyId: 1001, name: 'B1001', status: 'enable' })
+    assert.deepEqual(source[1].brandKeyIdOptions, { keyId: 404 })
+    assert.equal(source[2].brandKeyIdOptions, undefined)
 })
 
 test('业务 Feign 客户端统一读取 Gateway 地址和超时并在启动时校验配置', () => {

@@ -18,7 +18,7 @@ export interface AccountUserOrganizationSummary {
     postName?: string
 }
 
-/**账号服务用户展示摘要，供跨服务把操作人 UID 还原为可读信息使用；扩展字段只在请求 fields 时返回。*/
+/**账号服务用户展示摘要，供跨服务把操作人 UID 还原为可读信息使用；默认字段始终返回，扩展字段只在请求 fields 时返回。*/
 export interface AccountUserSummary {
     /**账号 UID。*/
     uid: string
@@ -40,7 +40,7 @@ export interface AccountUserSummary {
     organizations?: AccountUserOrganizationSummary[]
 }
 
-/**列表展示使用的账号选项；字段集合与请求 fields 一致，账号不存在时只保留 uid。*/
+/**列表展示使用的账号选项；字段集合为默认字段加请求 fields，账号不存在时只保留 uid。*/
 export type AccountUserOption = AccountUserSummary
 
 /**为指定 UID 字段追加 `<字段名>Options` 后的列表项类型。*/
@@ -52,7 +52,7 @@ export type WithAccountUserOptions<TItem, TKey extends keyof TItem & string> = T
 export interface AccountColumnUserResolverRequest {
     /**待查询的账号 UID 集合，单次上限 100 个。*/
     uids: string[]
-    /**需要返回的账号字段，缺省返回 uid、number、name、avatar；uid 始终返回。*/
+    /**需要额外返回的账号字段；uid、number、name、avatar 默认始终返回。*/
     fields?: AccountUserField[]
 }
 
@@ -60,7 +60,7 @@ export interface AccountColumnUserResolverRequest {
 export interface AccountUserResolverRequest {
     /**待查询的账号 UID。*/
     uid: string
-    /**需要返回的账号字段，缺省返回 uid、number、name、avatar；uid 始终返回。*/
+    /**需要额外返回的账号字段；uid、number、name、avatar 默认始终返回。*/
     fields?: AccountUserField[]
 }
 

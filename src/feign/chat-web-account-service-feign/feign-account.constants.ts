@@ -4,7 +4,7 @@ export const ACCOUNT_SYSTEM_UID = '0'
 /** 系统账号展示名称。 */
 export const ACCOUNT_SYSTEM_NAME = '系统'
 
-/** 账号批量还原默认返回的展示字段，未传 fields 时保持该最小集合。 */
+/** 账号批量还原默认返回的展示字段，始终返回，fields 在其基础上追加。 */
 export const ACCOUNT_USER_RESOLVER_DEFAULT_FIELDS = ['uid', 'number', 'name', 'avatar'] as const
 
 /** 账号批量还原中需要关联查询、不对应 tb_account_user 列的扩展字段。 */

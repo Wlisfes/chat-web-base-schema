@@ -16,7 +16,8 @@ function isFinanceBrandKeyId(value: unknown): value is number {
  *
  * - 多个字段、多行数据中的品牌主键统一去重，并按财务服务上限分批请求；
  * - Authorization 固定使用服务间凭据，不转发终端用户令牌；
- * - 品牌不存在时保留 `{ keyId }`，字段为空时对应的 `<字段名>Options` 返回 undefined。
+ * - 品牌不存在时保留 `{ keyId }`，字段为空时对应的 `<字段名>Options` 返回 undefined；
+ * - 直接在传入的列表项上追加字段并返回原列表引用，不创建新数组或新对象。
  *
  * @example
  * await appendFinanceBrandOptions(financeFeignClient, configService, list, ['brandKeyId'])
@@ -41,12 +42,12 @@ export async function appendFinanceBrandOptions<TItem extends object, const TKey
             options.set(brand.keyId, { keyId: brand.keyId, name: brand.name, status: brand.status })
         }
     }
-    return list.map(item => {
-        const result = { ...item } as Record<string, unknown>
+    for (const item of list) {
+        const result = item as Record<string, unknown>
         for (const key of keys) {
             const keyId: unknown = item[key]
             result[`${key}Options`] = isFinanceBrandKeyId(keyId) ? (options.get(keyId) ?? { keyId }) : undefined
         }
-        return result as FinanceTypes.WithFinanceBrandOptions<TItem, TKey>
-    })
+    }
+    return list as Array<FinanceTypes.WithFinanceBrandOptions<TItem, TKey>>
 }

@@ -9,7 +9,7 @@ const ACCOUNT_USER_RESOLVE_LIMIT = 100
 
 /** 账号还原工具的扩展配置。 */
 export interface AppendAccountUserOptionsConfig {
-    /** 需要返回的账号字段，缺省返回 uid、number、name、avatar；uid 始终返回。 */
+    /** 需要额外返回的账号字段；uid、number、name、avatar 默认始终返回。 */
     fields?: AccountTypes.AccountUserField[]
 }
 
@@ -33,14 +33,15 @@ function toAccountUserOption(user: AccountTypes.AccountUserSummary): AccountType
  *
  * - 多个字段、多行数据中的 UID 统一去重，并按账号服务上限分批请求；
  * - Authorization 固定使用服务间凭据，不转发终端用户令牌；
- * - 返回字段默认 uid、number、name、avatar，可通过 config.fields 扩展；
+ * - 返回字段默认 uid、number、name、avatar，config.fields 只需声明额外字段；
  * - 系统账号 `0` 固定返回 `{ uid: '0', name: '系统' }`，不请求 Account 服务；
  * - 账号不存在时保留 `{ uid }`，避免单个账号异常导致整个列表不可用；
- * - 字段为空时对应的 `<字段名>Options` 返回 undefined。
+ * - 字段为空时对应的 `<字段名>Options` 返回 undefined；
+ * - 直接在传入的列表项上追加字段并返回原列表引用，不创建新数组或新对象。
  *
  * @example
  * await appendAccountUserOptions(accountFeignClient, configService, list, ['createBy', 'modifyBy'])
- * await appendAccountUserOptions(accountFeignClient, configService, list, ['modifyBy'], { fields: ['uid', 'name', 'phone'] })
+ * await appendAccountUserOptions(accountFeignClient, configService, list, ['modifyBy'], { fields: ['phone', 'organizations'] })
  */
 export async function appendAccountUserOptions<TItem extends object, const TKey extends keyof TItem & string>(
     accountFeignClient: FeignClientAccountManager,
@@ -70,12 +71,12 @@ export async function appendAccountUserOptions<TItem extends object, const TKey 
             options.set(user.uid, toAccountUserOption(user))
         }
     }
-    return list.map(item => {
-        const result = { ...item } as Record<string, unknown>
+    for (const item of list) {
+        const result = item as Record<string, unknown>
         for (const key of keys) {
             const uid: unknown = item[key]
             result[`${key}Options`] = isAccountUid(uid) ? (options.get(uid) ?? { uid }) : undefined
         }
-        return result as AccountTypes.WithAccountUserOptions<TItem, TKey>
-    })
+    }
+    return list as Array<AccountTypes.WithAccountUserOptions<TItem, TKey>>
 }

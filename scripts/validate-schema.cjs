@@ -194,6 +194,14 @@ validateTable({
 })
 
 validateTable({
+    entity: crmSchema.TbCrmUserContact,
+    dto: crmSchema.TbCrmUserContactDto,
+    columns: crmSchema.TbCrmUserContactColumn,
+    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_user_contact.sql'),
+    enumComments: [crmSchema.TbCrmUserContactStatusDefinition.comment]
+})
+
+validateTable({
     entity: crmSchema.TbCrmSmsApp,
     dto: crmSchema.TbCrmSmsAppDto,
     columns: crmSchema.TbCrmSmsAppColumn,

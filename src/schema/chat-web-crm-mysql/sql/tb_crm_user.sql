@@ -26,6 +26,6 @@ CREATE TABLE IF NOT EXISTS `tb_crm_user` (
     KEY `idx_tb_crm_user_brand_key_id` (`brand_key_id`),
     KEY `idx_tb_crm_user_status` (`status`),
     KEY `idx_tb_crm_user_currency` (`currency`)
-) ENGINE = InnoDB AUTO_INCREMENT = 10241000 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '外部客户账号表';
+) ENGINE = InnoDB AUTO_INCREMENT = 10241000 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '消费客户账号表';
 
 

@@ -45,7 +45,8 @@ export const TbSkylineChunkModuleKindDefinition = defineEnumMetadata(TbSkylineCh
 export enum TbSkylineChunkModuleType {
     CHUNK_SYSTEM_ACCOUNT_USER_POST = 'CHUNK_SYSTEM_ACCOUNT_USER_POST',
     CHUNK_SYSTEM_ACCOUNT_USER_LEVEL = 'CHUNK_SYSTEM_ACCOUNT_USER_LEVEL',
-    CHUNK_CRM_CRM_USER_SOURCE = 'CHUNK_CRM_CRM_USER_SOURCE'
+    CHUNK_CRM_CRM_USER_SOURCE = 'CHUNK_CRM_CRM_USER_SOURCE',
+    CHUNK_SYSTEM_COMMON_CONTACT_TYPE = 'CHUNK_SYSTEM_COMMON_CONTACT_TYPE'
 }
 
 export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineChunkModuleType, '枚举类型编码', {
@@ -63,6 +64,11 @@ export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineCh
         label: '客户注册来源',
         description: 'CRM 客户注册来源，仅一级枚举项',
         type: 'orange'
+    },
+    [TbSkylineChunkModuleType.CHUNK_SYSTEM_COMMON_CONTACT_TYPE]: {
+        label: '联系方式',
+        description: '系统通用联系方式类型，仅一级枚举项',
+        type: 'cyan'
     }
 })
 

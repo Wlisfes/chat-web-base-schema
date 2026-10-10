@@ -47,58 +47,6 @@ export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCr
         return this.dispatch('httpBaseCrmColumnUserResolver', _authorization, _input)
     }
 
-    /**按名称筛选客户下拉数据**/
-    @FeignPost('/user/select', {
-        operation: { summary: '供内部服务筛选客户下拉数据' },
-        request: { source: 'body', type: CrmDto.CrmSelectUserRequestDto },
-        response: { type: CrmDto.CrmUserResponseDto, isArray: true, description: '客户下拉列表' }
-    })
-    async httpBaseCrmSelectUser(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmSelectUserInput
-    ): Promise<CrmTypes.CrmUserSelect[]> {
-        return this.dispatch('httpBaseCrmSelectUser', _authorization, _input)
-    }
-
-    /**创建客户**/
-    @FeignPost('/user/create', {
-        operation: { summary: '供内部服务创建客户' },
-        request: { source: 'body', type: CrmDto.CrmCreateUserRequestDto },
-        response: { type: CrmDto.CrmUserResponseDto, description: '客户详情' }
-    })
-    async httpBaseCrmCreateUser(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmCreateUserInput
-    ): Promise<CrmTypes.CrmUser> {
-        return this.dispatch('httpBaseCrmCreateUser', _authorization, _input)
-    }
-
-    /**更新客户基础信息**/
-    @FeignPost('/user/update', {
-        operation: { summary: '供内部服务更新客户' },
-        request: { source: 'body', type: CrmDto.CrmUpdateUserRequestDto },
-        response: { type: CrmDto.CrmUserResponseDto, description: '客户详情' }
-    })
-    async httpBaseCrmUpdateUser(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmUpdateUserInput
-    ): Promise<CrmTypes.CrmUser> {
-        return this.dispatch('httpBaseCrmUpdateUser', _authorization, _input)
-    }
-
-    /**更新客户启用状态**/
-    @FeignPost('/user/status/update', {
-        operation: { summary: '供内部服务更新客户状态' },
-        request: { source: 'body', type: CrmDto.CrmUpdateUserStatusRequestDto },
-        response: { type: CrmDto.CrmUserResponseDto, description: '客户详情' }
-    })
-    async httpBaseCrmUserStatusUpdate(
-        @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: CrmTypes.CrmUpdateUserStatusInput
-    ): Promise<CrmTypes.CrmUser> {
-        return this.dispatch('httpBaseCrmUserStatusUpdate', _authorization, _input)
-    }
-
     /**分页查询客户列表**/
     @FeignPost('/user/column', {
         operation: { summary: '供内部服务分页查询客户' },

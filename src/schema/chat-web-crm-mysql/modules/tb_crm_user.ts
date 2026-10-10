@@ -192,7 +192,7 @@ export class TbCrmUserDto extends DataBaseDto {
 @Index('idx_tb_crm_user_brand_key_id', ['brandKeyId'])
 @Index('idx_tb_crm_user_status', ['status'])
 @Index('idx_tb_crm_user_currency', ['currency'])
-@Entity({ name: 'tb_crm_user', comment: '外部客户账号表' })
+@Entity({ name: 'tb_crm_user', comment: '消费客户账号表' })
 export class TbCrmUser extends DataBaseAdapter {
     @Column({ name: TbCrmUserColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '归属账号UID' })
     ownerUserUid: string

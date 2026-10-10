@@ -1,6 +1,6 @@
 import { ApiProperty, IntersectionType, PartialType, PickType } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator'
+import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsInt, IsOptional, Min } from 'class-validator'
 import * as Schema from '@/schema/chat-web-crm-mysql'
 import { PageResponseDataDto } from '@/decorator'
 import { PageDto } from '@/utils'
@@ -12,132 +12,6 @@ export class CrmUserResponseDto extends Schema.TbCrmUserDto {}
 export class CrmUserPageResponseDto extends PageResponseDataDto {
     @ApiProperty({ description: '客户列表', type: [CrmUserResponseDto] })
     list: CrmUserResponseDto[]
-}
-
-/** CRM 客户下拉服务间响应。 */
-export class CrmUserSelectResponseDto {
-    @ApiProperty({ description: '客户主键', example: 10241000 })
-    keyId: number
-
-    @ApiProperty({ description: '归属账号 UID', example: '2149446185344106496' })
-    ownerUserUid: string
-
-    @ApiProperty({ description: '客户名称', example: '测试客户' })
-    name: string
-
-    @ApiProperty({ description: '客户别名', required: false, example: 'demo' })
-    alias?: string
-
-    @ApiProperty({ description: '财务品牌主键', example: 1001 })
-    brandKeyId: number
-
-    @ApiProperty({ description: '财务币种编码', example: 'USD' })
-    currency: string
-
-    @ApiProperty({ description: '邮箱', example: 'user@example.com' })
-    email: string
-
-    @ApiProperty({ description: '电话号码', required: false, example: '+8613800138000' })
-    phone?: string
-
-    @ApiProperty({ description: '客户状态', example: 'enable' })
-    status: string
-}
-
-/** CRM 客户创建服务间请求。 */
-export class CrmCreateUserRequestDto {
-    @ApiProperty({ description: '归属账号 UID', example: '2149446185344106496' })
-    @IsString({ message: '归属账号UID必须是字符串' })
-    @MaxLength(19, { message: '归属账号UID长度不能超过19位' })
-    ownerUserUid: string
-
-    @ApiProperty({ description: '客户名称', example: '测试客户' })
-    @IsString({ message: '客户名称必须是字符串' })
-    @IsNotEmpty({ message: '客户名称必填' })
-    @MaxLength(64, { message: '客户名称长度不能超过64位' })
-    name: string
-
-    @ApiProperty({ description: '客户别名', required: false, example: '测试客户别名' })
-    @IsOptional()
-    @IsString({ message: '客户别名必须是字符串' })
-    @MaxLength(64, { message: '客户别名长度不能超过64位' })
-    alias?: string
-
-    @ApiProperty({ description: '财务品牌主键', example: 1001 })
-    @Type(() => Number)
-    @IsInt({ message: '财务品牌主键必须是整数' })
-    @Min(1, { message: '财务品牌主键必须大于0' })
-    brandKeyId: number
-
-    @ApiProperty({ description: '财务币种编码', example: 'USD' })
-    @IsString({ message: '财务币种编码必须是字符串' })
-    @MaxLength(16, { message: '财务币种编码长度不能超过16位' })
-    currency: string
-
-    @ApiProperty({ description: '邮箱', example: 'user@example.com' })
-    @IsString({ message: '邮箱必须是字符串' })
-    @MaxLength(128, { message: '邮箱长度不能超过128位' })
-    email: string
-
-    @ApiProperty({ description: '电话号码', required: false, example: '+8613800138000' })
-    @IsOptional()
-    @IsString({ message: '电话号码必须是字符串' })
-    @MaxLength(32, { message: '电话号码长度不能超过32位' })
-    phone?: string
-
-    @ApiProperty({ description: '客户状态', required: false, enum: Schema.TbCrmUserStatus, example: Schema.TbCrmUserStatus.ENABLE })
-    @IsOptional()
-    @IsEnum(Schema.TbCrmUserStatus, { message: '客户状态格式错误' })
-    status?: Schema.TbCrmUserStatus
-
-    @ApiProperty({ description: '付款模式', enum: Schema.TbCrmUserPayMode, example: Schema.TbCrmUserPayMode.PREPAID })
-    @IsEnum(Schema.TbCrmUserPayMode, { message: '付款模式格式错误' })
-    payMode: Schema.TbCrmUserPayMode
-
-    @ApiProperty({
-        description: '认证状态',
-        required: false,
-        enum: Schema.TbCrmUserAuthStatus,
-        example: Schema.TbCrmUserAuthStatus.UNVERIFIED
-    })
-    @IsOptional()
-    @IsEnum(Schema.TbCrmUserAuthStatus, { message: '认证状态格式错误' })
-    authStatus?: Schema.TbCrmUserAuthStatus
-
-    @ApiProperty({
-        description: '注册来源：Skyline 枚举 CHUNK_CRM_CRM_USER_SOURCE 的枚举项主键，不传默认手动创建',
-        required: false,
-        example: 1024186
-    })
-    @IsOptional()
-    @Type(() => Number)
-    @IsInt({ message: '注册来源必须是整数' })
-    @Min(1, { message: '注册来源必须大于0' })
-    source?: number
-
-    @ApiProperty({ description: '备注', required: false, example: '重点跟进客户' })
-    @IsOptional()
-    @IsString({ message: '备注必须是字符串' })
-    @MaxLength(1024, { message: '备注长度不能超过1024位' })
-    remark?: string
-}
-
-/** CRM 客户更新服务间请求。 */
-export class CrmUpdateUserRequestDto extends CrmCreateUserRequestDto {
-    @ApiProperty({ description: '客户主键', example: 10241000 })
-    @Type(() => Number)
-    @IsInt({ message: '客户主键必须是整数' })
-    @Min(1, { message: '客户主键必须大于0' })
-    keyId: number
-}
-
-/** CRM 客户状态更新服务间请求。 */
-export class CrmUpdateUserStatusRequestDto extends PickType(Schema.TbCrmUserDto, ['status'] as const) {
-    @ApiProperty({ description: '客户主键', example: 10241000 })
-    @Type(() => Number)
-    @IsInt({ message: '客户主键必须是整数' })
-    @Min(1, { message: '客户主键必须大于0' })
-    keyId: number
 }
 
 /** CRM 客户详情服务间请求。 */
@@ -160,9 +34,6 @@ export class CrmColumnUserResolverRequestDto {
     @Min(1, { each: true, message: '客户主键必须大于0' })
     keyIds: number[]
 }
-
-/** CRM 客户下拉服务间请求。 */
-export class CrmSelectUserRequestDto extends PartialType(PickType(Schema.TbCrmUserDto, ['name'] as const)) {}
 
 /** CRM 客户分页服务间请求。 */
 export class CrmListUserRequestDto extends IntersectionType(

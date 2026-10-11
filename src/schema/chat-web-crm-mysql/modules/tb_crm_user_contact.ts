@@ -30,11 +30,15 @@ export const TbCrmUserContactStatusDefinition = defineEnumMetadata(TbCrmUserCont
 
 /** 联系方式项：type 为 Skyline 枚举 CHUNK_SYSTEM_COMMON_CONTACT_TYPE 的枚举项主键，value 为联系方式内容。 */
 export class TbCrmUserContactItemDto {
-    @ApiProperty({ description: '联系方式类型：Skyline 枚举 CHUNK_SYSTEM_COMMON_CONTACT_TYPE 的枚举项主键', example: 1024188 })
+    @ApiProperty({
+        description: '联系方式类型：Skyline 枚举 CHUNK_SYSTEM_COMMON_CONTACT_TYPE 的枚举项主键，支持数字或数字字符串，入库统一转为数字',
+        oneOf: [{ type: 'integer' }, { type: 'string' }],
+        example: 1024188
+    })
     @Type(() => Number)
     @IsInt({ message: '联系方式类型必须是整数' })
     @Min(1, { message: '联系方式类型必须大于0' })
-    type: number
+    type: number | string
 
     @ApiProperty({ description: '联系方式内容', example: '19rok5@sugtbt.com' })
     @IsString({ message: '联系方式内容必须是字符串' })

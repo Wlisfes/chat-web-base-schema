@@ -1,5 +1,6 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator'
 import { DataBaseAdapter, DataBaseDto, defineEnumMetadata, BigintNumberTransformer } from '@/utils'
 
@@ -111,6 +112,7 @@ export class TbCrmUserDto extends DataBaseDto {
     alias: string
 
     @ApiProperty({ description: '财务品牌主键', example: 1001 })
+    @Type(() => Number)
     @IsInt({ message: '财务品牌主键必须是整数' })
     @Min(1, { message: '财务品牌主键必须大于0' })
     brandKeyId: number
@@ -160,6 +162,7 @@ export class TbCrmUserDto extends DataBaseDto {
     creditUsd: number
 
     @ApiProperty({ description: '客户等级', example: 1 })
+    @Type(() => Number)
     @IsInt({ message: '客户等级必须是整数' })
     @Min(1, { message: '客户等级不能小于1' })
     level: number
@@ -177,6 +180,7 @@ export class TbCrmUserDto extends DataBaseDto {
     authStatus: TbCrmUserAuthStatus
 
     @ApiProperty({ description: '注册来源：Skyline 枚举 CHUNK_CRM_CRM_USER_SOURCE 的枚举项主键', example: 1024186 })
+    @Type(() => Number)
     @IsInt({ message: '注册来源必须是整数' })
     @Min(1, { message: '注册来源必须大于0' })
     source: number

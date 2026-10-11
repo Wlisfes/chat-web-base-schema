@@ -18,15 +18,20 @@ function listEnumValues<TEnum extends PrimitiveEnum>(enumObject: TEnum) {
         .map(key => enumObject[key]) as PrimitiveEnumValue<TEnum>[]
 }
 
-/** 统一生成枚举元数据、选项列表、数量和字段说明。 */
+/** 统一生成枚举元数据、选项列表、数量和字段说明；选项按 metadata 书写顺序输出，字段说明保持枚举定义顺序。 */
 export function defineEnumMetadata<const TEnum extends PrimitiveEnum>(
     enumObject: TEnum,
     title: string,
     metadata: Record<PrimitiveEnumValue<TEnum>, EnumMetadataItem>
 ) {
     const values = listEnumValues(enumObject)
-    const options: EnumOption<PrimitiveEnumValue<TEnum>>[] = values.map(value => ({ value, ...metadata[value] }))
-    const comment = `${title}：${options.map(option => `${option.value}=${option.label}（${option.description}）`).join('；')}`
+    /**按 metadata 的书写顺序排列选项，供前端下拉、阶段条等按业务顺序展示。*/
+    const orderedValues = Object.keys(metadata)
+        .map(key => values.find(value => String(value) === key))
+        .filter((value): value is PrimitiveEnumValue<TEnum> => value !== undefined)
+    const options: EnumOption<PrimitiveEnumValue<TEnum>>[] = orderedValues.map(value => ({ value, ...metadata[value] }))
+    /**字段说明沿用枚举定义顺序，与已发布的建表 SQL 注释保持一致。*/
+    const comment = `${title}：${values.map(value => `${value}=${metadata[value].label}（${metadata[value].description}）`).join('；')}`
 
     return {
         metadata,

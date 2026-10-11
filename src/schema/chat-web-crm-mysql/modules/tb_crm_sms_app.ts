@@ -32,16 +32,17 @@ export const TbCrmSmsAppStatusDefinition = defineEnumMetadata(TbCrmSmsAppStatus,
     [TbCrmSmsAppStatus.INACTIVE]: { label: '未激活', description: '应用尚未启用', type: 'warning' }
 })
 
+/** 短信应用类型：枚举值与应用别名中的4位类型标识保持一致。 */
 export enum TbCrmSmsAppType {
-    MARKET = 'market',
-    NOTIFY = 'notify',
-    OTP = 'otp'
+    MRKT = 'MRKT',
+    NTFY = 'NTFY',
+    SOTP = 'SOTP'
 }
 
 export const TbCrmSmsAppTypeDefinition = defineEnumMetadata(TbCrmSmsAppType, '短信应用类型', {
-    [TbCrmSmsAppType.MARKET]: { label: '营销短信', description: '用于营销推广内容', type: 'orange' },
-    [TbCrmSmsAppType.NOTIFY]: { label: '通知短信', description: '用于业务通知内容', type: 'blue' },
-    [TbCrmSmsAppType.OTP]: { label: '验证码', description: '用于一次性验证码', type: 'geekblue' }
+    [TbCrmSmsAppType.MRKT]: { label: '营销短信', description: '用于营销推广内容', type: 'orange' },
+    [TbCrmSmsAppType.NTFY]: { label: '通知短信', description: '用于业务通知内容', type: 'blue' },
+    [TbCrmSmsAppType.SOTP]: { label: '验证码', description: '用于一次性验证码', type: 'geekblue' }
 })
 
 export class TbCrmSmsAppDto extends DataBaseByDto {
@@ -73,7 +74,7 @@ export class TbCrmSmsAppDto extends DataBaseByDto {
     @MaxLength(64, { message: '应用名称长度不能超过64位' })
     appName: string
 
-    @ApiProperty({ description: '应用别名', example: 'LYNKS-OTP' })
+    @ApiProperty({ description: '应用别名', example: 'CSK1233R7MPSOTP001' })
     @IsString({ message: '应用别名必须是字符串' })
     @IsNotEmpty({ message: '应用别名必填' })
     @MaxLength(64, { message: '应用别名长度不能超过64位' })

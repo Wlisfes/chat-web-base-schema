@@ -105,7 +105,7 @@ export class TbCrmUserDto extends DataBaseDto {
     @MaxLength(64, { message: '客户名称长度不能超过64位' })
     name: string
 
-    @ApiProperty({ description: '客户别名', example: 'Test Client', required: false })
+    @ApiProperty({ description: '客户别名：CSK + 创建人工号 + 4位数字或大写字母随机码，全表唯一', example: 'CSK1233A7K9', required: false })
     @IsOptional()
     @IsString({ message: '客户别名必须是字符串' })
     @MaxLength(64, { message: '客户别名长度不能超过64位' })
@@ -192,6 +192,7 @@ export class TbCrmUserDto extends DataBaseDto {
     remark: string
 }
 
+@Index('uk_tb_crm_user_alias', ['alias'], { unique: true })
 @Index('idx_tb_crm_user_owner_user_uid', ['ownerUserUid'])
 @Index('idx_tb_crm_user_brand_key_id', ['brandKeyId'])
 @Index('idx_tb_crm_user_status', ['status'])
@@ -204,7 +205,13 @@ export class TbCrmUser extends DataBaseAdapter {
     @Column({ name: TbCrmUserColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '客户名称' })
     name: string
 
-    @Column({ name: TbCrmUserColumn.ALIAS, type: 'varchar', length: 64, nullable: true, comment: '客户别名' })
+    @Column({
+        name: TbCrmUserColumn.ALIAS,
+        type: 'varchar',
+        length: 64,
+        nullable: true,
+        comment: '客户别名：CSK + 创建人工号 + 4位数字或大写字母随机码，全表唯一'
+    })
     alias: string
 
     @Column({ name: TbCrmUserColumn.BRAND_KEY_ID, type: 'int', nullable: false, comment: '财务品牌主键' })

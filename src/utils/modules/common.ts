@@ -1,14 +1,15 @@
 import { cloneDeep, concat, omit, pick } from 'lodash'
 import { isNotEmpty, isEmpty, isArray, isEmail, isString, isObject, isBoolean } from 'class-validator'
+import type { Omix, EnumMetadataItem, EnumOption, PrimitiveEnum, PrimitiveEnumValue } from '@/types'
+import { v1, v3, v4, v5, v6, v7 } from 'uuid'
 import type { PageResult } from './page'
 import moment from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import type { Omix, EnumMetadataItem, EnumOption, PrimitiveEnum, PrimitiveEnumValue } from '@/types'
 moment.extend(timezone)
 moment.extend(utc)
-
-export { moment, cloneDeep, concat, omit, pick, isNotEmpty, isEmpty, isArray, isEmail, isString, isObject, isBoolean }
+export { v1, v3, v4, v5, v6, v7, moment, cloneDeep, concat, omit, pick }
+export { isNotEmpty, isEmpty, isArray, isEmail, isString, isObject, isBoolean }
 
 /** 读取枚举业务值，过滤数字枚举的反向映射键。 */
 function listEnumValues<TEnum extends PrimitiveEnum>(enumObject: TEnum) {

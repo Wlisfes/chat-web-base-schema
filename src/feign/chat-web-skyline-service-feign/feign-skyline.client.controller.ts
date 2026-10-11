@@ -52,4 +52,30 @@ export class FeignClientSkylineManager extends FeignWebClient<SkylineTypes.Feign
     ): Promise<SkylineTypes.SkylineChunkOption> {
         return this.dispatch('httpBaseSkylineChunkOptionResolver', _authorization, _input)
     }
+
+    /**按列表批量把账号 UID 还原为展示摘要**/
+    @FeignPost('/user/column/resolve', {
+        operation: { summary: '供内部服务按列表批量把账号 UID 还原为展示摘要' },
+        request: { source: 'body', type: SkylineDto.SkylineColumnUserResolverDto },
+        response: { type: SkylineDto.SkylineUserSummaryResponseDto, isArray: true, description: '账号展示摘要列表' }
+    })
+    async httpBaseSkylineColumnUserResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SkylineDto.SkylineColumnUserResolverDto
+    ): Promise<SkylineTypes.SkylineUserSummary[]> {
+        return this.dispatch('httpBaseSkylineColumnUserResolver', _authorization, _input)
+    }
+
+    /**按账号 UID 还原单个展示摘要**/
+    @FeignPost('/user/resolve', {
+        operation: { summary: '供内部服务按账号 UID 还原单个展示摘要' },
+        request: { source: 'body', type: SkylineDto.SkylineUserResolverDto },
+        response: { type: SkylineDto.SkylineUserSummaryResponseDto, description: '账号展示摘要' }
+    })
+    async httpBaseSkylineUserResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SkylineDto.SkylineUserResolverDto
+    ): Promise<SkylineTypes.SkylineUserSummary> {
+        return this.dispatch('httpBaseSkylineUserResolver', _authorization, _input)
+    }
 }

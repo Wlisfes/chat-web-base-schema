@@ -336,4 +336,92 @@ validateTable({
     sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_data_scope_organization.sql')
 })
 
+validateTable({
+    entity: skylineSchema.TbSkylineUser,
+    dto: skylineSchema.TbSkylineUserDto,
+    columns: skylineSchema.TbSkylineUserColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_user.sql'),
+    enumComments: [skylineSchema.TbSkylineUserStatusDefinition.comment, skylineSchema.TbSkylineUserEmploymentStatusDefinition.comment]
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineOrganization,
+    dto: skylineSchema.TbSkylineOrganizationDto,
+    columns: skylineSchema.TbSkylineOrganizationColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_organization.sql'),
+    enumComments: [skylineSchema.TbSkylineOrganizationTypeDefinition.comment, skylineSchema.TbSkylineOrganizationStatusDefinition.comment]
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineOrganizationClosure,
+    dto: skylineSchema.TbSkylineOrganizationClosureDto,
+    columns: skylineSchema.TbSkylineOrganizationClosureColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_organization_closure.sql')
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineUserOrganization,
+    dto: skylineSchema.TbSkylineUserOrganizationDto,
+    columns: skylineSchema.TbSkylineUserOrganizationColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_user_organization.sql'),
+    enumComments: [skylineSchema.TbSkylineUserOrganizationStatusDefinition.comment]
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineUserChunk,
+    dto: skylineSchema.TbSkylineUserChunkDto,
+    columns: skylineSchema.TbSkylineUserChunkColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_user_chunk.sql'),
+    enumComments: [skylineSchema.TbSkylineUserChunkLinkNameDefinition.comment]
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineSheet,
+    dto: skylineSchema.TbSkylineSheetDto,
+    columns: skylineSchema.TbSkylineSheetColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_sheet.sql'),
+    enumComments: [
+        skylineSchema.TbSkylineSheetTypeDefinition.comment,
+        skylineSchema.TbSkylineSheetStatusDefinition.comment,
+        skylineSchema.TbSkylineSheetVisibleDefinition.comment
+    ]
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineRole,
+    dto: skylineSchema.TbSkylineRoleDto,
+    columns: skylineSchema.TbSkylineRoleColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_role.sql'),
+    enumComments: [skylineSchema.TbSkylineRoleStatusDefinition.comment]
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineUserRole,
+    dto: skylineSchema.TbSkylineUserRoleDto,
+    columns: skylineSchema.TbSkylineUserRoleColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_user_role.sql')
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineRoleSheet,
+    dto: skylineSchema.TbSkylineRoleSheetDto,
+    columns: skylineSchema.TbSkylineRoleSheetColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_role_sheet.sql')
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineRoleDataScope,
+    dto: skylineSchema.TbSkylineRoleDataScopeDto,
+    columns: skylineSchema.TbSkylineRoleDataScopeColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_role_data_scope.sql'),
+    enumComments: [skylineSchema.TbSkylineRoleDataScopeTypeDefinition.comment, skylineSchema.TbSkylineRoleDataScopeStatusDefinition.comment]
+})
+
+validateTable({
+    entity: skylineSchema.TbSkylineRoleDataScopeOrganization,
+    dto: skylineSchema.TbSkylineRoleDataScopeOrganizationDto,
+    columns: skylineSchema.TbSkylineRoleDataScopeOrganizationColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_role_data_scope_organization.sql')
+})
+
 console.log('Schema consistency validation passed.')

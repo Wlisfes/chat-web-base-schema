@@ -1,6 +1,13 @@
 import { ApiProperty, getSchemaPath } from '@nestjs/swagger'
-import { ArrayNotEmpty, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
-import { TbSkylineChunkModule, TbSkylineChunkModuleType } from '@/schema/chat-web-skyline-mysql'
+import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator'
+import {
+    TbSkylineChunkModule,
+    TbSkylineChunkModuleType,
+    TbSkylineUserEmploymentStatus,
+    TbSkylineUserStatus
+} from '@/schema/chat-web-skyline-mysql'
+import { SKYLINE_USER_RESOLVER_FIELDS } from './feign-skyline.constants'
+import type * as SkylineTypes from './feign-skyline.interface'
 
 /** Skyline 枚举字典选项；value、label、description 与前后端统一的下拉协议保持一致。 */
 export class SkylineChunkOptionDto {
@@ -121,4 +128,102 @@ export class SkylineChunkOptionResolverRequestDto {
     @IsNotEmpty({ message: '枚举项业务值必填' })
     @MaxLength(128, { message: '枚举项业务值长度不能超过128位' })
     value: string
+}
+
+/** 账号所属组织摘要的 Feign 响应文档模型。 */
+export class SkylineUserOrganizationSummaryResponseDto {
+    @ApiProperty({ description: '组织主键', example: 1 })
+    keyId: number
+
+    @ApiProperty({ description: '组织名称', example: '研发中心' })
+    name: string
+
+    @ApiProperty({ description: '组织编码', example: 'RD' })
+    code: string
+
+    @ApiProperty({ description: '是否主组织', example: true })
+    isPrimary: boolean
+
+    @ApiProperty({ description: '组织内岗位名称', required: false, example: '前端开发工程师' })
+    postName?: string
+}
+
+/** 账号展示摘要的 Feign 响应文档模型；uid、number、name、avatar 默认返回，其余字段按请求 fields 返回。 */
+export class SkylineUserSummaryResponseDto {
+    @ApiProperty({ description: '账号 UID', example: '2149446185344106496' })
+    uid: string
+
+    @ApiProperty({ description: '账号工号，默认返回', required: false, example: 'A00001' })
+    number?: string
+
+    @ApiProperty({ description: '账号姓名，默认返回', required: false, example: '张三' })
+    name?: string
+
+    @ApiProperty({ description: '账号头像，默认返回', required: false, example: 'https://cdn.example.com/avatar.png' })
+    avatar?: string
+
+    @ApiProperty({ description: '账号手机号，仅请求 phone 时返回', required: false, example: '13800000000' })
+    phone?: string
+
+    @ApiProperty({ description: '账号邮箱，仅请求 email 时返回', required: false, example: 'zhangsan@example.com' })
+    email?: string
+
+    @ApiProperty({ description: '账号状态，仅请求 status 时返回', required: false, enum: TbSkylineUserStatus, example: 'enabled' })
+    status?: TbSkylineUserStatus
+
+    @ApiProperty({
+        description: '员工在职状态，仅请求 employmentStatus 时返回',
+        required: false,
+        enum: TbSkylineUserEmploymentStatus,
+        example: 'employed'
+    })
+    employmentStatus?: TbSkylineUserEmploymentStatus
+
+    @ApiProperty({
+        description: '账号所属组织，仅请求 organizations 时返回；只包含启用的成员关系和启用的组织',
+        required: false,
+        type: [SkylineUserOrganizationSummaryResponseDto]
+    })
+    organizations?: SkylineUserOrganizationSummaryResponseDto[]
+}
+
+/** 列表操作人展示选项的响应文档模型；字段集合为默认字段加请求 fields，账号不存在时只返回 uid。 */
+export class SkylineUserOptionResponseDto extends SkylineUserSummaryResponseDto {}
+
+/** 账号还原请求中可选的返回字段声明。 */
+class SkylineUserFieldsDto {
+    @ApiProperty({
+        description: '需要额外返回的账号字段；uid、number、name、avatar 默认始终返回',
+        required: false,
+        enum: SKYLINE_USER_RESOLVER_FIELDS,
+        isArray: true,
+        example: ['organizations']
+    })
+    @IsOptional()
+    @IsArray({ message: '账号返回字段必须是数组' })
+    @IsIn(SKYLINE_USER_RESOLVER_FIELDS, { each: true, message: '账号返回字段不在允许范围内' })
+    fields?: SkylineTypes.SkylineUserField[]
+}
+
+/**
+ * 按列表批量还原账号展示摘要的请求体。
+ *
+ * 该接口只返回白名单中的展示字段，不做权限码校验和数据范围过滤，因此必须限制单次
+ * 查询数量，避免被用于批量导出账号信息。
+ */
+export class SkylineColumnUserResolverDto extends SkylineUserFieldsDto {
+    @ApiProperty({ description: '待查询的账号 UID 集合', type: String, isArray: true, example: ['2149446185344106496'] })
+    @IsArray({ message: '账号UID集合必须是数组' })
+    @ArrayNotEmpty({ message: '账号UID集合不能为空' })
+    @ArrayMaxSize(100, { message: '账号UID集合单次最多100个' })
+    @IsString({ each: true, message: '账号UID必须是字符串' })
+    uids: string[]
+}
+
+/** 按账号 UID 还原单个展示摘要的请求体。 */
+export class SkylineUserResolverDto extends SkylineUserFieldsDto {
+    @ApiProperty({ description: '待查询的账号 UID', example: '2149446185344106496' })
+    @IsString({ message: '账号UID必须是字符串' })
+    @Matches(/^\d{1,19}$/, { message: '账号UID必须是1-19位数字字符串' })
+    uid: string
 }

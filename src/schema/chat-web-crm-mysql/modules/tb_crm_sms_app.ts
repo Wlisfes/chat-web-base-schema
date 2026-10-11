@@ -41,7 +41,7 @@ export enum TbCrmSmsAppType {
 
 export const TbCrmSmsAppTypeDefinition = defineEnumMetadata(TbCrmSmsAppType, '短信应用类型', {
     [TbCrmSmsAppType.MRKT]: { label: '营销短信', description: '用于营销推广内容', type: 'orange' },
-    [TbCrmSmsAppType.NTFY]: { label: '通知短信', description: '用于业务通知内容', type: 'pink' },
+    [TbCrmSmsAppType.NTFY]: { label: '通知短信', description: '用于业务通知内容', type: 'info' },
     [TbCrmSmsAppType.SOTP]: { label: '验证码', description: '用于一次性验证码', type: 'success' }
 })
 

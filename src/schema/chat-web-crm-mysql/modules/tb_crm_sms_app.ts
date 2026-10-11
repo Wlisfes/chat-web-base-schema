@@ -74,7 +74,7 @@ export class TbCrmSmsAppDto extends DataBaseByDto {
     @MaxLength(64, { message: '应用名称长度不能超过64位' })
     appName: string
 
-    @ApiProperty({ description: '应用别名', example: 'CSK1233R7MPSOTP001' })
+    @ApiProperty({ description: '应用别名', example: 'CSK1233SOTPA001' })
     @IsString({ message: '应用别名必须是字符串' })
     @IsNotEmpty({ message: '应用别名必填' })
     @MaxLength(64, { message: '应用别名长度不能超过64位' })

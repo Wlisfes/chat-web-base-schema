@@ -60,14 +60,30 @@ export interface FinanceCurrencyExchangeSyncItem {
     date: string
 }
 
-/**批量汇率同步响应。*/
+/**批量汇率同步响应；count、list 为原有字段保持不变，其余为执行统计，供任务结果和日志展示。*/
 export interface FinanceCurrencyExchangeSyncResponse {
     /**实际同步的汇率日期。*/
     date: string
-    /**已同步的币种数量。*/
+    /**已同步（本次新增）的币种数量。*/
     count: number
-    /**已同步的币种汇率列表。*/
+    /**已同步（本次新增）的币种汇率列表。*/
     list: FinanceCurrencyExchangeSyncItem[]
+    /**汇率数据来源，例如 Open Exchange Rates。*/
+    source?: string
+    /**外部数据源返回的有效币种数量。*/
+    fetched?: number
+    /**系统中已启用的币种数量。*/
+    enabled?: number
+    /**本次新增写入的币种数量，等同于 count。*/
+    inserted?: number
+    /**当天已存在、本次跳过的币种数量。*/
+    skipped?: number
+    /**本次新增的币种代码。*/
+    insertedCurrencies?: string[]
+    /**当天已存在、本次跳过的币种代码。*/
+    skippedCurrencies?: string[]
+    /**已启用但外部数据源未返回汇率的币种代码。*/
+    missingCurrencies?: string[]
 }
 
 /**按币种查询最新汇率的请求。*/

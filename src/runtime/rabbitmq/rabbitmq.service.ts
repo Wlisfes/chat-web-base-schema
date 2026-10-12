@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown, Optional } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { connect } from 'amqplib'
-import type { ConfirmChannel, ConsumeMessage, RecoveringChannelModel } from 'amqplib'
+import type { ChannelModel, ConfirmChannel, ConsumeMessage, RecoveringChannelModel } from 'amqplib'
 import { NacosService } from '../nacos/nacos.service'
 import * as RabbitmqTypes from './rabbitmq.interface'
 
@@ -97,8 +97,9 @@ export class RabbitmqService implements OnApplicationBootstrap, OnApplicationShu
                     initialDelay: 500,
                     maxDelay: 30_000,
                     initialMaxRetries: 5,
-                    setup: async () => {
-                        await this.openChannel()
+                    // 首次连接时 connect() 尚未返回、this.model 还未赋值，必须使用回调传入的连接创建通道。
+                    setup: async (model: ChannelModel) => {
+                        await this.openChannel(model)
                     }
                 }
             }
@@ -143,9 +144,9 @@ export class RabbitmqService implements OnApplicationBootstrap, OnApplicationShu
         if (this.channel) await this.subscribe(this.channel, consumer)
     }
 
-    private async openChannel(): Promise<void> {
-        if (!this.model || this.closing) return
-        const channel = await this.model.createConfirmChannel()
+    private async openChannel(model: ChannelModel): Promise<void> {
+        if (this.closing) return
+        const channel = await model.createConfirmChannel()
         channel.on('error', error => this.logger.error(`RabbitMQ通道错误：${this.errorMessage(error)}`))
         channel.on('close', () => {
             if (this.channel === channel) this.channel = undefined

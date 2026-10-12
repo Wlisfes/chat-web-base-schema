@@ -190,6 +190,23 @@ export class SkylineUserSummaryResponseDto {
 /** 列表操作人展示选项的响应文档模型；字段集合为默认字段加请求 fields，账号不存在时只返回 uid。 */
 export class SkylineUserOptionResponseDto extends SkylineUserSummaryResponseDto {}
 
+/** 列表创建人、更新人展示选项；业务响应 DTO 可通过 IntersectionType 或 PickType 组合使用。 */
+export class SkylineUserOptionsResponseDto {
+    @ApiProperty({
+        description: '创建人选项，通过 Skyline 账号 Feign 按 createBy 还原',
+        type: SkylineUserOptionResponseDto,
+        required: false
+    })
+    createByOptions?: SkylineUserOptionResponseDto
+
+    @ApiProperty({
+        description: '更新人选项，通过 Skyline 账号 Feign 按 modifyBy 还原',
+        type: SkylineUserOptionResponseDto,
+        required: false
+    })
+    modifyByOptions?: SkylineUserOptionResponseDto
+}
+
 /** 账号还原请求中可选的返回字段声明。 */
 class SkylineUserFieldsDto {
     @ApiProperty({

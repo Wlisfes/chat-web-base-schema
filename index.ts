@@ -13,6 +13,7 @@ export type {
 export * from './src/schema/chat-web-finance-mysql'
 export * from './src/schema/chat-web-crm-mysql'
 export * from './src/schema/chat-web-skyline-mysql'
+export * from './src/schema/chat-web-task-mysql'
 export * from './src/utils'
 export * from './src/interceptor'
 export * from './src/filters'

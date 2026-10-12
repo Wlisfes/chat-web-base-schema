@@ -14,6 +14,17 @@ Import the account, menu, role and organization table definitions from the Skyli
 import { TbSkylineUser, TbSkylineUserDto } from '@wlisfes/chat-web-base-schema/chat-web-skyline-mysql'
 ```
 
+## Task MySQL
+
+Import the scheduled task table definitions owned by `chat-web-task-service` from the Task schema subpath:
+
+```ts
+import { TbTaskCron, TbTaskExecution } from '@wlisfes/chat-web-base-schema/chat-web-task-mysql'
+```
+
+The Task schema only stores scheduling definitions and execution state. Business
+data such as exchange rates or SMS records stays in the owning service database.
+
 Applications consuming this package must keep TypeORM `synchronize` and
 `migrationsRun` disabled.
 

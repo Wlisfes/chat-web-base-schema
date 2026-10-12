@@ -6,6 +6,7 @@ const { getMetadataArgsStorage } = require('typeorm')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
 const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
+const taskSchema = require('../dist/src/schema/chat-web-task-mysql')
 const { DataBaseAdapter, DataBaseByAdapter } = require('../dist/src/utils')
 
 function sorted(values) {
@@ -120,6 +121,10 @@ validateColumnEnumUsage(crmServiceRoot)
 const skylineServiceRoot = resolve(__dirname, '../src/schema/chat-web-skyline-mysql')
 validateServiceFiles(skylineServiceRoot)
 validateColumnEnumUsage(skylineServiceRoot)
+
+const taskServiceRoot = resolve(__dirname, '../src/schema/chat-web-task-mysql')
+validateServiceFiles(taskServiceRoot)
+validateColumnEnumUsage(taskServiceRoot)
 
 validateTable({
     entity: financeSchema.TbFinanceBrand,
@@ -329,6 +334,22 @@ validateTable({
     dto: skylineSchema.TbSkylineRoleDataScopeOrganizationDto,
     columns: skylineSchema.TbSkylineRoleDataScopeOrganizationColumn,
     sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_role_data_scope_organization.sql')
+})
+
+validateTable({
+    entity: taskSchema.TbTaskCron,
+    dto: taskSchema.TbTaskCronDto,
+    columns: taskSchema.TbTaskCronColumn,
+    sqlPath: resolve(taskServiceRoot, 'sql/tb_task_cron.sql'),
+    enumComments: [taskSchema.TbTaskCronStatusDefinition.comment]
+})
+
+validateTable({
+    entity: taskSchema.TbTaskExecution,
+    dto: taskSchema.TbTaskExecutionDto,
+    columns: taskSchema.TbTaskExecutionColumn,
+    sqlPath: resolve(taskServiceRoot, 'sql/tb_task_execution.sql'),
+    enumComments: [taskSchema.TbTaskExecutionStatusDefinition.comment, taskSchema.TbTaskExecutionTriggerDefinition.comment]
 })
 
 console.log('Schema consistency validation passed.')

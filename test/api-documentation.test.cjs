@@ -101,7 +101,8 @@ test('共享完整字段 DTO 的标量字段均提供类型和示例', async () 
     const schemaModules = [
         require('../dist/src/schema/chat-web-finance-mysql'),
         require('../dist/src/schema/chat-web-crm-mysql'),
-        require('../dist/src/schema/chat-web-skyline-mysql')
+        require('../dist/src/schema/chat-web-skyline-mysql'),
+        require('../dist/src/schema/chat-web-task-mysql')
     ]
     const extraModels = schemaModules.flatMap(schemaModule =>
         Object.entries(schemaModule)

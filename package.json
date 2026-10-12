@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.6.85",
+    "version": "1.6.86",
     "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {
@@ -33,6 +33,11 @@
             "types": "./dist/src/schema/chat-web-crm-mysql/index.d.ts",
             "require": "./dist/src/schema/chat-web-crm-mysql/index.js",
             "default": "./dist/src/schema/chat-web-crm-mysql/index.js"
+        },
+        "./chat-web-task-mysql": {
+            "types": "./dist/src/schema/chat-web-task-mysql/index.d.ts",
+            "require": "./dist/src/schema/chat-web-task-mysql/index.js",
+            "default": "./dist/src/schema/chat-web-task-mysql/index.js"
         },
         "./chat-web-skyline-mysql": {
             "types": "./dist/src/schema/chat-web-skyline-mysql/index.d.ts",
@@ -73,6 +78,11 @@
             "types": "./dist/src/utils/modules/response.d.ts",
             "require": "./dist/src/utils/modules/response.js",
             "default": "./dist/src/utils/modules/response.js"
+        },
+        "./rabbitmq": {
+            "types": "./dist/src/runtime/rabbitmq/index.d.ts",
+            "require": "./dist/src/runtime/rabbitmq/index.js",
+            "default": "./dist/src/runtime/rabbitmq/index.js"
         },
         "./redis": {
             "types": "./dist/src/runtime/redis/index.d.ts",
@@ -132,6 +142,7 @@
         "@nestjs/platform-express": ">=11 <12",
         "@nestjs/swagger": ">=11 <12",
         "@nestjs/typeorm": ">=11 <12",
+        "amqplib": ">=2.2 <3",
         "class-transformer": ">=0.5 <1",
         "express": ">=5 <6",
         "js-yaml": ">=4 <5",
@@ -146,6 +157,9 @@
             "optional": true
         },
         "@nestjs/typeorm": {
+            "optional": true
+        },
+        "amqplib": {
             "optional": true
         },
         "js-yaml": {
@@ -169,6 +183,7 @@
         "@types/cookie-parser": "^1.4.10",
         "@types/express": "^5.0.6",
         "@types/node": "^24.0.0",
+        "amqplib": "2.2.0",
         "class-transformer": "^0.5.1",
         "express": "^5.2.1",
         "js-yaml": "^4.1.0",

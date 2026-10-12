@@ -10,7 +10,6 @@ export type {
     PrimitiveEnum,
     PrimitiveEnumValue
 } from './src/types'
-export * from './src/schema/chat-web-account-mysql'
 export * from './src/schema/chat-web-finance-mysql'
 export * from './src/schema/chat-web-crm-mysql'
 export * from './src/schema/chat-web-skyline-mysql'

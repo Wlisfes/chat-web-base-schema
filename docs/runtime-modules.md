@@ -187,32 +187,32 @@ timeouts, Bearer headers, response envelopes and upstream errors.
 
 ```ts
 @FeignClient({
-    name: '账号服务',
-    prefix: '/feign/account',
+    name: 'Skyline 服务',
+    prefix: '/feign/skyline',
     serviceTokenKey: 'gateway.feign.service_token',
     baseUrlConfigKey: 'gateway.feign.url',
     timeoutConfigKey: 'gateway.feign.timeout'
 })
-export class FeignClientAccountManager extends FeignWebClient<FeignClientAccountImplementation> {
+export class FeignClientSkylineManager extends FeignWebClient<FeignClientSkylineImplementation> {
     @FeignPost('/user/column/resolve')
-    async httpBaseAccountColumnUserResolver(
+    async httpBaseSkylineColumnUserResolver(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: AccountColumnUserResolverDto
-    ): Promise<AccountUserSummary[]> {
-        return this.dispatch('httpBaseAccountColumnUserResolver', _authorization, _input)
+        @FeignBody() _input: SkylineColumnUserResolverDto
+    ): Promise<SkylineUserSummary[]> {
+        return this.dispatch('httpBaseSkylineColumnUserResolver', _authorization, _input)
     }
 
     @FeignPost('/user/resolve')
-    async httpBaseAccountUserResolver(
+    async httpBaseSkylineUserResolver(
         @FeignHeader('authorization') _authorization: string,
-        @FeignBody() _input: AccountUserResolverDto
-    ): Promise<AccountUserSummary> {
-        return this.dispatch('httpBaseAccountUserResolver', _authorization, _input)
+        @FeignBody() _input: SkylineUserResolverDto
+    ): Promise<SkylineUserSummary> {
+        return this.dispatch('httpBaseSkylineUserResolver', _authorization, _input)
     }
 }
 
 @Module({
-    imports: [FeignModule.register([FeignClientAccountManager])]
+    imports: [FeignModule.register([FeignClientSkylineManager])]
 })
 export class IntegrationModule {}
 ```
@@ -227,22 +227,22 @@ Business Feign clients always set `serviceTokenKey`; the Authorization position
 carries the caller service credential, not an end-user token. Callers build that
 header with `resolveFeignServiceAuthorization(configService)` so cross-service
 base queries are not subject to permission codes or data-scope filtering.
-List responses that need operator names use `appendAccountUserOptions` instead of
-copying Account Feign lookup code into each service. It deduplicates UIDs across all
-requested fields, batches calls by the Account limit of 100, uses the service
+List responses that need operator names use `appendSkylineUserOptions` instead of
+copying Skyline Feign lookup code into each service. It deduplicates UIDs across all
+requested fields, batches calls by the Skyline limit of 100, uses the service
 credential, and appends `<field>Options`; missing accounts keep `{ uid }`. The system
-account UID `0` (`ACCOUNT_SYSTEM_UID`) is never sent to Account and always resolves to
+account UID `0` (`SKYLINE_SYSTEM_UID`) is never sent to Skyline and always resolves to
 `{ uid: '0', name: '系统' }`:
 
 ```ts
-const list = await appendAccountUserOptions(accountFeignClient, configService, records, ['createBy', 'modifyBy'])
+const list = await appendSkylineUserOptions(skylineFeignClient, configService, records, ['createBy', 'modifyBy'])
 // 默认返回 uid、number、name、avatar；按需扩展白名单字段
-const detail = await appendAccountUserOptions(accountFeignClient, configService, records, ['modifyBy'], {
+const detail = await appendSkylineUserOptions(skylineFeignClient, configService, records, ['modifyBy'], {
     fields: ['uid', 'name', 'phone']
 })
 ```
 
-Extendable fields are limited to `ACCOUNT_USER_RESOLVER_FIELDS`. Sensitive columns such as
+Extendable fields are limited to `SKYLINE_USER_RESOLVER_FIELDS`. Sensitive columns such as
 `password` are never exposed.
 
 Access-token introspection is not a business Feign concern and is served by the
@@ -260,8 +260,8 @@ it does not repeat route, header, query or Swagger decorators:
 
 ```ts
 @ApifoxController('内部 Feign 接口')
-export class FeignController extends FeignClientAccountManager {
-    constructor(implementation: FeignClientAccountImplementation, configService: ConfigService) {
+export class FeignController extends FeignClientSkylineManager {
+    constructor(implementation: FeignClientSkylineImplementation, configService: ConfigService) {
         super(implementation, configService)
     }
 }

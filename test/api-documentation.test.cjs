@@ -99,7 +99,6 @@ test('ApiServiceDecorator 支持数组 data 和原始非 JSON 响应', () => {
 
 test('共享完整字段 DTO 的标量字段均提供类型和示例', async () => {
     const schemaModules = [
-        require('../dist/src/schema/chat-web-account-mysql'),
         require('../dist/src/schema/chat-web-finance-mysql'),
         require('../dist/src/schema/chat-web-crm-mysql'),
         require('../dist/src/schema/chat-web-skyline-mysql')

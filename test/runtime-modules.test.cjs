@@ -14,10 +14,9 @@ const {
 const { AuthSessionService } = require('../dist/src/runtime/auth-session')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
-    appendAccountUserOptions,
     appendFinanceBrandOptions,
+    appendSkylineUserOptions,
     FeignClient,
-    FeignClientAccountManager,
     FeignClientCrmManager,
     FeignClientFactory,
     FeignClientFinanceManager,
@@ -33,7 +32,7 @@ const { runWithRequestContext } = require('../dist/src/utils/modules/request-con
 
 test('Feign 公共入口仅导出正式 Manager 命名', () => {
     const feign = require('../dist/src/feign')
-    assert.equal(typeof feign.FeignClientAccountManager, 'function')
+    assert.equal(feign.FeignClientAccountManager, undefined)
     assert.equal(typeof feign.FeignClientFinanceManager, 'function')
     assert.equal(typeof feign.FeignClientCrmManager, 'function')
     assert.equal(typeof feign.FeignClientSkylineManager, 'function')
@@ -308,54 +307,54 @@ test('网关必须剥离的入站头部覆盖身份上下文', () => {
     assert.equal(GATEWAY_STRIPPED_HEADERS.includes(GATEWAY_PRINCIPAL_HEADER), true)
 })
 
-test('账号业务 Feign 客户端可被直接继承为服务端路由且不再暴露内省接口', async () => {
-    class AccountFeignController extends FeignClientAccountManager {}
-    const controller = new AccountFeignController(
+test('Skyline 业务 Feign 客户端可被直接继承为服务端路由且不再暴露内省接口', async () => {
+    class SkylineFeignController extends FeignClientSkylineManager {}
+    const controller = new SkylineFeignController(
         {
-            async httpBaseAccountColumnUserResolver(authorization, input) {
+            async httpBaseSkylineColumnUserResolver(authorization, input) {
                 return { authorization, input }
             },
-            async httpBaseAccountUserResolver(authorization, input) {
+            async httpBaseSkylineUserResolver(authorization, input) {
                 return { authorization, input }
             }
         },
         config({ gateway: { feign: { service_token: 'service-token' } } })
     )
 
-    assert.equal(AccountFeignController.prototype.introspect, undefined)
-    assert.equal(AccountFeignController.prototype.httpBaseCrmUserResolver, undefined)
+    assert.equal(SkylineFeignController.prototype.introspect, undefined)
+    assert.equal(SkylineFeignController.prototype.httpBaseCrmUserResolver, undefined)
 
     // 服务间路由带 /feign/<服务名> 前缀，网关不改写，因此不会与公开业务路由冲突。
-    const httpBaseAccountColumnUserResolver = AccountFeignController.prototype.httpBaseAccountColumnUserResolver
-    assert.equal(Reflect.getMetadata(PATH_METADATA, httpBaseAccountColumnUserResolver), '/feign/account/user/column/resolve')
-    assert.equal(Reflect.getMetadata(METHOD_METADATA, httpBaseAccountColumnUserResolver), RequestMethod.POST)
-    assert.equal(Reflect.getMetadata('auth:is-public', httpBaseAccountColumnUserResolver), true)
+    const httpBaseSkylineColumnUserResolver = SkylineFeignController.prototype.httpBaseSkylineColumnUserResolver
+    assert.equal(Reflect.getMetadata(PATH_METADATA, httpBaseSkylineColumnUserResolver), '/feign/skyline/user/column/resolve')
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, httpBaseSkylineColumnUserResolver), RequestMethod.POST)
+    assert.equal(Reflect.getMetadata('auth:is-public', httpBaseSkylineColumnUserResolver), true)
     assert.equal(
-        Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'httpBaseAccountColumnUserResolver')['6:0'].data,
+        Reflect.getMetadata(ROUTE_ARGS_METADATA, SkylineFeignController, 'httpBaseSkylineColumnUserResolver')['6:0'].data,
         'authorization'
     )
-    assert.deepEqual(await controller.httpBaseAccountColumnUserResolver('Bearer service-token', { uids: ['1'] }), {
+    assert.deepEqual(await controller.httpBaseSkylineColumnUserResolver('Bearer service-token', { uids: ['1'] }), {
         authorization: 'Bearer service-token',
         input: { uids: ['1'] }
     })
 
-    const httpBaseAccountUserResolver = AccountFeignController.prototype.httpBaseAccountUserResolver
-    assert.equal(Reflect.getMetadata(PATH_METADATA, httpBaseAccountUserResolver), '/feign/account/user/resolve')
-    assert.equal(Reflect.getMetadata(METHOD_METADATA, httpBaseAccountUserResolver), RequestMethod.POST)
-    assert.equal(Reflect.getMetadata('auth:is-public', httpBaseAccountUserResolver), true)
+    const httpBaseSkylineUserResolver = SkylineFeignController.prototype.httpBaseSkylineUserResolver
+    assert.equal(Reflect.getMetadata(PATH_METADATA, httpBaseSkylineUserResolver), '/feign/skyline/user/resolve')
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, httpBaseSkylineUserResolver), RequestMethod.POST)
+    assert.equal(Reflect.getMetadata('auth:is-public', httpBaseSkylineUserResolver), true)
     assert.equal(
-        Reflect.getMetadata(ROUTE_ARGS_METADATA, AccountFeignController, 'httpBaseAccountUserResolver')['6:0'].data,
+        Reflect.getMetadata(ROUTE_ARGS_METADATA, SkylineFeignController, 'httpBaseSkylineUserResolver')['6:0'].data,
         'authorization'
     )
-    assert.equal(AccountFeignController.prototype.httpBaseAccountBatchUserResolver, undefined)
-    assert.deepEqual(await controller.httpBaseAccountUserResolver('Bearer service-token', { uid: '1' }), {
+    assert.equal(SkylineFeignController.prototype.httpBaseSkylineBatchUserResolver, undefined)
+    assert.deepEqual(await controller.httpBaseSkylineUserResolver('Bearer service-token', { uid: '1' }), {
         authorization: 'Bearer service-token',
         input: { uid: '1' }
     })
 
     /** 业务 Feign 的 Authorization 位承载服务凭据，凭据不匹配必须拒绝。 */
-    await assert.rejects(() => controller.httpBaseAccountColumnUserResolver('Bearer user-token', { uids: ['1'] }), UnauthorizedException)
-    await assert.rejects(() => controller.httpBaseAccountUserResolver('Bearer user-token', { uid: '1' }), UnauthorizedException)
+    await assert.rejects(() => controller.httpBaseSkylineColumnUserResolver('Bearer user-token', { uids: ['1'] }), UnauthorizedException)
+    await assert.rejects(() => controller.httpBaseSkylineUserResolver('Bearer user-token', { uid: '1' }), UnauthorizedException)
 })
 
 test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorization', () => {
@@ -373,7 +372,7 @@ test('业务 Feign 调用端统一从 Nacos 读取服务凭据组装 Authorizati
 test('账号操作人还原工具按字段去重、分批调用并保留缺失账号 uid', async () => {
     const calls = []
     const client = {
-        async httpBaseAccountColumnUserResolver(authorization, input) {
+        async httpBaseSkylineColumnUserResolver(authorization, input) {
             calls.push({ authorization, uids: input.uids, fields: input.fields })
             return input.uids
                 .filter(uid => uid !== 'missing')
@@ -383,7 +382,7 @@ test('账号操作人还原工具按字段去重、分批调用并保留缺失�
     const extra = Array.from({ length: 100 }, (_, index) => ({ createBy: String(index + 10), modifyBy: '' }))
     const source = [{ id: 1, createBy: '1', modifyBy: 'missing' }, { id: 2, createBy: '1', modifyBy: undefined }, ...extra]
     const first = source[0]
-    const list = await appendAccountUserOptions(client, config({ gateway: { feign: { service_token: 'service-token' } } }), source, [
+    const list = await appendSkylineUserOptions(client, config({ gateway: { feign: { service_token: 'service-token' } } }), source, [
         'createBy',
         'modifyBy'
     ])
@@ -404,15 +403,15 @@ test('账号操作人还原工具按字段去重、分批调用并保留缺失�
     assert.equal(calls[0].fields, undefined)
 })
 
-test('账号操作人还原工具把系统账号 0 固定还原为系统且不请求 Account', async () => {
+test('账号操作人还原工具把系统账号 0 固定还原为系统且不请求 Skyline', async () => {
     const calls = []
     const client = {
-        async httpBaseAccountColumnUserResolver(_authorization, input) {
+        async httpBaseSkylineColumnUserResolver(_authorization, input) {
             calls.push(input.uids)
             return input.uids.map(uid => ({ uid, name: `U${uid}` }))
         }
     }
-    const list = await appendAccountUserOptions(
+    const list = await appendSkylineUserOptions(
         client,
         config({ gateway: { feign: { service_token: 'service-token' } } }),
         [
@@ -427,7 +426,7 @@ test('账号操作人还原工具把系统账号 0 固定还原为系统且不�
     assert.deepEqual(list[0].modifyByOptions, { uid: '1', name: 'U1' })
     assert.deepEqual(list[1].modifyByOptions, { uid: '0', name: '系统' })
 
-    const empty = await appendAccountUserOptions(client, config(), [{ createBy: '0' }], ['createBy'])
+    const empty = await appendSkylineUserOptions(client, config(), [{ createBy: '0' }], ['createBy'])
     assert.equal(calls.length, 1)
     assert.deepEqual(empty[0].createByOptions, { uid: '0', name: '系统' })
 })
@@ -435,12 +434,12 @@ test('账号操作人还原工具把系统账号 0 固定还原为系统且不�
 test('账号操作人还原工具支持扩展返回字段', async () => {
     let received
     const client = {
-        async httpBaseAccountColumnUserResolver(_authorization, input) {
+        async httpBaseSkylineColumnUserResolver(_authorization, input) {
             received = input
             return [{ uid: '1', name: '张三', phone: '13800000000' }]
         }
     }
-    const [item] = await appendAccountUserOptions(
+    const [item] = await appendSkylineUserOptions(
         client,
         config({ gateway: { feign: { service_token: 'service-token' } } }),
         [{ modifyBy: '1' }],
@@ -473,7 +472,7 @@ test('品牌还原工具直接在原列表项上追加选项', async () => {
 
 test('业务 Feign 客户端统一读取 Gateway 地址和超时并在启动时校验配置', () => {
     const missing = new FeignClientFactory(config(), async () => new Response())
-    missing.create(FeignClientAccountManager)
+    missing.create(FeignClientSkylineManager)
     assert.throws(() => missing.onApplicationBootstrap(), /Nacos 配置 gateway\.feign\.url/)
 
     const configured = new FeignClientFactory(
@@ -482,14 +481,13 @@ test('业务 Feign 客户端统一读取 Gateway 地址和超时并在启动时�
         }),
         async () => new Response()
     )
-    configured.create(FeignClientAccountManager)
+    configured.create(FeignClientSkylineManager)
     configured.create(FeignClientFinanceManager)
     assert.doesNotThrow(() => configured.onApplicationBootstrap())
-    assert.equal(getFeignClientOptions(FeignClientAccountManager).baseUrlConfigKey, 'gateway.feign.url')
     assert.equal(getFeignClientOptions(FeignClientFinanceManager).baseUrlConfigKey, 'gateway.feign.url')
     assert.equal(getFeignClientOptions(FeignClientCrmManager).baseUrlConfigKey, 'gateway.feign.url')
     assert.equal(getFeignClientOptions(FeignClientSkylineManager).baseUrlConfigKey, 'gateway.feign.url')
-    assert.equal(getFeignClientOptions(FeignClientAccountManager).timeoutConfigKey, 'gateway.feign.timeout')
+    assert.equal(getFeignClientOptions(FeignClientSkylineManager).timeoutConfigKey, 'gateway.feign.timeout')
     assert.equal(getFeignClientOptions(FeignClientFinanceManager).timeoutConfigKey, 'gateway.feign.timeout')
 })
 

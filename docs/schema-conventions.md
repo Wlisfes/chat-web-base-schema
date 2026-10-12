@@ -35,10 +35,10 @@ service-name/
 
 Each table module exports:
 
-1. A database-column enum, for example `TbAccountUserColumn`.
+1. A database-column enum, for example `TbSkylineUserColumn`.
 2. Business value enums and `defineEnumMetadata()` definitions.
-3. A complete field DTO, for example `TbAccountUserDto`.
-4. A PascalCase TypeORM entity, for example `TbAccountUser`.
+3. A complete field DTO, for example `TbSkylineUserDto`.
+4. A PascalCase TypeORM entity, for example `TbSkylineUser`.
 
 ## Entity rules
 

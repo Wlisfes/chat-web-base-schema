@@ -3,7 +3,6 @@ require('reflect-metadata')
 const { readFileSync, readdirSync } = require('node:fs')
 const { basename, extname, resolve } = require('node:path')
 const { getMetadataArgsStorage } = require('typeorm')
-const accountSchema = require('../dist/src/schema/chat-web-account-mysql')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
 const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
@@ -110,10 +109,6 @@ function validateTable({ entity, dto, columns, sqlPath, enumComments = [] }) {
     }
 }
 
-const accountServiceRoot = resolve(__dirname, '../src/schema/chat-web-account-mysql')
-validateServiceFiles(accountServiceRoot)
-validateColumnEnumUsage(accountServiceRoot)
-
 const financeServiceRoot = resolve(__dirname, '../src/schema/chat-web-finance-mysql')
 validateServiceFiles(financeServiceRoot)
 validateColumnEnumUsage(financeServiceRoot)
@@ -125,14 +120,6 @@ validateColumnEnumUsage(crmServiceRoot)
 const skylineServiceRoot = resolve(__dirname, '../src/schema/chat-web-skyline-mysql')
 validateServiceFiles(skylineServiceRoot)
 validateColumnEnumUsage(skylineServiceRoot)
-
-validateTable({
-    entity: accountSchema.TbAccountUser,
-    dto: accountSchema.TbAccountUserDto,
-    columns: accountSchema.TbAccountUserColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user.sql'),
-    enumComments: [accountSchema.TbAccountUserStatusDefinition.comment, accountSchema.TbAccountUserEmploymentStatusDefinition.comment]
-})
 
 validateTable({
     entity: financeSchema.TbFinanceBrand,
@@ -254,86 +241,6 @@ validateTable({
         skylineSchema.TbSkylineChunkModuleKindDefinition.comment,
         skylineSchema.TbSkylineChunkModuleTypeDefinition.comment
     ]
-})
-
-validateTable({
-    entity: accountSchema.TbAccountOrganization,
-    dto: accountSchema.TbAccountOrganizationDto,
-    columns: accountSchema.TbAccountOrganizationColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_organization.sql'),
-    enumComments: [accountSchema.TbAccountOrganizationTypeDefinition.comment, accountSchema.TbAccountOrganizationStatusDefinition.comment]
-})
-
-validateTable({
-    entity: accountSchema.TbAccountOrganizationClosure,
-    dto: accountSchema.TbAccountOrganizationClosureDto,
-    columns: accountSchema.TbAccountOrganizationClosureColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_organization_closure.sql')
-})
-
-validateTable({
-    entity: accountSchema.TbAccountUserOrganization,
-    dto: accountSchema.TbAccountUserOrganizationDto,
-    columns: accountSchema.TbAccountUserOrganizationColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user_organization.sql'),
-    enumComments: [accountSchema.TbAccountUserOrganizationStatusDefinition.comment]
-})
-
-validateTable({
-    entity: accountSchema.TbAccountChunk,
-    dto: accountSchema.TbAccountChunkDto,
-    columns: accountSchema.TbAccountChunkColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_chunk.sql'),
-    enumComments: [accountSchema.TbAccountChunkLinkNameDefinition.comment]
-})
-
-validateTable({
-    entity: accountSchema.TbAccountSheet,
-    dto: accountSchema.TbAccountSheetDto,
-    columns: accountSchema.TbAccountSheetColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_sheet.sql'),
-    enumComments: [
-        accountSchema.TbAccountSheetTypeDefinition.comment,
-        accountSchema.TbAccountSheetStatusDefinition.comment,
-        accountSchema.TbAccountSheetVisibleDefinition.comment
-    ]
-})
-
-validateTable({
-    entity: accountSchema.TbAccountRole,
-    dto: accountSchema.TbAccountRoleDto,
-    columns: accountSchema.TbAccountRoleColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role.sql'),
-    enumComments: [accountSchema.TbAccountRoleStatusDefinition.comment]
-})
-
-validateTable({
-    entity: accountSchema.TbAccountUserRole,
-    dto: accountSchema.TbAccountUserRoleDto,
-    columns: accountSchema.TbAccountUserRoleColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_user_role.sql')
-})
-
-validateTable({
-    entity: accountSchema.TbAccountRoleSheet,
-    dto: accountSchema.TbAccountRoleSheetDto,
-    columns: accountSchema.TbAccountRoleSheetColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_sheet.sql')
-})
-
-validateTable({
-    entity: accountSchema.TbAccountRoleDataScope,
-    dto: accountSchema.TbAccountRoleDataScopeDto,
-    columns: accountSchema.TbAccountRoleDataScopeColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_data_scope.sql'),
-    enumComments: [accountSchema.TbAccountRoleDataScopeTypeDefinition.comment, accountSchema.TbAccountRoleDataScopeStatusDefinition.comment]
-})
-
-validateTable({
-    entity: accountSchema.TbAccountRoleDataScopeOrganization,
-    dto: accountSchema.TbAccountRoleDataScopeOrganizationDto,
-    columns: accountSchema.TbAccountRoleDataScopeOrganizationColumn,
-    sqlPath: resolve(accountServiceRoot, 'sql/tb_account_role_data_scope_organization.sql')
 })
 
 validateTable({

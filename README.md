@@ -6,21 +6,21 @@ descriptions and opt-in NestJS runtime modules for chat-web microservices.
 This package only describes existing tables. Databases and tables are created by
 external SQL deployment scripts. It does not contain a DataSource or migrations.
 
-## Account MySQL
+## Skyline MySQL
 
-Import the account table definitions from the account schema subpath:
+Import the account, menu, role and organization table definitions from the Skyline schema subpath:
 
 ```ts
-import { TbAccountUser, TbAccountUserDto } from '@wlisfes/chat-web-base-schema/chat-web-account-mysql'
+import { TbSkylineUser, TbSkylineUserDto } from '@wlisfes/chat-web-base-schema/chat-web-skyline-mysql'
 ```
 
 Applications consuming this package must keep TypeORM `synchronize` and
 `migrationsRun` disabled.
 
-Internal users and external customers are both owned by the account schema.
-Finance only owns brands, currencies, exchange rates, countries and pricing;
-it must reference customers through the account service instead of defining a
-second customer table.
+Internal users are owned by the Skyline schema and external customers by the CRM
+schema. Finance only owns brands, currencies, exchange rates, countries and
+pricing; it must reference users and customers through Feign instead of
+defining duplicate tables.
 
 Each table module has a canonical create script with the same filename under
 its service's `sql` directory. Later changes are stored as immutable scripts in

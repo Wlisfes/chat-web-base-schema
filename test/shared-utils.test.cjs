@@ -16,7 +16,6 @@ const {
 const { EnumOptionDto, EnumsResponseDto, ListResponseDto, PageListResponseDto, PageResponseDataDto } = require('../dist/src/decorator')
 const { BigintNumberTransformer, DataBaseDto } = require('../dist/src/utils')
 const requestContext = require('../dist/src/utils/modules/request-context')
-const accountSchema = require('../dist/src/schema/chat-web-account-mysql')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
 const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
@@ -64,12 +63,9 @@ test('枚举元数据的 type 取值限定在管理端标签颜色类型内', ()
         'pink',
         'volcano'
     ])
-    const definitions = [
-        ...Object.entries(accountSchema),
-        ...Object.entries(financeSchema),
-        ...Object.entries(crmSchema),
-        ...Object.entries(skylineSchema)
-    ].filter(([name, value]) => name.endsWith('Definition') && value && Array.isArray(value.options))
+    const definitions = [...Object.entries(financeSchema), ...Object.entries(crmSchema), ...Object.entries(skylineSchema)].filter(
+        ([name, value]) => name.endsWith('Definition') && value && Array.isArray(value.options)
+    )
 
     assert.ok(definitions.length >= 29, `枚举 Definition 数量异常：${definitions.length}`)
     for (const [name, definition] of definitions) {

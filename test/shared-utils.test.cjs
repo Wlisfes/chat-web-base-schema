@@ -9,6 +9,14 @@ const {
     assertUid,
     assertValidTree,
     buildTree,
+    createTreeTool,
+    filterTree,
+    findTreeNode,
+    findTreePath,
+    fromTreeList,
+    removeTreeNode,
+    renameTreeChildren,
+    toTreeList,
     generateUid,
     resolvePublicRequestUrl,
     resolveRequestId
@@ -149,6 +157,57 @@ test('共享树工具校验层级并稳定排序', () => {
         [3, 2]
     )
     assert.throws(() => assertValidTree([{ keyId: 1, parentKeyId: 2, sort: 1 }], '节点'), /父节点 2 不存在/)
+})
+
+test('通用树工具支持自定义字段并且不修改入参', () => {
+    const list = [
+        { keyId: 1, pid: null, name: '华东' },
+        { keyId: 2, pid: 1, name: '上海' },
+        { keyId: 3, pid: 2, name: '浦东' },
+        { keyId: 4, pid: 1, name: '杭州' },
+        { keyId: 5, pid: 99, name: '孤立节点' }
+    ]
+    const tree = fromTreeList(list, { id: 'keyId', children: 'items' })
+    assert.equal(list[0].items, undefined)
+    assert.deepEqual(
+        tree.map(node => [node.keyId, node.items.map(child => child.keyId)]),
+        [
+            [1, [2, 4]],
+            [5, []]
+        ]
+    )
+    assert.deepEqual(
+        toTreeList(tree, { children: 'items' }).map(node => node.keyId),
+        [1, 2, 3, 4, 5]
+    )
+    assert.equal(findTreeNode(tree, node => node.keyId === 3, { children: 'items' }).name, '浦东')
+    assert.deepEqual(
+        findTreePath(tree, node => node.keyId === 3, { children: 'items' }).map(node => node.keyId),
+        [1, 2, 3]
+    )
+
+    const filtered = filterTree(tree, node => node.name === '浦东', { children: 'items' })
+    assert.deepEqual(
+        toTreeList(filtered, { children: 'items' }).map(node => node.keyId),
+        [1, 2, 3]
+    )
+    assert.equal(tree[0].items.length, 2)
+
+    const instance = createTreeTool({ id: 'keyId', children: 'items' })
+    assert.equal(
+        instance.removeNode(tree, node => node.keyId === 2),
+        1
+    )
+    assert.deepEqual(
+        instance.toList(tree).map(node => node.keyId),
+        [1, 4, 5]
+    )
+    renameTreeChildren(tree, 'items', 'children')
+    assert.deepEqual(
+        tree[0].children.map(node => node.keyId),
+        [4]
+    )
+    assert.equal(tree[0].items, undefined)
 })
 
 test('共享 UID 与请求 ID 工具保持输入约束', () => {

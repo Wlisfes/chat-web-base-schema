@@ -31,6 +31,25 @@ test('RabbitmqModule.forRoot 注册运行时选项和服务', () => {
     assert.ok(module.providers.some(item => item.provide === RABBITMQ_RUNTIME_OPTIONS && item.useValue.setup === setup))
 })
 
+test('RabbitMQ 首次连接时使用 setup 回调传入的连接声明拓扑并恢复消费者', async () => {
+    const calls = []
+    const channel = {
+        on: () => {},
+        prefetch: async count => calls.push(['prefetch', count]),
+        consume: async queue => calls.push(['consume', queue])
+    }
+    const model = { createConfirmChannel: async () => channel }
+    const service = new RabbitmqService(config({}), { vhost: '/chat-task', setup: async value => calls.push(['setup', value === channel]) })
+    service.consumers.push({ queue: 'chat.task.execute', handler: async () => 'ack' })
+    await service.openChannel(model)
+    assert.deepEqual(calls, [
+        ['prefetch', 10],
+        ['setup', true],
+        ['consume', 'chat.task.execute']
+    ])
+    assert.equal(service.isReady(), true)
+})
+
 test('RabbitMQ 消费结果按回调返回值确认、重新入队或拒绝，回调异常按拒绝处理', async () => {
     const service = new RabbitmqService(config({}), { vhost: '/chat-task' })
     const calls = []

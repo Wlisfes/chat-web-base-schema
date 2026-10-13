@@ -37,8 +37,8 @@ export enum TbSkylineChunkModuleKind {
 }
 
 export const TbSkylineChunkModuleKindDefinition = defineEnumMetadata(TbSkylineChunkModuleKind, '枚举字段类型', {
-    [TbSkylineChunkModuleKind.SELECT]: { label: '下拉选项', description: '仅一级枚举项，适用于普通下拉选择', type: 'blue' },
-    [TbSkylineChunkModuleKind.TREE]: { label: '树形选项', description: '支持多级枚举项，适用于树形选择', type: 'cyan' }
+    [TbSkylineChunkModuleKind.SELECT]: { label: '下拉选项', description: '仅一级枚举项，适用于普通下拉选择', type: 'success' },
+    [TbSkylineChunkModuleKind.TREE]: { label: '树形选项', description: '支持多级枚举项，适用于树形选择', type: 'warning' }
 })
 
 /** 枚举类型编码：CHUNK_<模块>_<服务>_<业务表>_<业务字段>，主表 tb_skyline_chunk_module 与子表 tb_skyline_chunk 共用。 */

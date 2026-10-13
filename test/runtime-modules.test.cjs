@@ -14,7 +14,7 @@ const {
 const { AuthSessionService } = require('../dist/src/runtime/auth-session')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
-    appendFinanceBrandOptions,
+    fetchAppendFinanceBrandOptions,
     fetchAppendSkylineUserOptions,
     FeignClient,
     FeignClientCrmManager,
@@ -459,7 +459,7 @@ test('品牌还原工具直接在原列表项上追加选项', async () => {
     }
     const source = [{ brandKeyId: 1001 }, { brandKeyId: 404 }, { brandKeyId: null }]
     const first = source[0]
-    const list = await appendFinanceBrandOptions(client, config({ gateway: { feign: { service_token: 'service-token' } } }), source, [
+    const list = await fetchAppendFinanceBrandOptions(client, config({ gateway: { feign: { service_token: 'service-token' } } }), source, [
         'brandKeyId'
     ])
 

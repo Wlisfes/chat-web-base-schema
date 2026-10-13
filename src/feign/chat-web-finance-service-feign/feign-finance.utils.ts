@@ -20,9 +20,9 @@ function isFinanceBrandKeyId(value: unknown): value is number {
  * - 直接在传入的列表项上追加字段并返回原列表引用，不创建新数组或新对象。
  *
  * @example
- * await appendFinanceBrandOptions(financeFeignClient, configService, list, ['brandKeyId'])
+ * await fetchAppendFinanceBrandOptions(financeFeignClient, configService, list, ['brandKeyId'])
  */
-export async function appendFinanceBrandOptions<TItem extends object, const TKey extends keyof TItem & string>(
+export async function fetchAppendFinanceBrandOptions<TItem extends object, const TKey extends keyof TItem & string>(
     financeFeignClient: FeignClientFinanceManager,
     configService: ConfigService,
     list: TItem[],

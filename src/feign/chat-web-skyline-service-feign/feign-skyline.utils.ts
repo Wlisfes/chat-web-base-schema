@@ -40,10 +40,10 @@ function toSkylineUserOption(user: SkylineTypes.SkylineUserSummary): SkylineType
  * - 直接在传入的列表项上追加字段并返回原列表引用，不创建新数组或新对象。
  *
  * @example
- * await appendSkylineUserOptions(skylineFeignClient, configService, list, ['createBy', 'modifyBy'])
- * await appendSkylineUserOptions(skylineFeignClient, configService, list, ['modifyBy'], { fields: ['phone', 'organizations'] })
+ * await fetchAppendSkylineUserOptions(skylineFeignClient, configService, list, ['createBy', 'modifyBy'])
+ * await fetchAppendSkylineUserOptions(skylineFeignClient, configService, list, ['modifyBy'], { fields: ['phone', 'organizations'] })
  */
-export async function appendSkylineUserOptions<TItem extends object, const TKey extends keyof TItem & string>(
+export async function fetchAppendSkylineUserOptions<TItem extends object, const TKey extends keyof TItem & string>(
     skylineFeignClient: FeignClientSkylineManager,
     configService: ConfigService,
     list: TItem[],

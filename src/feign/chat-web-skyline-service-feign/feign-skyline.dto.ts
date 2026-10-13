@@ -32,8 +32,8 @@ export class SkylineChunkOptionDto {
     @ApiProperty({ description: '枚举项扩展配置', type: Object, required: false, nullable: true, example: { type: 'success' } })
     json: Record<string, unknown>
 
-    @ApiProperty({ description: '子级枚举项列表', type: () => [SkylineChunkOptionDto] })
-    children: SkylineChunkOptionDto[]
+    @ApiProperty({ description: '子级枚举项列表；无下级的叶子节点不返回该字段', type: () => [SkylineChunkOptionDto], required: false })
+    children?: SkylineChunkOptionDto[]
 }
 
 /** 按枚举类型编码分组的枚举字典选项。 */
@@ -69,8 +69,7 @@ export const SkylineChunkOptionRecordSchema = {
                     keyId: 1001,
                     pid: null,
                     sort: 1,
-                    json: {},
-                    children: []
+                    json: {}
                 }
             ]
         }

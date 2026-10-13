@@ -227,7 +227,7 @@ Business Feign clients always set `serviceTokenKey`; the Authorization position
 carries the caller service credential, not an end-user token. Callers build that
 header with `resolveFeignServiceAuthorization(configService)` so cross-service
 base queries are not subject to permission codes or data-scope filtering.
-List responses that need operator names use `appendSkylineUserOptions` instead of
+List responses that need operator names use `fetchAppendSkylineUserOptions` instead of
 copying Skyline Feign lookup code into each service. It deduplicates UIDs across all
 requested fields, batches calls by the Skyline limit of 100, uses the service
 credential, and appends `<field>Options`; missing accounts keep `{ uid }`. The system
@@ -235,9 +235,9 @@ account UID `0` (`SKYLINE_SYSTEM_UID`) is never sent to Skyline and always resol
 `{ uid: '0', name: '系统' }`:
 
 ```ts
-const list = await appendSkylineUserOptions(skylineFeignClient, configService, records, ['createBy', 'modifyBy'])
+const list = await fetchAppendSkylineUserOptions(skylineFeignClient, configService, records, ['createBy', 'modifyBy'])
 // 默认返回 uid、number、name、avatar；按需扩展白名单字段
-const detail = await appendSkylineUserOptions(skylineFeignClient, configService, records, ['modifyBy'], {
+const detail = await fetchAppendSkylineUserOptions(skylineFeignClient, configService, records, ['modifyBy'], {
     fields: ['uid', 'name', 'phone']
 })
 ```

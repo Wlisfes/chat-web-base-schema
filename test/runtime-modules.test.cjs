@@ -15,7 +15,7 @@ const { AuthSessionService } = require('../dist/src/runtime/auth-session')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
     appendFinanceBrandOptions,
-    appendSkylineUserOptions,
+    fetchAppendSkylineUserOptions,
     FeignClient,
     FeignClientCrmManager,
     FeignClientFactory,
@@ -382,7 +382,7 @@ test('账号操作人还原工具按字段去重、分批调用并保留缺失�
     const extra = Array.from({ length: 100 }, (_, index) => ({ createBy: String(index + 10), modifyBy: '' }))
     const source = [{ id: 1, createBy: '1', modifyBy: 'missing' }, { id: 2, createBy: '1', modifyBy: undefined }, ...extra]
     const first = source[0]
-    const list = await appendSkylineUserOptions(client, config({ gateway: { feign: { service_token: 'service-token' } } }), source, [
+    const list = await fetchAppendSkylineUserOptions(client, config({ gateway: { feign: { service_token: 'service-token' } } }), source, [
         'createBy',
         'modifyBy'
     ])
@@ -411,7 +411,7 @@ test('账号操作人还原工具把系统账号 0 固定还原为系统且不�
             return input.uids.map(uid => ({ uid, name: `U${uid}` }))
         }
     }
-    const list = await appendSkylineUserOptions(
+    const list = await fetchAppendSkylineUserOptions(
         client,
         config({ gateway: { feign: { service_token: 'service-token' } } }),
         [
@@ -426,7 +426,7 @@ test('账号操作人还原工具把系统账号 0 固定还原为系统且不�
     assert.deepEqual(list[0].modifyByOptions, { uid: '1', name: 'U1' })
     assert.deepEqual(list[1].modifyByOptions, { uid: '0', name: '系统' })
 
-    const empty = await appendSkylineUserOptions(client, config(), [{ createBy: '0' }], ['createBy'])
+    const empty = await fetchAppendSkylineUserOptions(client, config(), [{ createBy: '0' }], ['createBy'])
     assert.equal(calls.length, 1)
     assert.deepEqual(empty[0].createByOptions, { uid: '0', name: '系统' })
 })
@@ -439,7 +439,7 @@ test('账号操作人还原工具支持扩展返回字段', async () => {
             return [{ uid: '1', name: '张三', phone: '13800000000' }]
         }
     }
-    const [item] = await appendSkylineUserOptions(
+    const [item] = await fetchAppendSkylineUserOptions(
         client,
         config({ gateway: { feign: { service_token: 'service-token' } } }),
         [{ modifyBy: '1' }],

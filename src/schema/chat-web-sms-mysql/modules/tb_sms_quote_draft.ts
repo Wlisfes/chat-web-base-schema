@@ -42,6 +42,16 @@ export const TbSmsQuoteDraftSourceDefinition = defineEnumMetadata(TbSmsQuoteDraf
     [TbSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制', type: 'blue' }
 })
 
+export enum TbSmsQuoteDraftChangeStatus {
+    UNCHANGED = 'unchanged',
+    ADDITION = 'addition'
+}
+
+export const TbSmsQuoteDraftChangeStatusDefinition = defineEnumMetadata(TbSmsQuoteDraftChangeStatus, '报价变更状态', {
+    [TbSmsQuoteDraftChangeStatus.UNCHANGED]: { label: '未变', description: '与现有有效报价一致', type: 'default' },
+    [TbSmsQuoteDraftChangeStatus.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'success' }
+})
+
 export class TbSmsQuoteDraftDto extends DataBaseByDto {
     @ApiProperty({ description: '草稿批次ID', example: '4b5be331-04bc-494b-9192-e7f62a377f52' })
     @IsUUID('4', { message: '草稿批次ID格式错误' })

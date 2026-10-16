@@ -59,4 +59,17 @@ export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCr
     ): Promise<CrmTypes.CrmUserPage> {
         return this.dispatch('httpBaseCrmColumnUser', _authorization, _input)
     }
+
+    /**按客户主键获取客户配置**/
+    @FeignPost('/user/config/resolve', {
+        operation: { summary: '供内部服务按客户主键获取客户配置' },
+        request: { source: 'body', type: CrmDto.CrmUserConfigResolverRequestDto },
+        response: { type: CrmDto.CrmUserConfigResponseDto, description: '客户配置' }
+    })
+    async httpBaseCrmUserConfigResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: CrmTypes.CrmUserConfigResolverInput
+    ): Promise<CrmTypes.CrmUserConfig> {
+        return this.dispatch('httpBaseCrmUserConfigResolver', _authorization, _input)
+    }
 }

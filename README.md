@@ -25,6 +25,16 @@ import { TbTaskCron, TbTaskExecution } from '@wlisfes/chat-web-base-schema/chat-
 The Task schema only stores scheduling definitions and execution state. Business
 data such as exchange rates or SMS records stays in the owning service database.
 
+## SMS MySQL
+
+Import the SMS application and quote table definitions owned by `chat-web-sms-service` from the SMS schema subpath:
+
+```ts
+import { TbSmsApp, TbSmsQuote, TbSmsQuoteDraft } from '@wlisfes/chat-web-base-schema/chat-web-sms-mysql'
+```
+
+CRM customers are referenced by `userKeyId`; SMS reads customer data through the CRM Feign client.
+
 Applications consuming this package must keep TypeORM `synchronize` and
 `migrationsRun` disabled.
 

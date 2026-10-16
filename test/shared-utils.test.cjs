@@ -36,8 +36,8 @@ test('共享分页 DTO 使用统一的 page/size 请求契约', () => {
 
     assert.deepEqual({ page: page.page, size: page.size }, { page: 1, size: 50 })
     assert.deepEqual({ page: sizePage.page, size: sizePage.size }, { page: 1, size: 50 })
-    assert.equal(validateSync(plainToInstance(PageDto, { page: 0, size: 101 })).length, 2)
-    assert.equal(validateSync(plainToInstance(SizePageDto, { page: 0, size: 101 })).length, 2)
+    assert.equal(validateSync(plainToInstance(PageDto, { page: 0, size: 301 })).length, 2)
+    assert.equal(validateSync(plainToInstance(SizePageDto, { page: 0, size: 301 })).length, 2)
     assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, SizePageDto.prototype, 'page').example, 1)
     assert.equal(Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, SizePageDto.prototype, 'size').example, 50)
 })

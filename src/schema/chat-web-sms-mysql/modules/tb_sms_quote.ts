@@ -40,10 +40,10 @@ export enum TbSmsQuoteStatus {
 }
 
 export const TbSmsQuoteStatusDefinition = defineEnumMetadata(TbSmsQuoteStatus, '短信报价状态', {
-    [TbSmsQuoteStatus.DELETED]: { label: '已作废', description: '报价被手动作废或在生效前被替换', type: 'default' },
     [TbSmsQuoteStatus.EFFECTIVE]: { label: '已生效', description: '报价当前有效', type: 'success' },
+    [TbSmsQuoteStatus.PENDING]: { label: '待生效', description: '报价等待生效时间', type: 'warning' },
     [TbSmsQuoteStatus.EXPIRED]: { label: '已失效', description: '报价已到失效时间', type: 'error' },
-    [TbSmsQuoteStatus.PENDING]: { label: '待生效', description: '报价等待生效时间', type: 'warning' }
+    [TbSmsQuoteStatus.DELETED]: { label: '已作废', description: '报价被手动作废或在生效前被替换', type: 'default' }
 })
 
 export class TbSmsQuoteDto extends DataBaseByDto {

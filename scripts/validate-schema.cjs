@@ -211,7 +211,7 @@ validateTable({
     dto: smsSchema.TbSmsQuoteDraftDto,
     columns: smsSchema.TbSmsQuoteDraftColumn,
     sqlPath: resolve(smsServiceRoot, 'sql/tb_sms_quote_draft.sql'),
-    enumComments: [smsSchema.TbSmsQuoteDraftSourceDefinition.comment]
+    enumComments: [smsSchema.TbSmsQuoteDraftSourceDefinition.comment, smsSchema.TbSmsQuoteDraftStatusDefinition.comment]
 })
 
 validateTable({

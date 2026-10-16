@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS `tb_sms_quote_draft` (
     `effective_time` datetime(3) NULL COMMENT '生效时间',
     `expiry_time` datetime(3) NULL COMMENT '失效时间',
     `source` varchar(32) NOT NULL COMMENT '报价来源：addition=新增（本次新增的国家或地区报价）；existing=已有（从现有有效报价复制）',
+    `status` varchar(32) NOT NULL DEFAULT 'enable' COMMENT '报价草稿状态：deleted=已删除（草稿已软删除，可恢复，不参与预览和发布）；enable=正常（草稿参与预览和发布）',
     `remark` varchar(1024) NULL COMMENT '备注',
     `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
     `modify_by` varchar(19) NULL COMMENT '更新账号UID',
@@ -27,5 +28,6 @@ CREATE TABLE IF NOT EXISTS `tb_sms_quote_draft` (
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_sms_quote_draft_batch_country` (`draft_batch_id`, `country_key_id`),
     KEY `idx_tb_sms_quote_draft_user_app` (`user_key_id`, `app_key_id`),
+    KEY `idx_tb_sms_quote_draft_batch_status` (`draft_batch_id`, `status`),
     KEY `idx_tb_sms_quote_draft_create_by` (`create_by`)
 ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SMS 短信报价草稿表';

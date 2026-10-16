@@ -4,7 +4,7 @@ import { Type } from 'class-transformer'
 import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Length, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, DateWithColumn, defineEnumMetadata, BigintNumberTransformer } from '@/utils'
 
-export enum TbCrmSmsQuoteDraftColumn {
+export enum TbSmsQuoteDraftColumn {
     KEY_ID = 'key_id',
     DRAFT_BATCH_ID = 'draft_batch_id',
     USER_KEY_ID = 'user_key_id',
@@ -32,17 +32,17 @@ export enum TbCrmSmsQuoteDraftColumn {
     MODIFY_TIME = 'modify_time'
 }
 
-export enum TbCrmSmsQuoteDraftSource {
+export enum TbSmsQuoteDraftSource {
     ADDITION = 'addition',
     EXISTING = 'existing'
 }
 
-export const TbCrmSmsQuoteDraftSourceDefinition = defineEnumMetadata(TbCrmSmsQuoteDraftSource, '报价来源', {
-    [TbCrmSmsQuoteDraftSource.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'cyan' },
-    [TbCrmSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制', type: 'blue' }
+export const TbSmsQuoteDraftSourceDefinition = defineEnumMetadata(TbSmsQuoteDraftSource, '报价来源', {
+    [TbSmsQuoteDraftSource.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'cyan' },
+    [TbSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制', type: 'blue' }
 })
 
-export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
+export class TbSmsQuoteDraftDto extends DataBaseByDto {
     @ApiProperty({ description: '草稿批次ID', example: '4b5be331-04bc-494b-9192-e7f62a377f52' })
     @IsUUID('4', { message: '草稿批次ID格式错误' })
     draftBatchId: string
@@ -52,7 +52,7 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     @Min(1, { message: '客户主键必须大于0' })
     userKeyId: number
 
-    @ApiProperty({ description: 'CRM 短信应用主键', example: 1 })
+    @ApiProperty({ description: 'SMS 短信应用主键', example: 1 })
     @IsInt({ message: '短信应用主键必须是整数' })
     @Min(1, { message: '短信应用主键必须大于0' })
     appKeyId: number
@@ -138,12 +138,12 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     expiryTime: Date
 
     @ApiProperty({
-        description: TbCrmSmsQuoteDraftSourceDefinition.comment,
-        enum: TbCrmSmsQuoteDraftSource,
-        enumName: 'TbCrmSmsQuoteDraftSource'
+        description: TbSmsQuoteDraftSourceDefinition.comment,
+        enum: TbSmsQuoteDraftSource,
+        enumName: 'TbSmsQuoteDraftSource'
     })
-    @IsEnum(TbCrmSmsQuoteDraftSource, { message: '报价来源格式错误' })
-    source: TbCrmSmsQuoteDraftSource
+    @IsEnum(TbSmsQuoteDraftSource, { message: '报价来源格式错误' })
+    source: TbSmsQuoteDraftSource
 
     @ApiProperty({ description: '备注', required: false, example: '客户专属报价草稿' })
     @IsOptional()
@@ -152,40 +152,40 @@ export class TbCrmSmsQuoteDraftDto extends DataBaseByDto {
     remark: string
 }
 
-@Index('uk_tb_crm_sms_quote_draft_batch_country', ['draftBatchId', 'countryKeyId'], { unique: true })
-@Index('idx_tb_crm_sms_quote_draft_user_app', ['userKeyId', 'appKeyId'])
-@Index('idx_tb_crm_sms_quote_draft_create_by', ['createBy'])
-@Entity({ name: 'tb_crm_sms_quote_draft', comment: 'CRM 短信报价草稿表' })
-export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
-    @Column({ name: TbCrmSmsQuoteDraftColumn.DRAFT_BATCH_ID, type: 'varchar', length: 36, nullable: false, comment: '草稿批次ID' })
+@Index('uk_tb_sms_quote_draft_batch_country', ['draftBatchId', 'countryKeyId'], { unique: true })
+@Index('idx_tb_sms_quote_draft_user_app', ['userKeyId', 'appKeyId'])
+@Index('idx_tb_sms_quote_draft_create_by', ['createBy'])
+@Entity({ name: 'tb_sms_quote_draft', comment: 'SMS 短信报价草稿表' })
+export class TbSmsQuoteDraft extends DataBaseByAdapter {
+    @Column({ name: TbSmsQuoteDraftColumn.DRAFT_BATCH_ID, type: 'varchar', length: 36, nullable: false, comment: '草稿批次ID' })
     draftBatchId: string
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.USER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
+    @Column({ name: TbSmsQuoteDraftColumn.USER_KEY_ID, type: 'int', nullable: false, comment: 'CRM 客户主键' })
     userKeyId: number
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.APP_KEY_ID, type: 'int', nullable: false, comment: 'CRM 短信应用主键' })
+    @Column({ name: TbSmsQuoteDraftColumn.APP_KEY_ID, type: 'int', nullable: false, comment: 'SMS 短信应用主键' })
     appKeyId: number
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.APP_ID, type: 'varchar', length: 32, nullable: false, comment: '应用ID快照' })
+    @Column({ name: TbSmsQuoteDraftColumn.APP_ID, type: 'varchar', length: 32, nullable: false, comment: '应用ID快照' })
     appId: string
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.USER_ALIAS, type: 'varchar', length: 64, nullable: true, comment: '客户别名快照' })
+    @Column({ name: TbSmsQuoteDraftColumn.USER_ALIAS, type: 'varchar', length: 64, nullable: true, comment: '客户别名快照' })
     userAlias: string
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.APP_ALIAS, type: 'varchar', length: 64, nullable: false, comment: '应用别名快照' })
+    @Column({ name: TbSmsQuoteDraftColumn.APP_ALIAS, type: 'varchar', length: 64, nullable: false, comment: '应用别名快照' })
     appAlias: string
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.COUNTRY_KEY_ID, type: 'int', nullable: false, comment: 'Finance 国家/地区主键' })
+    @Column({ name: TbSmsQuoteDraftColumn.COUNTRY_KEY_ID, type: 'int', nullable: false, comment: 'Finance 国家/地区主键' })
     countryKeyId: number
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.CODE, type: 'varchar', length: 10, nullable: false, comment: '国家/地区国际区号' })
+    @Column({ name: TbSmsQuoteDraftColumn.CODE, type: 'varchar', length: 10, nullable: false, comment: '国家/地区国际区号' })
     code: string
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.MCC, type: 'varchar', length: 4, nullable: false, comment: '移动国家代码' })
+    @Column({ name: TbSmsQuoteDraftColumn.MCC, type: 'varchar', length: 4, nullable: false, comment: '移动国家代码' })
     mcc: string
 
     @Column({
-        name: TbCrmSmsQuoteDraftColumn.UP_USD,
+        name: TbSmsQuoteDraftColumn.UP_USD,
         type: 'bigint',
         transformer: BigintNumberTransformer,
         nullable: false,
@@ -194,7 +194,7 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     upUsd: number
 
     @Column({
-        name: TbCrmSmsQuoteDraftColumn.DOWN_USD,
+        name: TbSmsQuoteDraftColumn.DOWN_USD,
         type: 'bigint',
         transformer: BigintNumberTransformer,
         nullable: false,
@@ -202,11 +202,11 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     })
     downUsd: number
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.CURRENCY, type: 'varchar', length: 16, nullable: false, comment: '报价币种' })
+    @Column({ name: TbSmsQuoteDraftColumn.CURRENCY, type: 'varchar', length: 16, nullable: false, comment: '报价币种' })
     currency: string
 
     @Column({
-        name: TbCrmSmsQuoteDraftColumn.UP_LOCAL,
+        name: TbSmsQuoteDraftColumn.UP_LOCAL,
         type: 'bigint',
         transformer: BigintNumberTransformer,
         nullable: false,
@@ -215,7 +215,7 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     upLocal: number
 
     @Column({
-        name: TbCrmSmsQuoteDraftColumn.DOWN_LOCAL,
+        name: TbSmsQuoteDraftColumn.DOWN_LOCAL,
         type: 'bigint',
         transformer: BigintNumberTransformer,
         nullable: false,
@@ -224,7 +224,7 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     downLocal: number
 
     @Column({
-        name: TbCrmSmsQuoteDraftColumn.EXCHANGE_RATE,
+        name: TbSmsQuoteDraftColumn.EXCHANGE_RATE,
         type: 'decimal',
         precision: 16,
         scale: 6,
@@ -233,11 +233,11 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     })
     exchangeRate: number
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.EXCHANGE_DATE, type: 'date', nullable: false, comment: '汇率日期' })
+    @Column({ name: TbSmsQuoteDraftColumn.EXCHANGE_DATE, type: 'date', nullable: false, comment: '汇率日期' })
     exchangeDate: string
 
     @DateWithColumn(Column, {
-        name: TbCrmSmsQuoteDraftColumn.EFFECTIVE_TIME,
+        name: TbSmsQuoteDraftColumn.EFFECTIVE_TIME,
         type: 'datetime',
         precision: 3,
         nullable: true,
@@ -246,7 +246,7 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     effectiveTime: Date
 
     @DateWithColumn(Column, {
-        name: TbCrmSmsQuoteDraftColumn.EXPIRY_TIME,
+        name: TbSmsQuoteDraftColumn.EXPIRY_TIME,
         type: 'datetime',
         precision: 3,
         nullable: true,
@@ -255,14 +255,14 @@ export class TbCrmSmsQuoteDraft extends DataBaseByAdapter {
     expiryTime: Date
 
     @Column({
-        name: TbCrmSmsQuoteDraftColumn.SOURCE,
+        name: TbSmsQuoteDraftColumn.SOURCE,
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbCrmSmsQuoteDraftSourceDefinition.comment
+        comment: TbSmsQuoteDraftSourceDefinition.comment
     })
-    source: TbCrmSmsQuoteDraftSource
+    source: TbSmsQuoteDraftSource
 
-    @Column({ name: TbCrmSmsQuoteDraftColumn.REMARK, type: 'varchar', length: 1024, nullable: true, comment: '备注' })
+    @Column({ name: TbSmsQuoteDraftColumn.REMARK, type: 'varchar', length: 1024, nullable: true, comment: '备注' })
     remark: string
 }

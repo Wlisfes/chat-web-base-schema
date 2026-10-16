@@ -1,7 +1,7 @@
-CREATE TABLE IF NOT EXISTS `tb_crm_sms_quote` (
+CREATE TABLE IF NOT EXISTS `tb_sms_quote` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `user_key_id` int NOT NULL COMMENT 'CRM 客户主键',
-    `app_key_id` int NOT NULL COMMENT 'CRM 短信应用主键',
+    `app_key_id` int NOT NULL COMMENT 'SMS 短信应用主键',
     `app_id` varchar(32) NOT NULL COMMENT '应用ID快照',
     `user_alias` varchar(64) NULL COMMENT '客户别名快照',
     `app_alias` varchar(64) NOT NULL COMMENT '应用别名快照',
@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS `tb_crm_sms_quote` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
-    KEY `idx_tb_crm_sms_quote_user_app` (`user_key_id`, `app_key_id`),
-    KEY `idx_tb_crm_sms_quote_country_key_id` (`country_key_id`),
-    KEY `idx_tb_crm_sms_quote_status_effective_time` (`status`, `effective_time`),
-    KEY `idx_tb_crm_sms_quote_published_time` (`published_time`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'CRM 短信正式报价表';
+    KEY `idx_tb_sms_quote_user_app` (`user_key_id`, `app_key_id`),
+    KEY `idx_tb_sms_quote_country_key_id` (`country_key_id`),
+    KEY `idx_tb_sms_quote_status_effective_time` (`status`, `effective_time`),
+    KEY `idx_tb_sms_quote_published_time` (`published_time`)
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SMS 短信正式报价表';

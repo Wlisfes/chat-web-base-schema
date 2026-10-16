@@ -28,6 +28,7 @@ const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
 const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
 const taskSchema = require('../dist/src/schema/chat-web-task-mysql')
+const smsSchema = require('../dist/src/schema/chat-web-sms-mysql')
 
 test('共享分页 DTO 使用统一的 page/size 请求契约', () => {
     const page = plainToInstance(PageDto, {})
@@ -76,7 +77,8 @@ test('枚举元数据的 type 取值限定在管理端标签颜色类型内', ()
         ...Object.entries(financeSchema),
         ...Object.entries(crmSchema),
         ...Object.entries(skylineSchema),
-        ...Object.entries(taskSchema)
+        ...Object.entries(taskSchema),
+        ...Object.entries(smsSchema)
     ].filter(([name, value]) => name.endsWith('Definition') && value && Array.isArray(value.options))
 
     assert.ok(definitions.length >= 29, `枚举 Definition 数量异常：${definitions.length}`)

@@ -8,6 +8,10 @@ export type CrmUserPage = CrmDto.CrmUserPageResponseDto
 export type CrmResolveUserInput = CrmDto.CrmResolveUserRequestDto
 /**按主键批量查询客户详情的请求入参。*/
 export type CrmColumnUserResolverInput = CrmDto.CrmColumnUserResolverRequestDto
+/**客户配置数据。*/
+export type CrmUserConfig = CrmDto.CrmUserConfigResponseDto
+/**查询客户配置的请求入参。*/
+export type CrmUserConfigResolverInput = CrmDto.CrmUserConfigResolverRequestDto
 /**分页查询客户的请求入参。*/
 export type CrmListUserInput = CrmDto.CrmListUserRequestDto
 
@@ -19,4 +23,6 @@ export interface FeignClientCrmImplementation {
     httpBaseCrmColumnUserResolver(authorization: string, input: CrmColumnUserResolverInput): Promise<CrmUser[]>
     /**分页查询客户列表**/
     httpBaseCrmColumnUser(authorization: string, input: CrmListUserInput): Promise<CrmUserPage>
+    /**按客户主键获取客户配置**/
+    httpBaseCrmUserConfigResolver(authorization: string, input: CrmUserConfigResolverInput): Promise<CrmUserConfig>
 }

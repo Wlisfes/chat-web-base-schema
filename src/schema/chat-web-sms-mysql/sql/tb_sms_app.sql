@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `tb_crm_sms_app` (
+CREATE TABLE IF NOT EXISTS `tb_sms_app` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `user_key_id` int NOT NULL COMMENT 'CRM 客户主键',
     `app_id` varchar(16) NOT NULL COMMENT '应用ID',
@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS `tb_crm_sms_app` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
-    UNIQUE KEY `uk_tb_crm_sms_app_app_id` (`app_id`),
-    UNIQUE KEY `uk_tb_crm_sms_app_user_alias` (`user_key_id`, `app_alias`),
-    KEY `idx_tb_crm_sms_app_user_key_id` (`user_key_id`),
-    KEY `idx_tb_crm_sms_app_status` (`status`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'CRM 客户短信应用表';
+    UNIQUE KEY `uk_tb_sms_app_app_id` (`app_id`),
+    UNIQUE KEY `uk_tb_sms_app_user_alias` (`user_key_id`, `app_alias`),
+    KEY `idx_tb_sms_app_user_key_id` (`user_key_id`),
+    KEY `idx_tb_sms_app_status` (`status`)
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SMS 客户短信应用表';

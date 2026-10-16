@@ -7,6 +7,7 @@ const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
 const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
 const taskSchema = require('../dist/src/schema/chat-web-task-mysql')
+const smsSchema = require('../dist/src/schema/chat-web-sms-mysql')
 const { DataBaseAdapter, DataBaseByAdapter } = require('../dist/src/utils')
 
 function sorted(values) {
@@ -126,6 +127,10 @@ const taskServiceRoot = resolve(__dirname, '../src/schema/chat-web-task-mysql')
 validateServiceFiles(taskServiceRoot)
 validateColumnEnumUsage(taskServiceRoot)
 
+const smsServiceRoot = resolve(__dirname, '../src/schema/chat-web-sms-mysql')
+validateServiceFiles(smsServiceRoot)
+validateColumnEnumUsage(smsServiceRoot)
+
 validateTable({
     entity: financeSchema.TbFinanceBrand,
     dto: financeSchema.TbFinanceBrandDto,
@@ -194,27 +199,27 @@ validateTable({
 })
 
 validateTable({
-    entity: crmSchema.TbCrmSmsApp,
-    dto: crmSchema.TbCrmSmsAppDto,
-    columns: crmSchema.TbCrmSmsAppColumn,
-    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_app.sql'),
-    enumComments: [crmSchema.TbCrmSmsAppStatusDefinition.comment, crmSchema.TbCrmSmsAppTypeDefinition.comment]
+    entity: smsSchema.TbSmsApp,
+    dto: smsSchema.TbSmsAppDto,
+    columns: smsSchema.TbSmsAppColumn,
+    sqlPath: resolve(smsServiceRoot, 'sql/tb_sms_app.sql'),
+    enumComments: [smsSchema.TbSmsAppStatusDefinition.comment, smsSchema.TbSmsAppTypeDefinition.comment]
 })
 
 validateTable({
-    entity: crmSchema.TbCrmSmsQuoteDraft,
-    dto: crmSchema.TbCrmSmsQuoteDraftDto,
-    columns: crmSchema.TbCrmSmsQuoteDraftColumn,
-    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_quote_draft.sql'),
-    enumComments: [crmSchema.TbCrmSmsQuoteDraftSourceDefinition.comment]
+    entity: smsSchema.TbSmsQuoteDraft,
+    dto: smsSchema.TbSmsQuoteDraftDto,
+    columns: smsSchema.TbSmsQuoteDraftColumn,
+    sqlPath: resolve(smsServiceRoot, 'sql/tb_sms_quote_draft.sql'),
+    enumComments: [smsSchema.TbSmsQuoteDraftSourceDefinition.comment]
 })
 
 validateTable({
-    entity: crmSchema.TbCrmSmsQuote,
-    dto: crmSchema.TbCrmSmsQuoteDto,
-    columns: crmSchema.TbCrmSmsQuoteColumn,
-    sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_sms_quote.sql'),
-    enumComments: [crmSchema.TbCrmSmsQuoteStatusDefinition.comment]
+    entity: smsSchema.TbSmsQuote,
+    dto: smsSchema.TbSmsQuoteDto,
+    columns: smsSchema.TbSmsQuoteColumn,
+    sqlPath: resolve(smsServiceRoot, 'sql/tb_sms_quote.sql'),
+    enumComments: [smsSchema.TbSmsQuoteStatusDefinition.comment]
 })
 
 validateTable({

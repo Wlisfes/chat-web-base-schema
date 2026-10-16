@@ -35,6 +35,12 @@ export class CrmColumnUserResolverRequestDto {
     keyIds: number[]
 }
 
+/** CRM 客户配置服务间请求。 */
+export class CrmUserConfigResolverRequestDto extends PickType(Schema.TbCrmUserConfigDto, ['userKeyId'] as const) {}
+
+/** CRM 客户配置服务间响应；未配置时返回默认值。 */
+export class CrmUserConfigResponseDto extends PickType(Schema.TbCrmUserConfigDto, ['userKeyId', 'smsAppLimit'] as const) {}
+
 /** CRM 客户分页服务间请求。 */
 export class CrmListUserRequestDto extends IntersectionType(
     PageDto,

@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.6.92",
+    "version": "1.6.93",
     "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {
@@ -38,6 +38,11 @@
             "types": "./dist/src/schema/chat-web-task-mysql/index.d.ts",
             "require": "./dist/src/schema/chat-web-task-mysql/index.js",
             "default": "./dist/src/schema/chat-web-task-mysql/index.js"
+        },
+        "./chat-web-sms-mysql": {
+            "types": "./dist/src/schema/chat-web-sms-mysql/index.d.ts",
+            "require": "./dist/src/schema/chat-web-sms-mysql/index.js",
+            "default": "./dist/src/schema/chat-web-sms-mysql/index.js"
         },
         "./chat-web-skyline-mysql": {
             "types": "./dist/src/schema/chat-web-skyline-mysql/index.d.ts",

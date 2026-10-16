@@ -17,12 +17,12 @@ export class PageDto {
     @Min(1, { message: '页码不能小于1' })
     page: number = 1
 
-    @ApiPropertyOptional({ description: '每页数量', default: 50, minimum: 1, maximum: 100, example: 50 })
+    @ApiPropertyOptional({ description: '每页数量', default: 50, minimum: 1, maximum: 300, example: 50 })
     @Type(() => Number)
     @IsOptional()
     @IsInt({ message: '每页数量必须是整数' })
     @Min(1, { message: '每页数量不能小于1' })
-    @Max(100, { message: '每页数量不能超过100' })
+    @Max(300, { message: '每页数量不能超过300' })
     size: number = 50
 }
 

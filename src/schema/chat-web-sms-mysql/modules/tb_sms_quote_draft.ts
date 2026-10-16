@@ -25,6 +25,7 @@ export enum TbSmsQuoteDraftColumn {
     EFFECTIVE_TIME = 'effective_time',
     EXPIRY_TIME = 'expiry_time',
     SOURCE = 'source',
+    STATUS = 'status',
     REMARK = 'remark',
     CREATE_BY = 'create_by',
     MODIFY_BY = 'modify_by',
@@ -50,6 +51,16 @@ export enum TbSmsQuoteDraftChangeStatus {
 export const TbSmsQuoteDraftChangeStatusDefinition = defineEnumMetadata(TbSmsQuoteDraftChangeStatus, '报价变更状态', {
     [TbSmsQuoteDraftChangeStatus.UNCHANGED]: { label: '未变', description: '与现有有效报价一致', type: 'default' },
     [TbSmsQuoteDraftChangeStatus.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'success' }
+})
+
+export enum TbSmsQuoteDraftStatus {
+    DELETED = 'deleted',
+    ENABLE = 'enable'
+}
+
+export const TbSmsQuoteDraftStatusDefinition = defineEnumMetadata(TbSmsQuoteDraftStatus, '报价草稿状态', {
+    [TbSmsQuoteDraftStatus.ENABLE]: { label: '正常', description: '草稿参与预览和发布', type: 'success' },
+    [TbSmsQuoteDraftStatus.DELETED]: { label: '已删除', description: '草稿已软删除，可恢复，不参与预览和发布', type: 'error' }
 })
 
 export class TbSmsQuoteDraftDto extends DataBaseByDto {
@@ -155,6 +166,14 @@ export class TbSmsQuoteDraftDto extends DataBaseByDto {
     @IsEnum(TbSmsQuoteDraftSource, { message: '报价来源格式错误' })
     source: TbSmsQuoteDraftSource
 
+    @ApiProperty({
+        description: TbSmsQuoteDraftStatusDefinition.comment,
+        enum: TbSmsQuoteDraftStatus,
+        enumName: 'TbSmsQuoteDraftStatus'
+    })
+    @IsEnum(TbSmsQuoteDraftStatus, { message: '报价草稿状态格式错误' })
+    status: TbSmsQuoteDraftStatus
+
     @ApiProperty({ description: '备注', required: false, example: '客户专属报价草稿' })
     @IsOptional()
     @IsString({ message: '备注必须是字符串' })
@@ -164,6 +183,7 @@ export class TbSmsQuoteDraftDto extends DataBaseByDto {
 
 @Index('uk_tb_sms_quote_draft_batch_country', ['draftBatchId', 'countryKeyId'], { unique: true })
 @Index('idx_tb_sms_quote_draft_user_app', ['userKeyId', 'appKeyId'])
+@Index('idx_tb_sms_quote_draft_batch_status', ['draftBatchId', 'status'])
 @Index('idx_tb_sms_quote_draft_create_by', ['createBy'])
 @Entity({ name: 'tb_sms_quote_draft', comment: 'SMS 短信报价草稿表' })
 export class TbSmsQuoteDraft extends DataBaseByAdapter {
@@ -272,6 +292,16 @@ export class TbSmsQuoteDraft extends DataBaseByAdapter {
         comment: TbSmsQuoteDraftSourceDefinition.comment
     })
     source: TbSmsQuoteDraftSource
+
+    @Column({
+        name: TbSmsQuoteDraftColumn.STATUS,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        default: TbSmsQuoteDraftStatus.ENABLE,
+        comment: TbSmsQuoteDraftStatusDefinition.comment
+    })
+    status: TbSmsQuoteDraftStatus
 
     @Column({ name: TbSmsQuoteDraftColumn.REMARK, type: 'varchar', length: 1024, nullable: true, comment: '备注' })
     remark: string

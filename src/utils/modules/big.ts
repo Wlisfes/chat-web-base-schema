@@ -35,3 +35,23 @@ export function fetchTimesNumber(a: any, b: any) {
 export function fetchDivNumber(a: any, b: any) {
     return new big(Number(a || 0)).div(Number(b || 0)).toNumber()
 }
+
+/**
+ * 金额缩小转换
+ * @param a 数字A
+ * @param b 倍率B
+ * @returns {Number}
+ */
+export function fetchShrinkNumber(a: number, b: number = 1000000) {
+    return fetchDivNumber(a, b)
+}
+
+/**
+ * 金额放大转换
+ * @param a 数字A
+ * @param b 倍率B
+ * @returns {Number}
+ */
+export function fetchZoomNumber(a: number, b: number = 1000000) {
+    return fetchTimesNumber(a, b)
+}

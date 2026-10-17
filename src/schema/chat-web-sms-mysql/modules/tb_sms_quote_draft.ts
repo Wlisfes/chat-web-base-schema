@@ -63,8 +63,8 @@ export enum TbSmsQuoteDraftStatus {
 }
 
 export const TbSmsQuoteDraftStatusDefinition = defineEnumMetadata(TbSmsQuoteDraftStatus, '报价草稿状态', {
-    [TbSmsQuoteDraftStatus.ENABLE]: { label: '正常', description: '草稿参与预览和发布', type: 'success' },
-    [TbSmsQuoteDraftStatus.DELETED]: { label: '已删除', description: '草稿已软删除，可恢复，不参与预览和发布', type: 'error' }
+    [TbSmsQuoteDraftStatus.ENABLE]: { label: 'ENABLE', description: '草稿参与预览和发布', type: 'success' },
+    [TbSmsQuoteDraftStatus.DELETED]: { label: 'DELETED', description: '草稿已软删除，可恢复，不参与预览和发布', type: 'error' }
 })
 
 export class TbSmsQuoteDraftDto extends DataBaseByDto {

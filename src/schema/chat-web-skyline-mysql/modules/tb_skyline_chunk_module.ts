@@ -19,13 +19,13 @@ export enum TbSkylineChunkModuleColumn {
 
 /** 枚举项所属业务模块，用于管理端按模块展示字典分类。 */
 export enum TbSkylineChunkModule {
-    CHUNK_SYSTEM = 'CHUNK_SYSTEM',
+    CHUNK_SKYLINE = 'CHUNK_SKYLINE',
     CHUNK_CRM = 'CHUNK_CRM',
     CHUNK_SRM = 'CHUNK_SRM'
 }
 
 export const TbSkylineChunkModuleDefinition = defineEnumMetadata(TbSkylineChunkModule, '枚举所属模块', {
-    [TbSkylineChunkModule.CHUNK_SYSTEM]: { label: '系统', description: '系统管理模块使用的枚举项', type: 'geekblue' },
+    [TbSkylineChunkModule.CHUNK_SKYLINE]: { label: 'SKYLINE', description: '系统管理模块使用的枚举项', type: 'geekblue' },
     [TbSkylineChunkModule.CHUNK_CRM]: { label: 'CRM', description: 'CRM 客户关系管理模块使用的枚举项', type: 'blue' },
     [TbSkylineChunkModule.CHUNK_SRM]: { label: 'SRM', description: 'SRM 供应商关系管理模块使用的枚举项', type: 'cyan' }
 })
@@ -41,34 +41,34 @@ export const TbSkylineChunkModuleKindDefinition = defineEnumMetadata(TbSkylineCh
     [TbSkylineChunkModuleKind.TREE]: { label: '树形选项', description: '支持多级枚举项，适用于树形选择', type: 'warning' }
 })
 
-/** 枚举类型编码：CHUNK_<模块>_<服务>_<业务表>_<业务字段>，主表 tb_skyline_chunk_module 与子表 tb_skyline_chunk 共用。 */
+/** 枚举类型编码：CHUNK_<服务>_<业务表>_<业务字段>（业务表省略 tb_<服务>_ 前缀）；不属于单一业务表的系统通用枚举使用 CHUNK_SKYLINE_COMMON_<业务字段>，主表 tb_skyline_chunk_module 与子表 tb_skyline_chunk 共用。 */
 export enum TbSkylineChunkModuleType {
-    CHUNK_SYSTEM_ACCOUNT_USER_POST = 'CHUNK_SYSTEM_ACCOUNT_USER_POST',
-    CHUNK_SYSTEM_ACCOUNT_USER_LEVEL = 'CHUNK_SYSTEM_ACCOUNT_USER_LEVEL',
-    CHUNK_CRM_CRM_USER_SOURCE = 'CHUNK_CRM_CRM_USER_SOURCE',
-    CHUNK_SYSTEM_COMMON_CONTACT_TYPE = 'CHUNK_SYSTEM_COMMON_CONTACT_TYPE'
+    CHUNK_SKYLINE_USER_POST = 'CHUNK_SKYLINE_USER_POST',
+    CHUNK_SKYLINE_USER_LEVEL = 'CHUNK_SKYLINE_USER_LEVEL',
+    CHUNK_SKYLINE_COMMON_CONTACT_TYPE = 'CHUNK_SKYLINE_COMMON_CONTACT_TYPE',
+    CHUNK_CRM_USER_SOURCE = 'CHUNK_CRM_USER_SOURCE'
 }
 
 export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineChunkModuleType, '枚举类型编码', {
-    [TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST]: {
+    [TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_POST]: {
         label: '用户岗位',
-        description: 'Account 账号岗位，仅一级枚举项，适用于普通下拉选择',
+        description: 'Skyline 账号岗位，仅一级枚举项，适用于普通下拉选择',
         type: 'blue'
     },
-    [TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_LEVEL]: {
+    [TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_LEVEL]: {
         label: '用户职级',
-        description: 'Account 账号职级，P1-P8 专业序列、M1-M8 管理序列，仅一级枚举项',
+        description: 'Skyline 账号职级，P1-P8 专业序列、M1-M8 管理序列，仅一级枚举项',
         type: 'purple'
     },
-    [TbSkylineChunkModuleType.CHUNK_CRM_CRM_USER_SOURCE]: {
-        label: '客户注册来源',
-        description: 'CRM 客户注册来源，仅一级枚举项',
-        type: 'orange'
-    },
-    [TbSkylineChunkModuleType.CHUNK_SYSTEM_COMMON_CONTACT_TYPE]: {
+    [TbSkylineChunkModuleType.CHUNK_SKYLINE_COMMON_CONTACT_TYPE]: {
         label: '联系方式',
         description: '系统通用联系方式类型，仅一级枚举项',
         type: 'cyan'
+    },
+    [TbSkylineChunkModuleType.CHUNK_CRM_USER_SOURCE]: {
+        label: '客户注册来源',
+        description: 'CRM 客户注册来源，仅一级枚举项',
+        type: 'orange'
     }
 })
 
@@ -78,7 +78,7 @@ export class TbSkylineChunkModuleDto extends DataBaseByDto {
         description: TbSkylineChunkModuleDefinition.comment,
         enum: TbSkylineChunkModule,
         enumName: 'TbSkylineChunkModule',
-        example: TbSkylineChunkModule.CHUNK_SYSTEM
+        example: TbSkylineChunkModule.CHUNK_SKYLINE
     })
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module: TbSkylineChunkModule
@@ -87,7 +87,7 @@ export class TbSkylineChunkModuleDto extends DataBaseByDto {
         description: TbSkylineChunkModuleTypeDefinition.comment,
         enum: TbSkylineChunkModuleType,
         enumName: 'TbSkylineChunkModuleType',
-        example: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST
+        example: TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_POST
     })
     @IsEnum(TbSkylineChunkModuleType, { message: '枚举类型编码格式错误' })
     type: TbSkylineChunkModuleType
@@ -123,7 +123,7 @@ export class TbSkylineChunkModuleEntity extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        default: TbSkylineChunkModule.CHUNK_SYSTEM,
+        default: TbSkylineChunkModule.CHUNK_SKYLINE,
         comment: TbSkylineChunkModuleDefinition.comment
     })
     module: TbSkylineChunkModule

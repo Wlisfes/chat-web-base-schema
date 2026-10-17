@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `tb_crm_user` (
     `level` int NOT NULL DEFAULT 1 COMMENT '客户等级',
     `stage` varchar(32) NOT NULL DEFAULT 'cluetrail' COMMENT '客户阶段：authenticate=认证阶段（客户正在认证）；charge=充值阶段（客户准备充值）；cluetrail=线索阶段（客户处于线索跟进）；cooperate=价值阶段（客户已形成稳定价值）；intention=意向阶段（客户已有合作意向）；production=生产阶段（客户已进入生产）；testing=测试阶段（客户正在业务测试）',
     `auth_status` varchar(32) NOT NULL DEFAULT 'unverified' COMMENT '认证状态：pending=认证中（认证资料审核中）；rejected=认证失败（认证资料未通过）；unverified=未认证（尚未提交认证）；verified=已认证（认证已通过）',
-    `source` int NOT NULL COMMENT '注册来源：Skyline 枚举 CHUNK_CRM_CRM_USER_SOURCE 的枚举项主键',
+    `source` int NOT NULL COMMENT '注册来源：Skyline 枚举 CHUNK_CRM_USER_SOURCE 的枚举项主键',
     `remark` varchar(1024) NULL COMMENT '备注',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',

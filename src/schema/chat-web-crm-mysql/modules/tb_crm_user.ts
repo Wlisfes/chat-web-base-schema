@@ -179,7 +179,7 @@ export class TbCrmUserDto extends DataBaseDto {
     @IsEnum(TbCrmUserAuthStatus, { message: '认证状态格式错误' })
     authStatus: TbCrmUserAuthStatus
 
-    @ApiProperty({ description: '注册来源：Skyline 枚举 CHUNK_CRM_CRM_USER_SOURCE 的枚举项主键', example: 1024186 })
+    @ApiProperty({ description: '注册来源：Skyline 枚举 CHUNK_CRM_USER_SOURCE 的枚举项主键', example: 1024186 })
     @Type(() => Number)
     @IsInt({ message: '注册来源必须是整数' })
     @Min(1, { message: '注册来源必须大于0' })
@@ -321,7 +321,7 @@ export class TbCrmUser extends DataBaseAdapter {
         name: TbCrmUserColumn.SOURCE,
         type: 'int',
         nullable: false,
-        comment: '注册来源：Skyline 枚举 CHUNK_CRM_CRM_USER_SOURCE 的枚举项主键'
+        comment: '注册来源：Skyline 枚举 CHUNK_CRM_USER_SOURCE 的枚举项主键'
     })
     source: number
 

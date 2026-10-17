@@ -22,12 +22,12 @@ export enum TbSkylineUserChunkLinkName {
 export const TbSkylineUserChunkLinkNameDefinition = defineEnumMetadata(TbSkylineUserChunkLinkName, '枚举关联类型', {
     [TbSkylineUserChunkLinkName.USER_POST]: {
         label: '账号岗位',
-        description: 'link_id 为账号UID，chunk_id 为 Skyline 枚举 CHUNK_SYSTEM_ACCOUNT_USER_POST 主键',
+        description: 'link_id 为账号UID，chunk_id 为 Skyline 枚举 CHUNK_SKYLINE_USER_POST 主键',
         type: 'info'
     },
     [TbSkylineUserChunkLinkName.USER_LEVEL]: {
         label: '账号职级',
-        description: 'link_id 为账号UID，chunk_id 为 Skyline 枚举 CHUNK_SYSTEM_ACCOUNT_USER_LEVEL 主键',
+        description: 'link_id 为账号UID，chunk_id 为 Skyline 枚举 CHUNK_SKYLINE_USER_LEVEL 主键',
         type: 'purple'
     }
 })

@@ -39,18 +39,22 @@ export enum TbSmsQuoteDraftSource {
 }
 
 export const TbSmsQuoteDraftSourceDefinition = defineEnumMetadata(TbSmsQuoteDraftSource, '报价来源', {
-    [TbSmsQuoteDraftSource.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'success' },
-    [TbSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制', type: 'pink' }
+    [TbSmsQuoteDraftSource.ADDITION]: { label: 'NEW', description: '本次新增的国家或地区报价', type: 'success' },
+    [TbSmsQuoteDraftSource.EXISTING]: { label: 'CURRENT', description: '从现有有效报价复制', type: 'info' }
 })
 
 export enum TbSmsQuoteDraftChangeStatus {
-    UNCHANGED = 'unchanged',
-    ADDITION = 'addition'
+    NEW = 'NEW',
+    CURRENT = 'CURRENT',
+    INCREASE = 'INCREASE',
+    DECREASE = 'DECREASE'
 }
 
 export const TbSmsQuoteDraftChangeStatusDefinition = defineEnumMetadata(TbSmsQuoteDraftChangeStatus, '报价变更状态', {
-    [TbSmsQuoteDraftChangeStatus.UNCHANGED]: { label: '未变', description: '与现有有效报价一致', type: 'info' },
-    [TbSmsQuoteDraftChangeStatus.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'success' }
+    [TbSmsQuoteDraftChangeStatus.NEW]: { label: 'NEW', description: '当前应用该国家/地区第一次报价', type: 'success' },
+    [TbSmsQuoteDraftChangeStatus.CURRENT]: { label: 'CURRENT', description: '与现有有效报价价格一致', type: 'info' },
+    [TbSmsQuoteDraftChangeStatus.INCREASE]: { label: 'INCREASE', description: '价格高于现有有效报价', type: 'error' },
+    [TbSmsQuoteDraftChangeStatus.DECREASE]: { label: 'DECREASE', description: '价格低于现有有效报价', type: 'warning' }
 })
 
 export enum TbSmsQuoteDraftStatus {

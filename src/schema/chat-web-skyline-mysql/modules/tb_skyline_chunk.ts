@@ -51,7 +51,7 @@ export class TbSkylineChunkDto extends DataBaseByDto {
         description: TbSkylineChunkModuleDefinition.comment,
         enum: TbSkylineChunkModule,
         enumName: 'TbSkylineChunkModule',
-        example: TbSkylineChunkModule.CHUNK_SYSTEM
+        example: TbSkylineChunkModule.CHUNK_SKYLINE
     })
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
     module: TbSkylineChunkModule
@@ -60,7 +60,7 @@ export class TbSkylineChunkDto extends DataBaseByDto {
         description: TbSkylineChunkModuleTypeDefinition.comment,
         enum: TbSkylineChunkModuleType,
         enumName: 'TbSkylineChunkModuleType',
-        example: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST
+        example: TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_POST
     })
     @IsEnum(TbSkylineChunkModuleType, { message: '枚举类型编码格式错误' })
     type: TbSkylineChunkModuleType
@@ -119,7 +119,7 @@ export class TbSkylineChunk extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        default: TbSkylineChunkModule.CHUNK_SYSTEM,
+        default: TbSkylineChunkModule.CHUNK_SKYLINE,
         comment: TbSkylineChunkModuleDefinition.comment
     })
     module: TbSkylineChunkModule

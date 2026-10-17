@@ -42,7 +42,7 @@ export class SkylineChunkOptionGroupDto {
         description: '枚举类型编码',
         enum: TbSkylineChunkModuleType,
         enumName: 'TbSkylineChunkModuleType',
-        example: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST
+        example: TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_POST
     })
     type: TbSkylineChunkModuleType
 
@@ -58,8 +58,8 @@ export const SkylineChunkOptionRecordSchema = {
     type: 'object' as const,
     additionalProperties: { $ref: getSchemaPath(SkylineChunkOptionGroupDto) },
     example: {
-        [TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST]: {
-            type: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST,
+        [TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_POST]: {
+            type: TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_POST,
             count: 1,
             options: [
                 {
@@ -82,7 +82,7 @@ export class SkylineColumnChunkOptionRequestDto {
         description: '枚举所属模块；不传表示不限制模块',
         required: false,
         enum: TbSkylineChunkModule,
-        example: TbSkylineChunkModule.CHUNK_SYSTEM
+        example: TbSkylineChunkModule.CHUNK_SKYLINE
     })
     @IsOptional()
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
@@ -93,7 +93,7 @@ export class SkylineColumnChunkOptionRequestDto {
         enum: TbSkylineChunkModuleType,
         enumName: 'TbSkylineChunkModuleType',
         isArray: true,
-        example: [TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST]
+        example: [TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_POST]
     })
     @IsArray({ message: '枚举类型编码列表必须是数组' })
     @ArrayNotEmpty({ message: '枚举类型编码列表不能为空' })
@@ -107,7 +107,7 @@ export class SkylineChunkOptionResolverRequestDto {
         description: '枚举所属模块；不传表示不限制模块',
         required: false,
         enum: TbSkylineChunkModule,
-        example: TbSkylineChunkModule.CHUNK_SYSTEM
+        example: TbSkylineChunkModule.CHUNK_SKYLINE
     })
     @IsOptional()
     @IsEnum(TbSkylineChunkModule, { message: '枚举所属模块格式错误' })
@@ -117,7 +117,7 @@ export class SkylineChunkOptionResolverRequestDto {
         description: '枚举类型编码',
         enum: TbSkylineChunkModuleType,
         enumName: 'TbSkylineChunkModuleType',
-        example: TbSkylineChunkModuleType.CHUNK_SYSTEM_ACCOUNT_USER_POST
+        example: TbSkylineChunkModuleType.CHUNK_SKYLINE_USER_POST
     })
     @IsEnum(TbSkylineChunkModuleType, { message: '枚举类型编码格式错误' })
     type: TbSkylineChunkModuleType

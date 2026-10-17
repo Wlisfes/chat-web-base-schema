@@ -28,10 +28,10 @@ export const TbCrmUserContactStatusDefinition = defineEnumMetadata(TbCrmUserCont
     [TbCrmUserContactStatus.ENABLE]: { label: '有效', description: '联系人正常可用', type: 'success' }
 })
 
-/** 联系方式项：type 为 Skyline 枚举 CHUNK_SYSTEM_COMMON_CONTACT_TYPE 的枚举项主键，value 为联系方式内容。 */
+/** 联系方式项：type 为 Skyline 枚举 CHUNK_SKYLINE_COMMON_CONTACT_TYPE 的枚举项主键，value 为联系方式内容。 */
 export class TbCrmUserContactItemDto {
     @ApiProperty({
-        description: '联系方式类型：Skyline 枚举 CHUNK_SYSTEM_COMMON_CONTACT_TYPE 的枚举项主键，支持数字或数字字符串，入库统一转为数字',
+        description: '联系方式类型：Skyline 枚举 CHUNK_SKYLINE_COMMON_CONTACT_TYPE 的枚举项主键，支持数字或数字字符串，入库统一转为数字',
         oneOf: [{ type: 'integer' }, { type: 'string' }],
         example: 1024188
     })

@@ -39,8 +39,8 @@ export enum TbSmsQuoteDraftSource {
 }
 
 export const TbSmsQuoteDraftSourceDefinition = defineEnumMetadata(TbSmsQuoteDraftSource, '报价来源', {
-    [TbSmsQuoteDraftSource.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'cyan' },
-    [TbSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制', type: 'blue' }
+    [TbSmsQuoteDraftSource.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'success' },
+    [TbSmsQuoteDraftSource.EXISTING]: { label: '已有', description: '从现有有效报价复制', type: 'pink' }
 })
 
 export enum TbSmsQuoteDraftChangeStatus {
@@ -49,7 +49,7 @@ export enum TbSmsQuoteDraftChangeStatus {
 }
 
 export const TbSmsQuoteDraftChangeStatusDefinition = defineEnumMetadata(TbSmsQuoteDraftChangeStatus, '报价变更状态', {
-    [TbSmsQuoteDraftChangeStatus.UNCHANGED]: { label: '未变', description: '与现有有效报价一致', type: 'default' },
+    [TbSmsQuoteDraftChangeStatus.UNCHANGED]: { label: '未变', description: '与现有有效报价一致', type: 'info' },
     [TbSmsQuoteDraftChangeStatus.ADDITION]: { label: '新增', description: '本次新增的国家或地区报价', type: 'success' }
 })
 

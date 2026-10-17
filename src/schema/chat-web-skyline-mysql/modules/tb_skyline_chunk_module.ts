@@ -41,12 +41,13 @@ export const TbSkylineChunkModuleKindDefinition = defineEnumMetadata(TbSkylineCh
     [TbSkylineChunkModuleKind.TREE]: { label: '树形选项', description: '支持多级枚举项，适用于树形选择', type: 'warning' }
 })
 
-/** 枚举类型编码：CHUNK_<服务>_<业务表>_<业务字段>（业务表省略 tb_<服务>_ 前缀）；不属于单一业务表的系统通用枚举使用 CHUNK_SKYLINE_COMMON_<业务字段>，主表 tb_skyline_chunk_module 与子表 tb_skyline_chunk 共用。 */
+/** 枚举类型编码：CHUNK_<服务>_<业务表>_<业务字段>（业务表省略 tb_<服务>_ 前缀）；不属于单一业务表的系统通用枚举使用 CHUNK_SKYLINE_<业务字段>，主表 tb_skyline_chunk_module 与子表 tb_skyline_chunk 共用。 */
 export enum TbSkylineChunkModuleType {
     CHUNK_SKYLINE_USER_POST = 'CHUNK_SKYLINE_USER_POST',
     CHUNK_SKYLINE_USER_LEVEL = 'CHUNK_SKYLINE_USER_LEVEL',
-    CHUNK_SKYLINE_COMMON_CONTACT_TYPE = 'CHUNK_SKYLINE_COMMON_CONTACT_TYPE',
-    CHUNK_CRM_USER_SOURCE = 'CHUNK_CRM_USER_SOURCE'
+    CHUNK_SKYLINE_CONTACT_TYPE = 'CHUNK_SKYLINE_CONTACT_TYPE',
+    CHUNK_CRM_USER_SOURCE = 'CHUNK_CRM_USER_SOURCE',
+    CHUNK_SRM_USER_SOURCE = 'CHUNK_SRM_USER_SOURCE'
 }
 
 export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineChunkModuleType, '枚举类型编码', {
@@ -60,7 +61,7 @@ export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineCh
         description: 'Skyline 账号职级，P1-P8 专业序列、M1-M8 管理序列，仅一级枚举项',
         type: 'purple'
     },
-    [TbSkylineChunkModuleType.CHUNK_SKYLINE_COMMON_CONTACT_TYPE]: {
+    [TbSkylineChunkModuleType.CHUNK_SKYLINE_CONTACT_TYPE]: {
         label: '联系方式',
         description: '系统通用联系方式类型，仅一级枚举项',
         type: 'cyan'
@@ -69,6 +70,11 @@ export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineCh
         label: '客户注册来源',
         description: 'CRM 客户注册来源，仅一级枚举项',
         type: 'orange'
+    },
+    [TbSkylineChunkModuleType.CHUNK_SRM_USER_SOURCE]: {
+        label: '供应商注册来源',
+        description: 'SRM 供应商注册来源，初始数据复制自客户注册来源',
+        type: 'volcano'
     }
 })
 

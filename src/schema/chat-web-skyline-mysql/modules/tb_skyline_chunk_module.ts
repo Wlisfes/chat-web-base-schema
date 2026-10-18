@@ -47,7 +47,8 @@ export enum TbSkylineChunkModuleType {
     CHUNK_SKYLINE_USER_LEVEL = 'CHUNK_SKYLINE_USER_LEVEL',
     CHUNK_SKYLINE_CONTACT_TYPE = 'CHUNK_SKYLINE_CONTACT_TYPE',
     CHUNK_CRM_USER_SOURCE = 'CHUNK_CRM_USER_SOURCE',
-    CHUNK_SRM_USER_SOURCE = 'CHUNK_SRM_USER_SOURCE'
+    CHUNK_SRM_USER_SOURCE = 'CHUNK_SRM_USER_SOURCE',
+    CHUNK_SRM_SIMBANK_MODEL = 'CHUNK_SRM_SIMBANK_MODEL'
 }
 
 export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineChunkModuleType, '枚举类型编码', {
@@ -75,6 +76,11 @@ export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineCh
         label: '供应商注册来源',
         description: 'SRM 供应商注册来源，初始数据复制自客户注册来源',
         type: 'volcano'
+    },
+    [TbSkylineChunkModuleType.CHUNK_SRM_SIMBANK_MODEL]: {
+        label: '设备型号',
+        description: 'SRM SIMBANK 设备型号，仅一级枚举项',
+        type: 'lime'
     }
 })
 

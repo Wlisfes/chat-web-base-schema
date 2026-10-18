@@ -34,6 +34,11 @@
             "require": "./dist/src/schema/chat-web-crm-mysql/index.js",
             "default": "./dist/src/schema/chat-web-crm-mysql/index.js"
         },
+        "./chat-web-srm-mysql": {
+            "types": "./dist/src/schema/chat-web-srm-mysql/index.d.ts",
+            "require": "./dist/src/schema/chat-web-srm-mysql/index.js",
+            "default": "./dist/src/schema/chat-web-srm-mysql/index.js"
+        },
         "./chat-web-task-mysql": {
             "types": "./dist/src/schema/chat-web-task-mysql/index.d.ts",
             "require": "./dist/src/schema/chat-web-task-mysql/index.js",

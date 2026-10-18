@@ -5,6 +5,7 @@ const { basename, extname, resolve } = require('node:path')
 const { getMetadataArgsStorage } = require('typeorm')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
+const srmSchema = require('../dist/src/schema/chat-web-srm-mysql')
 const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
 const taskSchema = require('../dist/src/schema/chat-web-task-mysql')
 const smsSchema = require('../dist/src/schema/chat-web-sms-mysql')
@@ -119,6 +120,10 @@ const crmServiceRoot = resolve(__dirname, '../src/schema/chat-web-crm-mysql')
 validateServiceFiles(crmServiceRoot)
 validateColumnEnumUsage(crmServiceRoot)
 
+const srmServiceRoot = resolve(__dirname, '../src/schema/chat-web-srm-mysql')
+validateServiceFiles(srmServiceRoot)
+validateColumnEnumUsage(srmServiceRoot)
+
 const skylineServiceRoot = resolve(__dirname, '../src/schema/chat-web-skyline-mysql')
 validateServiceFiles(skylineServiceRoot)
 validateColumnEnumUsage(skylineServiceRoot)
@@ -196,6 +201,33 @@ validateTable({
     columns: crmSchema.TbCrmUserContactColumn,
     sqlPath: resolve(crmServiceRoot, 'sql/tb_crm_user_contact.sql'),
     enumComments: [crmSchema.TbCrmUserContactStatusDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmUser,
+    dto: srmSchema.TbSrmUserDto,
+    columns: srmSchema.TbSrmUserColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_user.sql'),
+    enumComments: [
+        srmSchema.TbSrmUserStatusDefinition.comment,
+        srmSchema.TbSrmUserPayModeDefinition.comment,
+        srmSchema.TbSrmUserStageDefinition.comment
+    ]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmUserConfig,
+    dto: srmSchema.TbSrmUserConfigDto,
+    columns: srmSchema.TbSrmUserConfigColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_user_config.sql')
+})
+
+validateTable({
+    entity: srmSchema.TbSrmUserContact,
+    dto: srmSchema.TbSrmUserContactDto,
+    columns: srmSchema.TbSrmUserContactColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_user_contact.sql'),
+    enumComments: [srmSchema.TbSrmUserContactStatusDefinition.comment]
 })
 
 validateTable({

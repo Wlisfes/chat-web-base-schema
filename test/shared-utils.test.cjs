@@ -26,6 +26,7 @@ const { BigintNumberTransformer, DataBaseDto } = require('../dist/src/utils')
 const requestContext = require('../dist/src/utils/modules/request-context')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
+const srmSchema = require('../dist/src/schema/chat-web-srm-mysql')
 const skylineSchema = require('../dist/src/schema/chat-web-skyline-mysql')
 const taskSchema = require('../dist/src/schema/chat-web-task-mysql')
 const smsSchema = require('../dist/src/schema/chat-web-sms-mysql')
@@ -76,6 +77,7 @@ test('枚举元数据的 type 取值限定在管理端标签颜色类型内', ()
     const definitions = [
         ...Object.entries(financeSchema),
         ...Object.entries(crmSchema),
+        ...Object.entries(srmSchema),
         ...Object.entries(skylineSchema),
         ...Object.entries(taskSchema),
         ...Object.entries(smsSchema)

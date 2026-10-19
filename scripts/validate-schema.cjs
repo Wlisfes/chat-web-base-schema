@@ -251,6 +251,18 @@ validateTable({
 })
 
 validateTable({
+    entity: srmSchema.TbSrmSimbankMessage,
+    dto: srmSchema.TbSrmSimbankMessageDto,
+    columns: srmSchema.TbSrmSimbankMessageColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_simbank_message.sql'),
+    enumComments: [
+        srmSchema.TbSrmSimbankMessageSourceDefinition.comment,
+        srmSchema.TbSrmSimbankMessageTypeDefinition.comment,
+        srmSchema.TbSrmSimbankMessageSendStatusDefinition.comment
+    ]
+})
+
+validateTable({
     entity: smsSchema.TbSmsApp,
     dto: smsSchema.TbSmsAppDto,
     columns: smsSchema.TbSmsAppColumn,

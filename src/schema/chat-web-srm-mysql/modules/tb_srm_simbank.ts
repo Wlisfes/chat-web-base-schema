@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, Matches, Max, MaxLength, Min } from 'class-validator'
+import { IsEnum, IsInt, IsMACAddress, IsNotEmpty, IsOptional, IsString, Length, Max, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbSrmSimbankColumn {
@@ -62,7 +62,7 @@ export class TbSrmSimbankDto extends DataBaseByDto {
 
     @ApiProperty({ description: 'MAC地址，格式 AA:BB:CC:DD:EE:FF，全表唯一', example: 'AA:BB:CC:DD:EE:FF' })
     @IsString({ message: 'MAC地址必须是字符串' })
-    @Matches(/^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/, { message: 'MAC地址格式错误' })
+    @IsMACAddress({ eui: '48' }, { message: 'MAC地址格式错误' })
     mac: string
 
     @ApiProperty({ description: '端口数：由设备型号枚举扩展配置 json.total 决定', example: 32 })

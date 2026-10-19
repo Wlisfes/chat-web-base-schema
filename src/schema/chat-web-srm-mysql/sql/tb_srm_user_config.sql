@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS `tb_srm_user_config` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `user_key_id` int NOT NULL COMMENT 'SRM 供应商主键',
+    `simbank_limit` int NOT NULL DEFAULT 5 COMMENT 'SIMBANK 设备最大数',
     `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
     `modify_by` varchar(19) NULL COMMENT '更新账号UID',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',

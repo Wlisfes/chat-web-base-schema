@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_chunk` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `pid` int NULL COMMENT '父枚举项主键；根节点为空',
     `module` varchar(32) NOT NULL DEFAULT 'CHUNK_SKYLINE' COMMENT '枚举所属模块：CHUNK_SKYLINE=SKYLINE；CHUNK_CRM=CRM；CHUNK_SRM=SRM',
-    `type` varchar(128) NOT NULL COMMENT '枚举类型编码：CHUNK_SKYLINE_USER_POST=用户岗位（Skyline 账号岗位，仅一级枚举项，适用于普通下拉选择）；CHUNK_SKYLINE_USER_LEVEL=用户职级（Skyline 账号职级，P1-P8 专业序列、M1-M8 管理序列，仅一级枚举项）；CHUNK_SKYLINE_CONTACT_TYPE=联系方式（系统通用联系方式类型，仅一级枚举项）；CHUNK_CRM_USER_SOURCE=客户注册来源（CRM 客户注册来源，仅一级枚举项）；CHUNK_SRM_USER_SOURCE=供应商注册来源（SRM 供应商注册来源，初始数据复制自客户注册来源）',
+    `type` varchar(128) NOT NULL COMMENT '枚举类型编码：CHUNK_SKYLINE_USER_POST=用户岗位（Skyline 账号岗位，仅一级枚举项，适用于普通下拉选择）；CHUNK_SKYLINE_USER_LEVEL=用户职级（Skyline 账号职级，P1-P8 专业序列、M1-M8 管理序列，仅一级枚举项）；CHUNK_SKYLINE_CONTACT_TYPE=联系方式（系统通用联系方式类型，仅一级枚举项）；CHUNK_CRM_USER_SOURCE=客户注册来源（CRM 客户注册来源，仅一级枚举项）；CHUNK_SRM_USER_SOURCE=供应商注册来源（SRM 供应商注册来源，初始数据复制自客户注册来源）；CHUNK_SRM_SIMBANK_MODEL=设备型号（SRM SIMBANK 设备型号，仅一级枚举项）',
     `name` varchar(128) NOT NULL COMMENT '枚举项显示名称',
     `value` varchar(128) NOT NULL COMMENT '枚举项业务值',
     `json` text NOT NULL DEFAULT ('{}') COMMENT '枚举项扩展配置，默认空对象',
@@ -175,6 +175,24 @@ FROM (
     UNION ALL SELECT 1024199 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SKYLINE' AS `module`, 'CHUNK_SKYLINE_CONTACT_TYPE' AS `type`, '微信（Wechat）' AS `name`, '1024199' AS `value`, '{}' AS `json`, 120 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`
     UNION ALL SELECT 1024200 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SKYLINE' AS `module`, 'CHUNK_SKYLINE_CONTACT_TYPE' AS `type`, '电话' AS `name`, '1024200' AS `value`, '{}' AS `json`, 130 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`
     UNION ALL SELECT 1024201 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SKYLINE' AS `module`, 'CHUNK_SKYLINE_CONTACT_TYPE' AS `type`, '在线客服' AS `name`, '1024201' AS `value`, '{}' AS `json`, 140 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`
+) AS `seed`
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM `tb_skyline_chunk` AS `chunk`
+    WHERE `chunk`.`key_id` = `seed`.`key_id`
+       OR (`chunk`.`module` = `seed`.`module` AND `chunk`.`type` = `seed`.`type` AND (`chunk`.`value` = `seed`.`value` OR `chunk`.`name` = `seed`.`name`))
+);
+
+-- SRM SIMBANK 设备型号：T32、T64、T128、T256，主键即枚举 value；json.total 为该型号的端口数。
+-- 回滚：DELETE FROM `tb_skyline_chunk` WHERE `key_id` BETWEEN 1024316 AND 1024319 AND `type` = 'CHUNK_SRM_SIMBANK_MODEL';
+
+INSERT INTO `tb_skyline_chunk` (`key_id`, `pid`, `module`, `type`, `name`, `value`, `json`, `sort`, `status`, `allow_delete`, `allow_update`, `create_by`, `modify_by`)
+SELECT `seed`.`key_id`, `seed`.`pid`, `seed`.`module`, `seed`.`type`, `seed`.`name`, `seed`.`value`, `seed`.`json`, `seed`.`sort`, `seed`.`status`, `seed`.`allow_delete`, `seed`.`allow_update`, '0', '0'
+FROM (
+    SELECT 1024316 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SRM' AS `module`, 'CHUNK_SRM_SIMBANK_MODEL' AS `type`, 'T32' AS `name`, '1024316' AS `value`, '{"total":32}' AS `json`, 10 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`
+    UNION ALL SELECT 1024317 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SRM' AS `module`, 'CHUNK_SRM_SIMBANK_MODEL' AS `type`, 'T64' AS `name`, '1024317' AS `value`, '{"total":64}' AS `json`, 20 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`
+    UNION ALL SELECT 1024318 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SRM' AS `module`, 'CHUNK_SRM_SIMBANK_MODEL' AS `type`, 'T128' AS `name`, '1024318' AS `value`, '{"total":128}' AS `json`, 30 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`
+    UNION ALL SELECT 1024319 AS `key_id`, CAST(NULL AS SIGNED) AS `pid`, 'CHUNK_SRM' AS `module`, 'CHUNK_SRM_SIMBANK_MODEL' AS `type`, 'T256' AS `name`, '1024319' AS `value`, '{"total":256}' AS `json`, 40 AS `sort`, 'enable' AS `status`, 1 AS `allow_delete`, 1 AS `allow_update`
 ) AS `seed`
 WHERE NOT EXISTS (
     SELECT 1

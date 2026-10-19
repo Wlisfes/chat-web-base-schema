@@ -231,6 +231,39 @@ validateTable({
 })
 
 validateTable({
+    entity: srmSchema.TbSrmSimbank,
+    dto: srmSchema.TbSrmSimbankDto,
+    columns: srmSchema.TbSrmSimbankColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_simbank.sql'),
+    enumComments: [srmSchema.TbSrmSimbankStatusDefinition.comment, srmSchema.TbSrmSimbankOnlineDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmSimbankPort,
+    dto: srmSchema.TbSrmSimbankPortDto,
+    columns: srmSchema.TbSrmSimbankPortColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_simbank_port.sql'),
+    enumComments: [
+        srmSchema.TbSrmSimbankPortActivateStatusDefinition.comment,
+        srmSchema.TbSrmSimbankPortInsertStatusDefinition.comment,
+        srmSchema.TbSrmSimbankPortStatusDefinition.comment
+    ]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmSimbankMessage,
+    dto: srmSchema.TbSrmSimbankMessageDto,
+    columns: srmSchema.TbSrmSimbankMessageColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_simbank_message.sql'),
+    enumComments: [
+        srmSchema.TbSrmSimbankMessageSourceDefinition.comment,
+        srmSchema.TbSrmSimbankMessageTypeDefinition.comment,
+        srmSchema.TbSrmSimbankMessageEncodingDefinition.comment,
+        srmSchema.TbSrmSimbankMessageSendStatusDefinition.comment
+    ]
+})
+
+validateTable({
     entity: smsSchema.TbSmsApp,
     dto: smsSchema.TbSmsAppDto,
     columns: smsSchema.TbSmsAppColumn,

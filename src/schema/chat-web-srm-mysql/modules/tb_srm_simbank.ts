@@ -1,12 +1,13 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsNotEmpty, IsString, Length, Matches, Max, MaxLength, Min } from 'class-validator'
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, Matches, Max, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbSrmSimbankColumn {
     KEY_ID = 'key_id',
     NAME = 'name',
+    ALIAS = 'alias',
     MODEL = 'model',
     MAC = 'mac',
     TOTAL = 'total',
@@ -46,6 +47,12 @@ export class TbSrmSimbankDto extends DataBaseByDto {
     @IsNotEmpty({ message: '设备名称必填' })
     @MaxLength(64, { message: '设备名称长度不能超过64位' })
     name: string
+
+    @ApiProperty({ description: '设备别名：自定义的设备简称，全表唯一', example: 'SB-HK-01', required: false })
+    @IsOptional()
+    @IsString({ message: '设备别名必须是字符串' })
+    @MaxLength(64, { message: '设备别名长度不能超过64位' })
+    alias: string
 
     @ApiProperty({ description: '设备型号：Skyline 枚举 CHUNK_SRM_SIMBANK_MODEL 的枚举项主键', example: 1024316 })
     @Type(() => Number)
@@ -96,6 +103,7 @@ export class TbSrmSimbankDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_srm_simbank_mac', ['mac'], { unique: true })
+@Index('uk_tb_srm_simbank_alias', ['alias'], { unique: true })
 @Index('idx_tb_srm_simbank_user_key_id', ['userKeyId'])
 @Index('idx_tb_srm_simbank_owner_user_uid', ['ownerUserUid'])
 @Index('idx_tb_srm_simbank_model', ['model'])
@@ -105,6 +113,15 @@ export class TbSrmSimbankDto extends DataBaseByDto {
 export class TbSrmSimbank extends DataBaseByAdapter {
     @Column({ name: TbSrmSimbankColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '设备名称' })
     name: string
+
+    @Column({
+        name: TbSrmSimbankColumn.ALIAS,
+        type: 'varchar',
+        length: 64,
+        nullable: true,
+        comment: '设备别名：自定义的设备简称，全表唯一'
+    })
+    alias: string
 
     @Column({
         name: TbSrmSimbankColumn.MODEL,

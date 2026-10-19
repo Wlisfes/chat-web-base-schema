@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS `tb_srm_simbank` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `name` varchar(64) NOT NULL COMMENT '设备名称',
+    `alias` varchar(64) NULL COMMENT '设备别名：自定义的设备简称，全表唯一',
     `model` int NOT NULL COMMENT '设备型号：Skyline 枚举 CHUNK_SRM_SIMBANK_MODEL 的枚举项主键',
     `mac` varchar(17) NOT NULL COMMENT 'MAC地址，格式 AA:BB:CC:DD:EE:FF，全表唯一',
     `total` int NOT NULL COMMENT '端口数：由设备型号枚举扩展配置 json.total 决定',
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `tb_srm_simbank` (
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_srm_simbank_mac` (`mac`),
+    UNIQUE KEY `uk_tb_srm_simbank_alias` (`alias`),
     KEY `idx_tb_srm_simbank_user_key_id` (`user_key_id`),
     KEY `idx_tb_srm_simbank_owner_user_uid` (`owner_user_uid`),
     KEY `idx_tb_srm_simbank_model` (`model`),

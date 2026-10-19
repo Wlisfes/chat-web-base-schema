@@ -258,6 +258,7 @@ validateTable({
     enumComments: [
         srmSchema.TbSrmSimbankMessageSourceDefinition.comment,
         srmSchema.TbSrmSimbankMessageTypeDefinition.comment,
+        srmSchema.TbSrmSimbankMessageEncodingDefinition.comment,
         srmSchema.TbSrmSimbankMessageSendStatusDefinition.comment
     ]
 })

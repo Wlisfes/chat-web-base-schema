@@ -80,3 +80,52 @@ export async function fetchAppendSkylineUserOptions<TItem extends object, const 
     }
     return list as Array<SkylineTypes.WithSkylineUserOptions<TItem, TKey>>
 }
+
+/** Skyline 国家/地区批量还原接口单次允许查询的主键数量上限。 */
+const SKYLINE_COUNTRY_RESOLVE_LIMIT = 100
+
+/** 判断字段值是否为可用于国家/地区还原的主键。 */
+function isSkylineCountryKeyId(value: unknown): value is number {
+    return typeof value === 'number' && Number.isInteger(value) && value > 0
+}
+
+/**
+ * 按列表字段批量调用 Skyline 国家/地区 Feign，把国家/地区主键还原为 `<字段名>Options`。
+ *
+ * - 多个字段、多行数据中的主键统一去重，并按 Skyline 上限分批请求；
+ * - Authorization 固定使用服务间凭据，不转发终端用户令牌；
+ * - 国家/地区不存在时保留 `{ keyId }`，字段为空时对应的 `<字段名>Options` 返回 undefined；
+ * - 直接在传入的列表项上追加字段并返回原列表引用。
+ *
+ * @example
+ * await fetchAppendSkylineCountryOptions(skylineFeignClient, configService, list, ['countryKeyId'])
+ */
+export async function fetchAppendSkylineCountryOptions<TItem extends object, const TKey extends keyof TItem & string>(
+    skylineFeignClient: FeignClientSkylineManager,
+    configService: ConfigService,
+    list: TItem[],
+    keys: readonly TKey[]
+): Promise<Array<SkylineTypes.WithSkylineCountryOptions<TItem, TKey>>> {
+    const keyIds = [...new Set(list.flatMap(item => keys.map(key => item[key] as unknown)).filter(isSkylineCountryKeyId))]
+    const options = new Map<number, SkylineTypes.SkylineCountryOption>()
+    if (keyIds.length > 0) {
+        const authorization = resolveFeignServiceAuthorization(configService)
+        const groups = Array.from({ length: Math.ceil(keyIds.length / SKYLINE_COUNTRY_RESOLVE_LIMIT) }, (_, index) =>
+            keyIds.slice(index * SKYLINE_COUNTRY_RESOLVE_LIMIT, (index + 1) * SKYLINE_COUNTRY_RESOLVE_LIMIT)
+        )
+        const countries = await Promise.all(
+            groups.map(group => skylineFeignClient.httpBaseSkylineColumnCountryResolver(authorization, { keyIds: group }))
+        )
+        for (const country of countries.flat()) {
+            options.set(country.keyId, country)
+        }
+    }
+    for (const item of list) {
+        const result = item as Record<string, unknown>
+        for (const key of keys) {
+            const keyId: unknown = item[key]
+            result[`${key}Options`] = isSkylineCountryKeyId(keyId) ? (options.get(keyId) ?? { keyId }) : undefined
+        }
+    }
+    return list as Array<SkylineTypes.WithSkylineCountryOptions<TItem, TKey>>
+}

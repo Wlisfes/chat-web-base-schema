@@ -7,7 +7,7 @@ import type * as SkylineTypes from './feign-skyline.interface'
 /**
  * Skyline 服务业务 Feign 客户端。
  *
- * 枚举字典属于跨服务基础参考数据，不做用户级数据隔离，因此统一使用服务间凭据调用。
+ * 枚举字典、国家/地区属于跨服务基础参考数据，不做用户级数据隔离，因此统一使用服务间凭据调用。
  * 请求通过 Gateway 访问 Skyline 服务的 `/feign/skyline` 服务间入口；Gateway 地址和超时读取
  * Nacos `gateway.feign.url` 与 `gateway.feign.timeout`，服务端在分发实现方法前校验 `gateway.feign.service_token`。
  */
@@ -77,5 +77,31 @@ export class FeignClientSkylineManager extends FeignWebClient<SkylineTypes.Feign
         @FeignBody() _input: SkylineDto.SkylineUserResolverDto
     ): Promise<SkylineTypes.SkylineUserSummary> {
         return this.dispatch('httpBaseSkylineUserResolver', _authorization, _input)
+    }
+
+    /**按国家/地区主键批量获取展示摘要**/
+    @FeignPost('/country/column/resolve', {
+        operation: { summary: '供内部服务按国家/地区主键批量获取展示摘要' },
+        request: { source: 'body', type: SkylineDto.SkylineColumnCountryResolverDto },
+        response: { type: SkylineDto.SkylineCountrySummaryResponseDto, isArray: true, description: '国家/地区展示摘要列表' }
+    })
+    async httpBaseSkylineColumnCountryResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SkylineDto.SkylineColumnCountryResolverDto
+    ): Promise<SkylineTypes.SkylineCountrySummary[]> {
+        return this.dispatch('httpBaseSkylineColumnCountryResolver', _authorization, _input)
+    }
+
+    /**按国家/地区主键获取单个展示摘要**/
+    @FeignPost('/country/resolve', {
+        operation: { summary: '供内部服务按国家/地区主键获取单个展示摘要' },
+        request: { source: 'body', type: SkylineDto.SkylineCountryResolverDto },
+        response: { type: SkylineDto.SkylineCountrySummaryResponseDto, description: '国家/地区展示摘要' }
+    })
+    async httpBaseSkylineCountryResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SkylineDto.SkylineCountryResolverDto
+    ): Promise<SkylineTypes.SkylineCountrySummary> {
+        return this.dispatch('httpBaseSkylineCountryResolver', _authorization, _input)
     }
 }

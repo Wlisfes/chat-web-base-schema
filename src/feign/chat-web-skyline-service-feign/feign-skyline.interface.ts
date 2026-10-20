@@ -76,6 +76,17 @@ export interface SkylineUserResolverRequest {
     fields?: SkylineUserField[]
 }
 
+/**国家/地区展示摘要。*/
+export type SkylineCountrySummary = SkylineDto.SkylineCountrySummaryResponseDto
+
+/**列表展示使用的国家/地区选项；国家/地区不存在时只保留 keyId。*/
+export type SkylineCountryOption = Pick<SkylineCountrySummary, 'keyId'> & Partial<Omit<SkylineCountrySummary, 'keyId'>>
+
+/**为指定国家/地区主键字段追加 `<字段名>Options` 后的列表项类型。*/
+export type WithSkylineCountryOptions<TItem, TKey extends keyof TItem & string> = TItem & {
+    [K in TKey as `${K}Options`]?: SkylineCountryOption
+}
+
 /** Skyline 服务 Feign 服务端实现必须满足的接口。 */
 export interface FeignClientSkylineImplementation {
     /**按枚举类型编码批量获取启用状态的枚举字典选项**/
@@ -86,4 +97,11 @@ export interface FeignClientSkylineImplementation {
     httpBaseSkylineColumnUserResolver(authorization: string, input: SkylineColumnUserResolverRequest): Promise<SkylineUserSummary[]>
     /**按账号 UID 还原单个展示摘要**/
     httpBaseSkylineUserResolver(authorization: string, input: SkylineUserResolverRequest): Promise<SkylineUserSummary>
+    /**按国家/地区主键批量获取展示摘要**/
+    httpBaseSkylineColumnCountryResolver(
+        authorization: string,
+        input: SkylineDto.SkylineColumnCountryResolverDto
+    ): Promise<SkylineCountrySummary[]>
+    /**按国家/地区主键获取单个展示摘要**/
+    httpBaseSkylineCountryResolver(authorization: string, input: SkylineDto.SkylineCountryResolverDto): Promise<SkylineCountrySummary>
 }

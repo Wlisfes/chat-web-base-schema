@@ -65,7 +65,7 @@ export class TbSrmSimbankPortDto extends DataBaseByDto {
     @Max(65535, { message: '端口编号不能大于65535' })
     port: number
 
-    @ApiProperty({ description: 'SIM 卡号码', example: '+8613800000000', required: false })
+    @ApiProperty({ description: 'SIM 卡号码：国际区号 + 号码，不带 + 号', example: '8613800000000', required: false })
     @IsOptional()
     @IsString({ message: 'SIM 卡号码必须是字符串' })
     @MaxLength(32, { message: 'SIM 卡号码长度不能超过32位' })

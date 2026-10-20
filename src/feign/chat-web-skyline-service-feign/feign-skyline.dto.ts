@@ -1,8 +1,23 @@
 import { ApiProperty, getSchemaPath } from '@nestjs/swagger'
-import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator'
+import { Type } from 'class-transformer'
+import {
+    ArrayMaxSize,
+    ArrayNotEmpty,
+    IsArray,
+    IsEnum,
+    IsIn,
+    IsInt,
+    IsNotEmpty,
+    IsOptional,
+    IsString,
+    Matches,
+    MaxLength,
+    Min
+} from 'class-validator'
 import {
     TbSkylineChunkModule,
     TbSkylineChunkModuleType,
+    TbSkylineCountryStatus,
     TbSkylineUserEmploymentStatus,
     TbSkylineUserStatus
 } from '@/schema/chat-web-skyline-mysql'
@@ -242,4 +257,46 @@ export class SkylineUserResolverDto extends SkylineUserFieldsDto {
     @IsString({ message: '账号UID必须是字符串' })
     @Matches(/^\d{1,19}$/, { message: '账号UID必须是1-19位数字字符串' })
     uid: string
+}
+
+/** 国家/地区展示摘要的 Feign 响应文档模型。 */
+export class SkylineCountrySummaryResponseDto {
+    @ApiProperty({ description: '国家/地区主键', example: 1000 })
+    keyId: number
+
+    @ApiProperty({ description: '国家/地区国际区号，不带 + 号', example: '86' })
+    code: string
+
+    @ApiProperty({ description: '移动国家代码', example: '460' })
+    mcc: string
+
+    @ApiProperty({ description: '中文名称', example: '中国' })
+    cnName: string
+
+    @ApiProperty({ description: '英文名称', example: 'China' })
+    enName: string
+
+    @ApiProperty({ description: '国家/地区状态', enum: TbSkylineCountryStatus, example: TbSkylineCountryStatus.ENABLE })
+    status: TbSkylineCountryStatus
+}
+
+/** 按国家/地区主键批量查询展示摘要的请求体；单次最多 100 个，不存在的主键直接忽略。 */
+export class SkylineColumnCountryResolverDto {
+    @ApiProperty({ description: '国家/地区主键集合', type: Number, isArray: true, example: [1000] })
+    @IsArray({ message: '国家/地区主键集合必须是数组' })
+    @ArrayNotEmpty({ message: '国家/地区主键集合不能为空' })
+    @ArrayMaxSize(100, { message: '国家/地区主键集合单次最多100个' })
+    @Type(() => Number)
+    @IsInt({ each: true, message: '国家/地区主键必须是整数' })
+    @Min(1, { each: true, message: '国家/地区主键必须大于0' })
+    keyIds: number[]
+}
+
+/** 按国家/地区主键查询单个展示摘要的请求体；不存在时返回 404。 */
+export class SkylineCountryResolverDto {
+    @ApiProperty({ description: '国家/地区主键', example: 1000 })
+    @Type(() => Number)
+    @IsInt({ message: '国家/地区主键必须是整数' })
+    @Min(1, { message: '国家/地区主键必须大于0' })
+    keyId: number
 }

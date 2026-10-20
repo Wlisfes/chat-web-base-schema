@@ -65,7 +65,7 @@ export class TbSrmSimbankPortDto extends DataBaseByDto {
     @Max(65535, { message: '端口编号不能大于65535' })
     port: number
 
-    @ApiProperty({ description: 'SIM 卡号码', example: '+8613800000000', required: false })
+    @ApiProperty({ description: 'SIM 卡号码：国际区号 + 号码，不带 + 号', example: '8613800000000', required: false })
     @IsOptional()
     @IsString({ message: 'SIM 卡号码必须是字符串' })
     @MaxLength(32, { message: 'SIM 卡号码长度不能超过32位' })
@@ -92,7 +92,7 @@ export class TbSrmSimbankPortDto extends DataBaseByDto {
     @IsEnum(TbSrmSimbankPortActivateStatus, { message: '激活状态格式错误' })
     activateStatus: TbSrmSimbankPortActivateStatus
 
-    @ApiProperty({ description: '激活方向：Finance 国家/地区主键；激活后必填', example: 1024, required: false })
+    @ApiProperty({ description: '激活方向：Skyline 国家/地区主键；激活后必填', example: 1024, required: false })
     @IsOptional()
     @Type(() => Number)
     @IsInt({ message: '激活方向必须是整数' })
@@ -163,7 +163,7 @@ export class TbSrmSimbankPort extends DataBaseByAdapter {
         name: TbSrmSimbankPortColumn.COUNTRY_KEY_ID,
         type: 'int',
         nullable: true,
-        comment: '激活方向：Finance 国家/地区主键；激活后必填'
+        comment: '激活方向：Skyline 国家/地区主键；激活后必填'
     })
     countryKeyId: number
 

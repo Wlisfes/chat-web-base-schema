@@ -358,6 +358,14 @@ validateTable({
 })
 
 validateTable({
+    entity: skylineSchema.TbSkylineCountry,
+    dto: skylineSchema.TbSkylineCountryDto,
+    columns: skylineSchema.TbSkylineCountryColumn,
+    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_country.sql'),
+    enumComments: [skylineSchema.TbSkylineCountryStatusDefinition.comment]
+})
+
+validateTable({
     entity: skylineSchema.TbSkylineSheet,
     dto: skylineSchema.TbSkylineSheetDto,
     columns: skylineSchema.TbSkylineSheetColumn,

@@ -104,4 +104,17 @@ export class FeignClientSkylineManager extends FeignWebClient<SkylineTypes.Feign
     ): Promise<SkylineTypes.SkylineCountrySummary> {
         return this.dispatch('httpBaseSkylineCountryResolver', _authorization, _input)
     }
+
+    /**按国际区号和 MCC 批量获取展示摘要**/
+    @FeignPost('/country/column/code/resolve', {
+        operation: { summary: '供内部服务按国际区号和 MCC 批量获取展示摘要' },
+        request: { source: 'body', type: SkylineDto.SkylineColumnCountryCodeResolverDto },
+        response: { type: SkylineDto.SkylineCountrySummaryResponseDto, isArray: true, description: '国家/地区展示摘要列表' }
+    })
+    async httpBaseSkylineColumnCountryCodeResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SkylineDto.SkylineColumnCountryCodeResolverDto
+    ): Promise<SkylineTypes.SkylineCountrySummary[]> {
+        return this.dispatch('httpBaseSkylineColumnCountryCodeResolver', _authorization, _input)
+    }
 }

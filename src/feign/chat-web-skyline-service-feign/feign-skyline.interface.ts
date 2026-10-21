@@ -104,4 +104,9 @@ export interface FeignClientSkylineImplementation {
     ): Promise<SkylineCountrySummary[]>
     /**按国家/地区主键获取单个展示摘要**/
     httpBaseSkylineCountryResolver(authorization: string, input: SkylineDto.SkylineCountryResolverDto): Promise<SkylineCountrySummary>
+    /**按国际区号和 MCC 批量获取展示摘要**/
+    httpBaseSkylineColumnCountryCodeResolver(
+        authorization: string,
+        input: SkylineDto.SkylineColumnCountryCodeResolverDto
+    ): Promise<SkylineCountrySummary[]>
 }

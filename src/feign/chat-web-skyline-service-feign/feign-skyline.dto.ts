@@ -292,6 +292,29 @@ export class SkylineColumnCountryResolverDto {
     keyIds: number[]
 }
 
+/** 按国际区号和 MCC 批量查询国家/地区的单项。 */
+export class SkylineCountryCodeDto {
+    @ApiProperty({ description: '国家/地区国际区号，不带 + 号', example: '86' })
+    @IsString({ message: '国际区号必须是字符串' })
+    @Matches(/^[0-9]{1,10}$/, { message: '国际区号格式错误' })
+    code: string
+
+    @ApiProperty({ description: '移动国家代码', example: '460' })
+    @IsString({ message: 'MCC必须是字符串' })
+    @Matches(/^[0-9]{1,4}$/, { message: 'MCC格式错误' })
+    mcc: string
+}
+
+/** 按国际区号和 MCC 批量查询国家/地区展示摘要的请求体；单次最多 100 组，不存在的组合直接忽略。 */
+export class SkylineColumnCountryCodeResolverDto {
+    @ApiProperty({ description: '国际区号和 MCC 组合', type: [SkylineCountryCodeDto] })
+    @IsArray({ message: '国家/地区组合必须是数组' })
+    @ArrayNotEmpty({ message: '国家/地区组合不能为空' })
+    @ArrayMaxSize(100, { message: '国家/地区组合单次最多100个' })
+    @Type(() => SkylineCountryCodeDto)
+    items: SkylineCountryCodeDto[]
+}
+
 /** 按国家/地区主键查询单个展示摘要的请求体；不存在时返回 404。 */
 export class SkylineCountryResolverDto {
     @ApiProperty({ description: '国家/地区主键', example: 1000 })

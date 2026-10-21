@@ -34,4 +34,17 @@ export class FeignClientSmsManager extends FeignWebClient<SmsTypes.FeignClientSm
     ): Promise<SmsTypes.SmsAppCount> {
         return this.dispatch('httpBaseSmsAppCountResolver', _authorization, _input)
     }
+
+    /**按短信应用主键批量获取短信应用摘要**/
+    @FeignPost('/app/column/resolve', {
+        operation: { summary: '供内部服务按短信应用主键批量获取短信应用摘要' },
+        request: { source: 'body', type: SmsDto.SmsColumnAppResolverRequestDto },
+        response: { type: SmsDto.SmsAppSummaryResponseDto, isArray: true, description: '短信应用摘要列表' }
+    })
+    async httpBaseSmsColumnAppResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SmsTypes.SmsColumnAppResolverInput
+    ): Promise<SmsTypes.SmsAppSummary[]> {
+        return this.dispatch('httpBaseSmsColumnAppResolver', _authorization, _input)
+    }
 }

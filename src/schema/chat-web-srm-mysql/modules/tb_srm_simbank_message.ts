@@ -24,7 +24,8 @@ export enum TbSrmSimbankMessageColumn {
     TASK_ID = 'task_id',
     TASK_NAME = 'task_name',
     CHANNEL_KEY_ID = 'channel_key_id',
-    CHANNEL_NAME = 'channel_name',
+    CHANNEL_ALIAS = 'channel_alias',
+    CHANNEL_OWNER_USER_UID = 'channel_owner_user_uid',
     SIMBANK_KEY_ID = 'simbank_key_id',
     SIMBANK_NAME = 'simbank_name',
     SIMBANK_ALIAS = 'simbank_alias',
@@ -214,11 +215,21 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
     @Min(1, { message: '通道ID必须大于0' })
     channelKeyId: number
 
-    @ApiProperty({ description: '通道名称快照', example: '中国-移动-01', required: false })
+    @ApiProperty({ description: '通道别名快照', example: '1024-460-MRKT-01', required: false })
     @IsOptional()
-    @IsString({ message: '通道名称必须是字符串' })
-    @MaxLength(64, { message: '通道名称长度不能超过64位' })
-    channelName: string
+    @IsString({ message: '通道别名必须是字符串' })
+    @MaxLength(32, { message: '通道别名长度不能超过32位' })
+    channelAlias: string
+
+    @ApiProperty({
+        description: '通道负责人账号UID快照：发送时通道的负责人，用于按负责人统计业绩',
+        example: '2149446185344106496',
+        required: false
+    })
+    @IsOptional()
+    @IsString({ message: '通道负责人账号UID必须是字符串' })
+    @Length(1, 19, { message: '通道负责人账号UID长度不能超过19位' })
+    channelOwnerUserUid: string
 
     @ApiProperty({ description: '设备ID：SRM SIMBANK 设备主键', example: 100201 })
     @Type(() => Number)
@@ -299,6 +310,7 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
 @Index('idx_tb_srm_simbank_message_port_create_time', ['portKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_user_create_time', ['userKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_owner_create_time', ['ownerUserUid', 'createTime'])
+@Index('idx_tb_srm_simbank_message_channel_owner_create_time', ['channelOwnerUserUid', 'createTime'])
 @Index('idx_tb_srm_simbank_message_status_create_time', ['sendStatus', 'createTime'])
 @Index('idx_tb_srm_simbank_message_country_create_time', ['countryKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_from_number_create_time', ['fromNumber', 'createTime'])
@@ -427,8 +439,17 @@ export class TbSrmSimbankMessage extends DataBaseAdapter {
     @Column({ name: TbSrmSimbankMessageColumn.CHANNEL_KEY_ID, type: 'int', nullable: true, comment: '通道ID：发送时使用的通道主键' })
     channelKeyId: number
 
-    @Column({ name: TbSrmSimbankMessageColumn.CHANNEL_NAME, type: 'varchar', length: 64, nullable: true, comment: '通道名称快照' })
-    channelName: string
+    @Column({ name: TbSrmSimbankMessageColumn.CHANNEL_ALIAS, type: 'varchar', length: 32, nullable: true, comment: '通道别名快照' })
+    channelAlias: string
+
+    @Column({
+        name: TbSrmSimbankMessageColumn.CHANNEL_OWNER_USER_UID,
+        type: 'varchar',
+        length: 19,
+        nullable: true,
+        comment: '通道负责人账号UID快照'
+    })
+    channelOwnerUserUid: string
 
     @Column({ name: TbSrmSimbankMessageColumn.SIMBANK_KEY_ID, type: 'int', nullable: false, comment: '设备ID：SRM SIMBANK 设备主键' })
     simbankKeyId: number

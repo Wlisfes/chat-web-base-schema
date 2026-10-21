@@ -231,6 +231,53 @@ validateTable({
 })
 
 validateTable({
+    entity: srmSchema.TbSrmChannel,
+    dto: srmSchema.TbSrmChannelDto,
+    columns: srmSchema.TbSrmChannelColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_channel.sql'),
+    enumComments: [srmSchema.TbSrmChannelStatusDefinition.comment, srmSchema.TbSrmChannelTypeDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmChannelPort,
+    dto: srmSchema.TbSrmChannelPortDto,
+    columns: srmSchema.TbSrmChannelPortColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_channel_port.sql'),
+    enumComments: [srmSchema.TbSrmChannelPortStatusDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmRoute,
+    dto: srmSchema.TbSrmRouteDto,
+    columns: srmSchema.TbSrmRouteColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route.sql'),
+    enumComments: [srmSchema.TbSrmRouteStatusDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmRouteRule,
+    dto: srmSchema.TbSrmRouteRuleDto,
+    columns: srmSchema.TbSrmRouteRuleColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route_rule.sql'),
+    enumComments: [srmSchema.TbSrmRouteRuleStatusDefinition.comment, srmSchema.TbSrmChannelTypeDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmRouteApp,
+    dto: srmSchema.TbSrmRouteAppDto,
+    columns: srmSchema.TbSrmRouteAppColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route_app.sql')
+})
+
+validateTable({
+    entity: srmSchema.TbSrmRouteChannel,
+    dto: srmSchema.TbSrmRouteChannelDto,
+    columns: srmSchema.TbSrmRouteChannelColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route_channel.sql'),
+    enumComments: [srmSchema.TbSrmRouteChannelStatusDefinition.comment]
+})
+
+validateTable({
     entity: srmSchema.TbSrmSimbank,
     dto: srmSchema.TbSrmSimbankDto,
     columns: srmSchema.TbSrmSimbankColumn,

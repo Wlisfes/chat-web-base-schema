@@ -1,15 +1,13 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator'
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
-import { TbSrmChannelType, TbSrmChannelTypeDefinition } from './tb_srm_channel'
 
 export enum TbSrmRouteColumn {
     KEY_ID = 'key_id',
-    COUNTRY_KEY_ID = 'country_key_id',
-    TYPE = 'type',
-    USER_KEY_ID = 'user_key_id',
+    NAME = 'name',
+    ALIAS = 'alias',
+    IS_DEFAULT = 'is_default',
     STATUS = 'status',
     REMARK = 'remark',
     CREATE_BY = 'create_by',
@@ -18,40 +16,35 @@ export enum TbSrmRouteColumn {
     MODIFY_TIME = 'modify_time'
 }
 
-/** 默认路由的客户主键：未配置专属路由的客户都走默认路由。 */
-export const TB_SRM_ROUTE_DEFAULT_USER_KEY_ID = 0
-
 export enum TbSrmRouteStatus {
     DISABLE = 'disable',
     ENABLE = 'enable'
 }
 
-export const TbSrmRouteStatusDefinition = defineEnumMetadata(TbSrmRouteStatus, '路由状态', {
-    [TbSrmRouteStatus.DISABLE]: { label: '停用', description: '路由不参与选通道，专属路由停用后客户回落到默认路由', type: 'error' },
-    [TbSrmRouteStatus.ENABLE]: { label: '启用', description: '路由参与选通道', type: 'success' }
+export const TbSrmRouteStatusDefinition = defineEnumMetadata(TbSrmRouteStatus, '路由方案状态', {
+    [TbSrmRouteStatus.DISABLE]: { label: '停用', description: '方案不参与选路，绑定该方案的短信应用回落到默认方案', type: 'error' },
+    [TbSrmRouteStatus.ENABLE]: { label: '启用', description: '方案参与选路', type: 'success' }
 })
 
 export class TbSrmRouteDto extends DataBaseByDto {
-    @ApiProperty({ description: '方向：Skyline 国家/地区主键，创建后不可修改', example: 1007 })
-    @Type(() => Number)
-    @IsInt({ message: '方向必须是整数' })
-    @Min(1, { message: '方向必须大于0' })
-    countryKeyId: number
+    @ApiProperty({ description: '方案名称', example: '标准线路' })
+    @IsString({ message: '方案名称必须是字符串' })
+    @IsNotEmpty({ message: '方案名称必填' })
+    @MaxLength(64, { message: '方案名称长度不能超过64位' })
+    name: string
+
+    @ApiProperty({ description: '方案别名：自定义的方案简称，全表唯一', example: 'RT-STANDARD', required: false })
+    @IsOptional()
+    @IsString({ message: '方案别名必须是字符串' })
+    @MaxLength(64, { message: '方案别名长度不能超过64位' })
+    alias: string
 
     @ApiProperty({
-        description: TbSrmChannelTypeDefinition.comment,
-        enum: TbSrmChannelType,
-        enumName: 'TbSrmChannelType',
-        example: TbSrmChannelType.MRKT
+        description: '是否默认方案：未绑定方案或绑定方案无匹配规则的短信应用走默认方案；全表只能有一个默认方案',
+        example: false
     })
-    @IsEnum(TbSrmChannelType, { message: '短信类型格式错误' })
-    type: TbSrmChannelType
-
-    @ApiProperty({ description: 'CRM 客户主键：0 表示默认路由，大于0 表示该客户的专属路由；创建后不可修改', example: 0 })
-    @Type(() => Number)
-    @IsInt({ message: '客户必须是整数' })
-    @Min(0, { message: '客户不能小于0' })
-    userKeyId: number
+    @IsBoolean({ message: '默认方案标记必须是布尔值' })
+    isDefault: boolean
 
     @ApiProperty({
         description: TbSrmRouteStatusDefinition.comment,
@@ -59,35 +52,41 @@ export class TbSrmRouteDto extends DataBaseByDto {
         enumName: 'TbSrmRouteStatus',
         example: TbSrmRouteStatus.ENABLE
     })
-    @IsEnum(TbSrmRouteStatus, { message: '路由状态格式错误' })
+    @IsEnum(TbSrmRouteStatus, { message: '路由方案状态格式错误' })
     status: TbSrmRouteStatus
 
-    @ApiProperty({ description: '备注', required: false, example: '大客户专属线路' })
+    @ApiProperty({ description: '备注', required: false, example: '普通客户通用线路' })
     @IsOptional()
     @IsString({ message: '备注必须是字符串' })
     @MaxLength(512, { message: '备注长度不能超过512位' })
     remark: string
 }
 
-@Index('uk_tb_srm_route_country_type_user', ['countryKeyId', 'type', 'userKeyId'], { unique: true })
-@Index('idx_tb_srm_route_user_key_id', ['userKeyId'])
+@Index('uk_tb_srm_route_alias', ['alias'], { unique: true })
+@Index('idx_tb_srm_route_is_default', ['isDefault'])
 @Index('idx_tb_srm_route_status', ['status'])
-@Entity({ name: 'tb_srm_route', comment: 'SRM 短信路由策略表' })
+@Entity({ name: 'tb_srm_route', comment: 'SRM 短信路由方案表' })
 export class TbSrmRoute extends DataBaseByAdapter {
-    @Column({ name: TbSrmRouteColumn.COUNTRY_KEY_ID, type: 'int', nullable: false, comment: '方向：Skyline 国家/地区主键' })
-    countryKeyId: number
-
-    @Column({ name: TbSrmRouteColumn.TYPE, type: 'varchar', length: 32, nullable: false, comment: TbSrmChannelTypeDefinition.comment })
-    type: TbSrmChannelType
+    @Column({ name: TbSrmRouteColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '方案名称' })
+    name: string
 
     @Column({
-        name: TbSrmRouteColumn.USER_KEY_ID,
-        type: 'int',
-        nullable: false,
-        default: TB_SRM_ROUTE_DEFAULT_USER_KEY_ID,
-        comment: 'CRM 客户主键：0 表示默认路由，大于0 表示该客户的专属路由'
+        name: TbSrmRouteColumn.ALIAS,
+        type: 'varchar',
+        length: 64,
+        nullable: true,
+        comment: '方案别名：自定义的方案简称，全表唯一'
     })
-    userKeyId: number
+    alias: string
+
+    @Column({
+        name: TbSrmRouteColumn.IS_DEFAULT,
+        type: 'boolean',
+        nullable: false,
+        default: false,
+        comment: '是否默认方案：未绑定方案或绑定方案无匹配规则的短信应用走默认方案'
+    })
+    isDefault: boolean
 
     @Column({
         name: TbSrmRouteColumn.STATUS,

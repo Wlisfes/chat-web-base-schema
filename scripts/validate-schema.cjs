@@ -251,7 +251,22 @@ validateTable({
     dto: srmSchema.TbSrmRouteDto,
     columns: srmSchema.TbSrmRouteColumn,
     sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route.sql'),
-    enumComments: [srmSchema.TbSrmRouteStatusDefinition.comment, srmSchema.TbSrmChannelTypeDefinition.comment]
+    enumComments: [srmSchema.TbSrmRouteStatusDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmRouteRule,
+    dto: srmSchema.TbSrmRouteRuleDto,
+    columns: srmSchema.TbSrmRouteRuleColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route_rule.sql'),
+    enumComments: [srmSchema.TbSrmRouteRuleStatusDefinition.comment, srmSchema.TbSrmChannelTypeDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmRouteApp,
+    dto: srmSchema.TbSrmRouteAppDto,
+    columns: srmSchema.TbSrmRouteAppColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route_app.sql')
 })
 
 validateTable({

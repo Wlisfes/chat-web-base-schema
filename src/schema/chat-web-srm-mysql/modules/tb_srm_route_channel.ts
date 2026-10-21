@@ -28,7 +28,7 @@ export const TbSrmRouteChannelStatusDefinition = defineEnumMetadata(TbSrmRouteCh
 })
 
 export class TbSrmRouteChannelDto extends DataBaseByDto {
-    @ApiProperty({ description: '规则ID：SRM 路由规则主键', example: 1 })
+    @ApiProperty({ description: '规则ID：SRM 路由规则主键', example: 1002001 })
     @Type(() => Number)
     @IsInt({ message: '规则ID必须是整数' })
     @Min(1, { message: '规则ID必须大于0' })

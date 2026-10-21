@@ -16,7 +16,7 @@ export enum TbSrmRouteAppColumn {
 }
 
 export class TbSrmRouteAppDto extends DataBaseByDto {
-    @ApiProperty({ description: '短信应用主键：SMS 短信应用主键；一个应用只能绑定一个路由方案', example: 1001 })
+    @ApiProperty({ description: '短信应用主键：SMS 短信应用主键；一个应用只能绑定一个路由', example: 1001 })
     @Type(() => Number)
     @IsInt({ message: '短信应用必须是整数' })
     @Min(1, { message: '短信应用必须大于0' })
@@ -28,18 +28,18 @@ export class TbSrmRouteAppDto extends DataBaseByDto {
     @Min(1, { message: '客户必须大于0' })
     userKeyId: number
 
-    @ApiProperty({ description: '方案ID：SRM 路由方案主键', example: 1 })
+    @ApiProperty({ description: '路由ID：SRM 路由主键', example: 1002001 })
     @Type(() => Number)
-    @IsInt({ message: '方案ID必须是整数' })
-    @Min(1, { message: '方案ID必须大于0' })
+    @IsInt({ message: '路由ID必须是整数' })
+    @Min(1, { message: '路由ID必须大于0' })
     routeKeyId: number
 }
 
-/** 短信应用绑定路由方案：未绑定的应用走默认方案。 */
+/** 短信应用绑定路由：绑定后路由变为定向路由；未绑定的应用走通用路由。 */
 @Index('uk_tb_srm_route_app_app_key_id', ['appKeyId'], { unique: true })
 @Index('idx_tb_srm_route_app_user_key_id', ['userKeyId'])
 @Index('idx_tb_srm_route_app_route_key_id', ['routeKeyId'])
-@Entity({ name: 'tb_srm_route_app', comment: 'SRM 短信应用路由方案绑定表' })
+@Entity({ name: 'tb_srm_route_app', comment: 'SRM 短信应用路由绑定表' })
 export class TbSrmRouteApp extends DataBaseByAdapter {
     @Column({ name: TbSrmRouteAppColumn.APP_KEY_ID, type: 'int', nullable: false, comment: '短信应用主键：SMS 短信应用主键' })
     appKeyId: number
@@ -47,6 +47,6 @@ export class TbSrmRouteApp extends DataBaseByAdapter {
     @Column({ name: TbSrmRouteAppColumn.USER_KEY_ID, type: 'int', nullable: false, comment: '客户主键：短信应用所属 CRM 客户主键' })
     userKeyId: number
 
-    @Column({ name: TbSrmRouteAppColumn.ROUTE_KEY_ID, type: 'int', nullable: false, comment: '方案ID：SRM 路由方案主键' })
+    @Column({ name: TbSrmRouteAppColumn.ROUTE_KEY_ID, type: 'int', nullable: false, comment: '路由ID：SRM 路由主键' })
     routeKeyId: number
 }

@@ -26,15 +26,15 @@ export enum TbSrmRouteRuleStatus {
 }
 
 export const TbSrmRouteRuleStatusDefinition = defineEnumMetadata(TbSrmRouteRuleStatus, '路由规则状态', {
-    [TbSrmRouteRuleStatus.DISABLE]: { label: '停用', description: '规则不参与匹配，继续匹配更粗粒度规则或默认方案', type: 'error' },
+    [TbSrmRouteRuleStatus.DISABLE]: { label: '停用', description: '规则不参与匹配，继续匹配更粗粒度规则或通用路由', type: 'error' },
     [TbSrmRouteRuleStatus.ENABLE]: { label: '启用', description: '规则参与匹配', type: 'success' }
 })
 
 export class TbSrmRouteRuleDto extends DataBaseByDto {
-    @ApiProperty({ description: '方案ID：SRM 路由方案主键', example: 1 })
+    @ApiProperty({ description: '路由ID：SRM 路由主键', example: 1002001 })
     @Type(() => Number)
-    @IsInt({ message: '方案ID必须是整数' })
-    @Min(1, { message: '方案ID必须大于0' })
+    @IsInt({ message: '路由ID必须是整数' })
+    @Min(1, { message: '路由ID必须大于0' })
     routeKeyId: number
 
     @ApiProperty({ description: '方向：Skyline 国家/地区主键', example: 1007 })
@@ -84,7 +84,7 @@ export class TbSrmRouteRuleDto extends DataBaseByDto {
 @Index('idx_tb_srm_route_rule_status', ['status'])
 @Entity({ name: 'tb_srm_route_rule', comment: 'SRM 路由规则表' })
 export class TbSrmRouteRule extends DataBaseByAdapter {
-    @Column({ name: TbSrmRouteRuleColumn.ROUTE_KEY_ID, type: 'int', nullable: false, comment: '方案ID：SRM 路由方案主键' })
+    @Column({ name: TbSrmRouteRuleColumn.ROUTE_KEY_ID, type: 'int', nullable: false, comment: '路由ID：SRM 路由主键' })
     routeKeyId: number
 
     @Column({ name: TbSrmRouteRuleColumn.COUNTRY_KEY_ID, type: 'int', nullable: false, comment: '方向：Skyline 国家/地区主键' })

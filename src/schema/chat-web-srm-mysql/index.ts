@@ -1,3 +1,7 @@
+export * from './modules/tb_srm_channel'
+export * from './modules/tb_srm_channel_port'
+export * from './modules/tb_srm_route'
+export * from './modules/tb_srm_route_channel'
 export * from './modules/tb_srm_simbank'
 export * from './modules/tb_srm_simbank_message'
 export * from './modules/tb_srm_simbank_port'

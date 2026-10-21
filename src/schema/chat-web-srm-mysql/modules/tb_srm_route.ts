@@ -1,13 +1,13 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbSrmRouteColumn {
     KEY_ID = 'key_id',
     NAME = 'name',
     ALIAS = 'alias',
-    IS_DEFAULT = 'is_default',
+    TYPE = 'type',
     STATUS = 'status',
     REMARK = 'remark',
     CREATE_BY = 'create_by',
@@ -21,30 +21,43 @@ export enum TbSrmRouteStatus {
     ENABLE = 'enable'
 }
 
-export const TbSrmRouteStatusDefinition = defineEnumMetadata(TbSrmRouteStatus, '路由方案状态', {
-    [TbSrmRouteStatus.DISABLE]: { label: '停用', description: '方案不参与选路，绑定该方案的短信应用回落到默认方案', type: 'error' },
-    [TbSrmRouteStatus.ENABLE]: { label: '启用', description: '方案参与选路', type: 'success' }
+export const TbSrmRouteStatusDefinition = defineEnumMetadata(TbSrmRouteStatus, '路由状态', {
+    [TbSrmRouteStatus.DISABLE]: { label: '停用', description: '路由不参与选路，绑定该路由的短信应用回落到通用路由', type: 'error' },
+    [TbSrmRouteStatus.ENABLE]: { label: '启用', description: '路由参与选路', type: 'success' }
+})
+
+/** 路由类型：由短信应用绑定关系自动维护，不能手动设置。 */
+export enum TbSrmRouteType {
+    GENERAL = 'general',
+    TARGETED = 'targeted'
+}
+
+export const TbSrmRouteTypeDefinition = defineEnumMetadata(TbSrmRouteType, '路由类型', {
+    [TbSrmRouteType.GENERAL]: { label: '通用路由', description: '没有绑定短信应用，所有短信应用都可回落使用', type: 'info' },
+    [TbSrmRouteType.TARGETED]: { label: '定向路由', description: '已绑定短信应用，只供绑定的短信应用使用', type: 'warning' }
 })
 
 export class TbSrmRouteDto extends DataBaseByDto {
-    @ApiProperty({ description: '方案名称', example: '标准线路' })
-    @IsString({ message: '方案名称必须是字符串' })
-    @IsNotEmpty({ message: '方案名称必填' })
-    @MaxLength(64, { message: '方案名称长度不能超过64位' })
+    @ApiProperty({ description: '路由名称', example: '标准线路' })
+    @IsString({ message: '路由名称必须是字符串' })
+    @IsNotEmpty({ message: '路由名称必填' })
+    @MaxLength(64, { message: '路由名称长度不能超过64位' })
     name: string
 
-    @ApiProperty({ description: '方案别名：自定义的方案简称，全表唯一', example: 'RT-STANDARD', required: false })
+    @ApiProperty({ description: '路由别名：自定义的路由简称，全表唯一', example: 'RT-STANDARD', required: false })
     @IsOptional()
-    @IsString({ message: '方案别名必须是字符串' })
-    @MaxLength(64, { message: '方案别名长度不能超过64位' })
+    @IsString({ message: '路由别名必须是字符串' })
+    @MaxLength(64, { message: '路由别名长度不能超过64位' })
     alias: string
 
     @ApiProperty({
-        description: '是否默认方案：未绑定方案或绑定方案无匹配规则的短信应用走默认方案；全表只能有一个默认方案',
-        example: false
+        description: TbSrmRouteTypeDefinition.comment,
+        enum: TbSrmRouteType,
+        enumName: 'TbSrmRouteType',
+        example: TbSrmRouteType.GENERAL
     })
-    @IsBoolean({ message: '默认方案标记必须是布尔值' })
-    isDefault: boolean
+    @IsEnum(TbSrmRouteType, { message: '路由类型格式错误' })
+    type: TbSrmRouteType
 
     @ApiProperty({
         description: TbSrmRouteStatusDefinition.comment,
@@ -52,7 +65,7 @@ export class TbSrmRouteDto extends DataBaseByDto {
         enumName: 'TbSrmRouteStatus',
         example: TbSrmRouteStatus.ENABLE
     })
-    @IsEnum(TbSrmRouteStatus, { message: '路由方案状态格式错误' })
+    @IsEnum(TbSrmRouteStatus, { message: '路由状态格式错误' })
     status: TbSrmRouteStatus
 
     @ApiProperty({ description: '备注', required: false, example: '普通客户通用线路' })
@@ -63,11 +76,11 @@ export class TbSrmRouteDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_srm_route_alias', ['alias'], { unique: true })
-@Index('idx_tb_srm_route_is_default', ['isDefault'])
+@Index('idx_tb_srm_route_type', ['type'])
 @Index('idx_tb_srm_route_status', ['status'])
-@Entity({ name: 'tb_srm_route', comment: 'SRM 短信路由方案表' })
+@Entity({ name: 'tb_srm_route', comment: 'SRM 短信路由表' })
 export class TbSrmRoute extends DataBaseByAdapter {
-    @Column({ name: TbSrmRouteColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '方案名称' })
+    @Column({ name: TbSrmRouteColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '路由名称' })
     name: string
 
     @Column({
@@ -75,18 +88,19 @@ export class TbSrmRoute extends DataBaseByAdapter {
         type: 'varchar',
         length: 64,
         nullable: true,
-        comment: '方案别名：自定义的方案简称，全表唯一'
+        comment: '路由别名：自定义的路由简称，全表唯一'
     })
     alias: string
 
     @Column({
-        name: TbSrmRouteColumn.IS_DEFAULT,
-        type: 'boolean',
+        name: TbSrmRouteColumn.TYPE,
+        type: 'varchar',
+        length: 32,
         nullable: false,
-        default: false,
-        comment: '是否默认方案：未绑定方案或绑定方案无匹配规则的短信应用走默认方案'
+        default: TbSrmRouteType.GENERAL,
+        comment: TbSrmRouteTypeDefinition.comment
     })
-    isDefault: boolean
+    type: TbSrmRouteType
 
     @Column({
         name: TbSrmRouteColumn.STATUS,

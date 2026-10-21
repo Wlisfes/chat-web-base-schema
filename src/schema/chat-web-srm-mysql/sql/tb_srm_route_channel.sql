@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS `tb_srm_route_channel` (
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_srm_route_channel_rule_channel` (`rule_key_id`, `channel_key_id`),
     KEY `idx_tb_srm_route_channel_channel_key_id` (`channel_key_id`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SRM 路由规则通道表';
+) ENGINE = InnoDB AUTO_INCREMENT = 1002001 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SRM 路由规则通道表';

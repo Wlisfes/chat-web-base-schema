@@ -18,12 +18,12 @@ export class VagueDto {
     vague?: string
 }
 
-/** 读取并去除模糊搜索关键词首尾空白；空字符串返回 */
-export function fetchVagueKeyword(input: Pick<VagueDto, 'vague'>): string {
-    return (input.vague ?? "").trim() 
+/** 去除模糊搜索关键词首尾空白；空值返回空字符串。 */
+export function fetchVagueKeyword(vague?: string): string {
+    return (vague ?? '').trim()
 }
 
-/** 读取模糊搜索关键词；用于手机号、SIM 等入库不带 + 号的字段时，同时去掉开头的 + 号。 */
-export function fetchVagueNumberKeyword(input: Pick<VagueDto, 'vague'>): string  {
-    return fetchVagueKeyword(input).replace(/^\+/, '') 
+/** 规范化模糊搜索号码：去除首尾空白，并去掉开头的 + 号，适用于手机号、SIM 等入库不带 + 号的字段。 */
+export function fetchVagueNumberKeyword(vague?: string): string {
+    return fetchVagueKeyword(vague).replace(/^\+/, '')
 }

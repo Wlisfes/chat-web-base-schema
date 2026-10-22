@@ -255,6 +255,14 @@ validateTable({
 })
 
 validateTable({
+    entity: srmSchema.TbSrmRouteRule,
+    dto: srmSchema.TbSrmRouteRuleDto,
+    columns: srmSchema.TbSrmRouteRuleColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route_rule.sql'),
+    enumComments: [srmSchema.TbSrmRouteRuleStatusDefinition.comment]
+})
+
+validateTable({
     entity: srmSchema.TbSrmRouteApp,
     dto: srmSchema.TbSrmRouteAppDto,
     columns: srmSchema.TbSrmRouteAppColumn,

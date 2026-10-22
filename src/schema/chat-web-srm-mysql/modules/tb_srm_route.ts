@@ -1,6 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbSrmRouteColumn {
@@ -8,6 +9,7 @@ export enum TbSrmRouteColumn {
     NAME = 'name',
     ALIAS = 'alias',
     TYPE = 'type',
+    SORT = 'sort',
     STATUS = 'status',
     REMARK = 'remark',
     CREATE_BY = 'create_by',
@@ -26,15 +28,19 @@ export const TbSrmRouteStatusDefinition = defineEnumMetadata(TbSrmRouteStatus, '
     [TbSrmRouteStatus.ENABLE]: { label: '启用', description: '路由参与选路', type: 'success' }
 })
 
-/** 路由类型：由短信应用绑定关系自动维护，不能手动设置。 */
+/** 路由类型：创建时选择；通用路由不能绑定短信应用，定向路由解绑后不会自动变回通用路由。 */
 export enum TbSrmRouteType {
     GENERAL = 'general',
     TARGETED = 'targeted'
 }
 
 export const TbSrmRouteTypeDefinition = defineEnumMetadata(TbSrmRouteType, '路由类型', {
-    [TbSrmRouteType.GENERAL]: { label: '通用路由', description: '没有绑定短信应用，所有短信应用都可回落使用', type: 'info' },
-    [TbSrmRouteType.TARGETED]: { label: '定向路由', description: '已绑定短信应用，只供绑定的短信应用使用', type: 'warning' }
+    [TbSrmRouteType.GENERAL]: {
+        label: '通用路由',
+        description: '不绑定短信应用；未绑定路由的短信应用，以及定向路由没有可用通道时，按排序依次使用',
+        type: 'info'
+    },
+    [TbSrmRouteType.TARGETED]: { label: '定向路由', description: '只供绑定的短信应用使用，没有可用通道时回落到通用路由', type: 'warning' }
 })
 
 export class TbSrmRouteDto extends DataBaseByDto {
@@ -59,6 +65,13 @@ export class TbSrmRouteDto extends DataBaseByDto {
     @IsEnum(TbSrmRouteType, { message: '路由类型格式错误' })
     type: TbSrmRouteType
 
+    @ApiProperty({ description: '排序：通用路由按排序从小到大依次尝试，数字越小越优先', example: 0 })
+    @Type(() => Number)
+    @IsInt({ message: '排序必须是整数' })
+    @Min(0, { message: '排序不能小于0' })
+    @Max(9999, { message: '排序不能大于9999' })
+    sort: number
+
     @ApiProperty({
         description: TbSrmRouteStatusDefinition.comment,
         enum: TbSrmRouteStatus,
@@ -76,7 +89,7 @@ export class TbSrmRouteDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_srm_route_alias', ['alias'], { unique: true })
-@Index('idx_tb_srm_route_type', ['type'])
+@Index('idx_tb_srm_route_type_sort', ['type', 'sort'])
 @Index('idx_tb_srm_route_status', ['status'])
 @Entity({ name: 'tb_srm_route', comment: 'SRM 短信路由表' })
 export class TbSrmRoute extends DataBaseByAdapter {
@@ -101,6 +114,15 @@ export class TbSrmRoute extends DataBaseByAdapter {
         comment: TbSrmRouteTypeDefinition.comment
     })
     type: TbSrmRouteType
+
+    @Column({
+        name: TbSrmRouteColumn.SORT,
+        type: 'int',
+        nullable: false,
+        default: 0,
+        comment: '排序：通用路由按排序从小到大依次尝试，数字越小越优先'
+    })
+    sort: number
 
     @Column({
         name: TbSrmRouteColumn.STATUS,

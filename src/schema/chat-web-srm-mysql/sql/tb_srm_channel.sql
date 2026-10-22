@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `tb_srm_channel` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `alias` varchar(32) NOT NULL COMMENT '通道别名：按 创建人工号-方向MCC-类型-序号 自动生成，全表唯一，创建后不可修改，用于队列命名',
-    `type` varchar(32) NOT NULL COMMENT '通道类型：MRKT=营销短信（用于营销推广内容）；NTFY=通知短信（用于业务通知内容）；SOTP=验证码（用于一次性验证码）',
+    `type` varchar(32) NOT NULL COMMENT '短信应用类型：MRKT=营销短信（用于营销推广内容）；NTFY=通知短信（用于业务通知内容）；SOTP=验证码（用于一次性验证码）',
     `country_key_id` int NOT NULL COMMENT '方向：Skyline 国家/地区主键，创建后不可修改',
     `owner_user_uid` varchar(19) NOT NULL COMMENT '负责人账号UID',
     `send_interval` int NOT NULL DEFAULT 3000 COMMENT '端口发送间隔：同一端口两条短信之间的最小间隔毫秒数',

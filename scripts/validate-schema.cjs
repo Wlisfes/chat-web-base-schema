@@ -235,7 +235,7 @@ validateTable({
     dto: srmSchema.TbSrmChannelDto,
     columns: srmSchema.TbSrmChannelColumn,
     sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_channel.sql'),
-    enumComments: [srmSchema.TbSrmChannelStatusDefinition.comment, srmSchema.TbSrmChannelTypeDefinition.comment]
+    enumComments: [srmSchema.TbSrmChannelStatusDefinition.comment, smsSchema.TbSmsAppTypeDefinition.comment]
 })
 
 validateTable({

@@ -9,7 +9,7 @@ export enum TbSrmRouteColumn {
     NAME = 'name',
     ALIAS = 'alias',
     TYPE = 'type',
-    SORT = 'sort',
+    PRIORITY = 'priority',
     STATUS = 'status',
     REMARK = 'remark',
     CREATE_BY = 'create_by',
@@ -37,7 +37,7 @@ export enum TbSrmRouteType {
 export const TbSrmRouteTypeDefinition = defineEnumMetadata(TbSrmRouteType, '路由类型', {
     [TbSrmRouteType.GENERAL]: {
         label: '通用路由',
-        description: '不绑定短信应用；未绑定路由的短信应用，以及定向路由没有可用通道时，按排序依次使用',
+        description: '不绑定短信应用；未绑定路由的短信应用，以及定向路由没有可用通道时，按优先级依次使用',
         type: 'info'
     },
     [TbSrmRouteType.TARGETED]: { label: '定向路由', description: '只供绑定的短信应用使用，没有可用通道时回落到通用路由', type: 'warning' }
@@ -65,12 +65,12 @@ export class TbSrmRouteDto extends DataBaseByDto {
     @IsEnum(TbSrmRouteType, { message: '路由类型格式错误' })
     type: TbSrmRouteType
 
-    @ApiProperty({ description: '排序：通用路由按排序从小到大依次尝试，数字越小越优先', example: 0 })
+    @ApiProperty({ description: '优先级：通用路由按优先级从小到大依次尝试，1 最优先，最大 100', example: 1 })
     @Type(() => Number)
-    @IsInt({ message: '排序必须是整数' })
-    @Min(0, { message: '排序不能小于0' })
-    @Max(9999, { message: '排序不能大于9999' })
-    sort: number
+    @IsInt({ message: '优先级必须是整数' })
+    @Min(1, { message: '优先级不能小于1' })
+    @Max(100, { message: '优先级不能大于100' })
+    priority: number
 
     @ApiProperty({
         description: TbSrmRouteStatusDefinition.comment,
@@ -89,7 +89,7 @@ export class TbSrmRouteDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_srm_route_alias', ['alias'], { unique: true })
-@Index('idx_tb_srm_route_type_sort', ['type', 'sort'])
+@Index('idx_tb_srm_route_type_priority', ['type', 'priority'])
 @Index('idx_tb_srm_route_status', ['status'])
 @Entity({ name: 'tb_srm_route', comment: 'SRM 短信路由表' })
 export class TbSrmRoute extends DataBaseByAdapter {
@@ -116,13 +116,13 @@ export class TbSrmRoute extends DataBaseByAdapter {
     type: TbSrmRouteType
 
     @Column({
-        name: TbSrmRouteColumn.SORT,
+        name: TbSrmRouteColumn.PRIORITY,
         type: 'int',
         nullable: false,
-        default: 0,
-        comment: '排序：通用路由按排序从小到大依次尝试，数字越小越优先'
+        default: 1,
+        comment: '优先级：通用路由按优先级从小到大依次尝试，1 最优先，最大 100'
     })
-    sort: number
+    priority: number
 
     @Column({
         name: TbSrmRouteColumn.STATUS,

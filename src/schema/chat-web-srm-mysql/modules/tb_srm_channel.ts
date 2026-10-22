@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsEnum, IsInt, IsOptional, IsString, Length, Matches, Max, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
+import { TbSmsAppType, TbSmsAppTypeDefinition } from '@/schema/chat-web-sms-mysql'
 
 export enum TbSrmChannelColumn {
     KEY_ID = 'key_id',
@@ -20,19 +21,7 @@ export enum TbSrmChannelColumn {
     MODIFY_TIME = 'modify_time'
 }
 
-/** 通道短信类型：取值与短信应用类型 TbSmsAppType 一致，通道只承载同类型的短信。 */
-export enum TbSrmChannelType {
-    MRKT = 'MRKT',
-    NTFY = 'NTFY',
-    SOTP = 'SOTP'
-}
-
-export const TbSrmChannelTypeDefinition = defineEnumMetadata(TbSrmChannelType, '通道类型', {
-    [TbSrmChannelType.MRKT]: { label: '营销短信', description: '用于营销推广内容', type: 'orange' },
-    [TbSrmChannelType.NTFY]: { label: '通知短信', description: '用于业务通知内容', type: 'info' },
-    [TbSrmChannelType.SOTP]: { label: '验证码', description: '用于一次性验证码', type: 'success' }
-})
-
+/** 通道短信类型直接使用短信应用类型 TbSmsAppType，通道只承载同类型的短信。 */
 export enum TbSrmChannelStatus {
     DISABLE = 'disable',
     ENABLE = 'enable'
@@ -54,13 +43,13 @@ export class TbSrmChannelDto extends DataBaseByDto {
     alias: string
 
     @ApiProperty({
-        description: TbSrmChannelTypeDefinition.comment,
-        enum: TbSrmChannelType,
-        enumName: 'TbSrmChannelType',
-        example: TbSrmChannelType.MRKT
+        description: TbSmsAppTypeDefinition.comment,
+        enum: TbSmsAppType,
+        enumName: 'TbSmsAppType',
+        example: TbSmsAppType.MRKT
     })
-    @IsEnum(TbSrmChannelType, { message: '通道类型格式错误' })
-    type: TbSrmChannelType
+    @IsEnum(TbSmsAppType, { message: '短信类型格式错误' })
+    type: TbSmsAppType
 
     @ApiProperty({
         description: '方向：Skyline 国家/地区主键；通道只发送该方向的短信，只能绑定该方向激活的端口，只能加入同方向的路由，创建后不可修改',
@@ -126,9 +115,9 @@ export class TbSrmChannel extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbSrmChannelTypeDefinition.comment
+        comment: TbSmsAppTypeDefinition.comment
     })
-    type: TbSrmChannelType
+    type: TbSmsAppType
 
     @Column({
         name: TbSrmChannelColumn.COUNTRY_KEY_ID,

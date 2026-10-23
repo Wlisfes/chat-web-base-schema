@@ -49,7 +49,11 @@ export class TbSrmRouteDto extends DataBaseByDto {
     @MaxLength(64, { message: '路由名称长度不能超过64位' })
     name: string
 
-    @ApiProperty({ description: '路由别名：创建时按 LSK + 归属人工号 + 路由类型 + 分段序号自动生成，全表唯一，创建后不可修改', example: 'LSK1233-MRKT-A001', required: false })
+    @ApiProperty({
+        description: '路由别名：创建时按 LSK + 归属人工号 + 路由类型 + 分段序号自动生成，全表唯一，创建后不可修改',
+        example: 'LSK1233-MRKT-A001',
+        required: false
+    })
     @IsOptional()
     @IsString({ message: '路由别名必须是字符串' })
     @MaxLength(64, { message: '路由别名长度不能超过64位' })

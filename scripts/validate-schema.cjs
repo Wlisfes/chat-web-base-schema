@@ -266,7 +266,8 @@ validateTable({
     entity: srmSchema.TbSrmRouteApp,
     dto: srmSchema.TbSrmRouteAppDto,
     columns: srmSchema.TbSrmRouteAppColumn,
-    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route_app.sql')
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_route_app.sql'),
+    enumComments: [srmSchema.TbSrmRouteAppStatusDefinition.comment]
 })
 
 validateTable({

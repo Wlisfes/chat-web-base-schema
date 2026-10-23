@@ -35,7 +35,7 @@ export class TbSrmRouteAppDto extends DataBaseByDto {
     routeKeyId: number
 }
 
-/** 短信应用绑定路由：只能绑定定向路由；未绑定的应用按排序使用通用路由。 */
+/** 短信应用绑定路由：只能绑定同类型路由；未绑定或绑定路由不可用时，按优先级使用同类型路由。 */
 @Index('uk_tb_srm_route_app_app_key_id', ['appKeyId'], { unique: true })
 @Index('idx_tb_srm_route_app_user_key_id', ['userKeyId'])
 @Index('idx_tb_srm_route_app_route_key_id', ['routeKeyId'])

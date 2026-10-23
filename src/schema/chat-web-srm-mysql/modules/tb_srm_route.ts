@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, Max, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbSrmRouteColumn {
@@ -9,8 +9,9 @@ export enum TbSrmRouteColumn {
     NAME = 'name',
     ALIAS = 'alias',
     TYPE = 'type',
-    SORT = 'sort',
+    PRIORITY = 'priority',
     STATUS = 'status',
+    OWNER_USER_UID = 'owner_user_uid',
     REMARK = 'remark',
     CREATE_BY = 'create_by',
     MODIFY_BY = 'modify_by',
@@ -24,23 +25,21 @@ export enum TbSrmRouteStatus {
 }
 
 export const TbSrmRouteStatusDefinition = defineEnumMetadata(TbSrmRouteStatus, '路由状态', {
-    [TbSrmRouteStatus.DISABLE]: { label: '停用', description: '路由不参与选路，绑定该路由的短信应用回落到通用路由', type: 'error' },
+    [TbSrmRouteStatus.DISABLE]: { label: '停用', description: '路由不参与选路，绑定该路由的短信应用回落到同类型路由', type: 'error' },
     [TbSrmRouteStatus.ENABLE]: { label: '启用', description: '路由参与选路', type: 'success' }
 })
 
-/** 路由类型：创建时选择；通用路由不能绑定短信应用，定向路由解绑后不会自动变回通用路由。 */
+/** 路由类型：取值与短信应用类型一致，但在路由侧单独定义；创建后不可修改。 */
 export enum TbSrmRouteType {
-    GENERAL = 'general',
-    TARGETED = 'targeted'
+    MRKT = 'MRKT',
+    NTFY = 'NTFY',
+    SOTP = 'SOTP'
 }
 
 export const TbSrmRouteTypeDefinition = defineEnumMetadata(TbSrmRouteType, '路由类型', {
-    [TbSrmRouteType.GENERAL]: {
-        label: '通用路由',
-        description: '不绑定短信应用；未绑定路由的短信应用，以及定向路由没有可用通道时，按排序依次使用',
-        type: 'info'
-    },
-    [TbSrmRouteType.TARGETED]: { label: '定向路由', description: '只供绑定的短信应用使用，没有可用通道时回落到通用路由', type: 'warning' }
+    [TbSrmRouteType.MRKT]: { label: '营销路由', description: '用于营销推广内容', type: 'orange' },
+    [TbSrmRouteType.NTFY]: { label: '通知路由', description: '用于业务通知内容', type: 'info' },
+    [TbSrmRouteType.SOTP]: { label: 'OTP路由', description: '用于一次性验证码', type: 'success' }
 })
 
 export class TbSrmRouteDto extends DataBaseByDto {
@@ -50,7 +49,7 @@ export class TbSrmRouteDto extends DataBaseByDto {
     @MaxLength(64, { message: '路由名称长度不能超过64位' })
     name: string
 
-    @ApiProperty({ description: '路由别名：自定义的路由简称，全表唯一', example: 'RT-STANDARD', required: false })
+    @ApiProperty({ description: '路由别名：创建时按 LSK + 归属人工号 + 路由类型 + 分段序号自动生成，全表唯一，创建后不可修改', example: 'LSK1233-MRKT-A001', required: false })
     @IsOptional()
     @IsString({ message: '路由别名必须是字符串' })
     @MaxLength(64, { message: '路由别名长度不能超过64位' })
@@ -60,17 +59,17 @@ export class TbSrmRouteDto extends DataBaseByDto {
         description: TbSrmRouteTypeDefinition.comment,
         enum: TbSrmRouteType,
         enumName: 'TbSrmRouteType',
-        example: TbSrmRouteType.GENERAL
+        example: TbSrmRouteType.SOTP
     })
     @IsEnum(TbSrmRouteType, { message: '路由类型格式错误' })
     type: TbSrmRouteType
 
-    @ApiProperty({ description: '排序：通用路由按排序从小到大依次尝试，数字越小越优先', example: 0 })
+    @ApiProperty({ description: '优先级：同类型路由按优先级从小到大依次尝试，1 最优先，最大 100', example: 1 })
     @Type(() => Number)
-    @IsInt({ message: '排序必须是整数' })
-    @Min(0, { message: '排序不能小于0' })
-    @Max(9999, { message: '排序不能大于9999' })
-    sort: number
+    @IsInt({ message: '优先级必须是整数' })
+    @Min(1, { message: '优先级不能小于1' })
+    @Max(100, { message: '优先级不能大于100' })
+    priority: number
 
     @ApiProperty({
         description: TbSrmRouteStatusDefinition.comment,
@@ -81,6 +80,11 @@ export class TbSrmRouteDto extends DataBaseByDto {
     @IsEnum(TbSrmRouteStatus, { message: '路由状态格式错误' })
     status: TbSrmRouteStatus
 
+    @ApiProperty({ description: '归属人账号UID：当前负责该路由的员工，可修改', example: '2149446185344106496' })
+    @IsString({ message: '归属人账号UID必须是字符串' })
+    @Length(1, 19, { message: '归属人账号UID长度不能超过19位' })
+    ownerUserUid: string
+
     @ApiProperty({ description: '备注', required: false, example: '普通客户通用线路' })
     @IsOptional()
     @IsString({ message: '备注必须是字符串' })
@@ -89,8 +93,9 @@ export class TbSrmRouteDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_srm_route_alias', ['alias'], { unique: true })
-@Index('idx_tb_srm_route_type_sort', ['type', 'sort'])
+@Index('idx_tb_srm_route_type_priority', ['type', 'priority'])
 @Index('idx_tb_srm_route_status', ['status'])
+@Index('idx_tb_srm_route_owner_user_uid', ['ownerUserUid'])
 @Entity({ name: 'tb_srm_route', comment: 'SRM 短信路由表' })
 export class TbSrmRoute extends DataBaseByAdapter {
     @Column({ name: TbSrmRouteColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '路由名称' })
@@ -101,7 +106,7 @@ export class TbSrmRoute extends DataBaseByAdapter {
         type: 'varchar',
         length: 64,
         nullable: true,
-        comment: '路由别名：自定义的路由简称，全表唯一'
+        comment: '路由别名：创建时按 LSK + 归属人工号 + 路由类型 + 分段序号自动生成，全表唯一，创建后不可修改'
     })
     alias: string
 
@@ -110,19 +115,18 @@ export class TbSrmRoute extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        default: TbSrmRouteType.GENERAL,
         comment: TbSrmRouteTypeDefinition.comment
     })
     type: TbSrmRouteType
 
     @Column({
-        name: TbSrmRouteColumn.SORT,
+        name: TbSrmRouteColumn.PRIORITY,
         type: 'int',
         nullable: false,
-        default: 0,
-        comment: '排序：通用路由按排序从小到大依次尝试，数字越小越优先'
+        default: 10,
+        comment: '优先级：同类型路由按优先级从小到大依次尝试，1 最优先，最大 100'
     })
-    sort: number
+    priority: number
 
     @Column({
         name: TbSrmRouteColumn.STATUS,
@@ -133,6 +137,9 @@ export class TbSrmRoute extends DataBaseByAdapter {
         comment: TbSrmRouteStatusDefinition.comment
     })
     status: TbSrmRouteStatus
+
+    @Column({ name: TbSrmRouteColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '归属人账号UID' })
+    ownerUserUid: string
 
     @Column({ name: TbSrmRouteColumn.REMARK, type: 'varchar', length: 512, nullable: true, comment: '备注' })
     remark: string

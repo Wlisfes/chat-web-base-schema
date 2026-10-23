@@ -22,7 +22,7 @@ const {
     resolveRequestId
 } = require('../dist/src/utils')
 const { EnumOptionDto, EnumsResponseDto, ListResponseDto, PageListResponseDto, PageResponseDataDto } = require('../dist/src/decorator')
-const { BigintNumberTransformer, DataBaseDto } = require('../dist/src/utils')
+const { BigintNumberTransformer, DataBaseDto, VagueDto, fetchVagueKeyword, fetchVagueNumberKeyword } = require('../dist/src/utils')
 const requestContext = require('../dist/src/utils/modules/request-context')
 const financeSchema = require('../dist/src/schema/chat-web-finance-mysql')
 const crmSchema = require('../dist/src/schema/chat-web-crm-mysql')
@@ -249,4 +249,20 @@ test('bigint 金额字段从数据库读取时转换为 number', () => {
     assert.equal(BigintNumberTransformer.from('0'), 0)
     assert.equal(BigintNumberTransformer.from(null), null)
     assert.equal(BigintNumberTransformer.to(1008600), 1008600)
+})
+test('通用模糊搜索 DTO 不进入基础表 DTO，只用于查询入参', () => {
+    const base = new DataBaseDto()
+    assert.equal('vague' in base, false)
+    assert.equal(validateSync(plainToInstance(VagueDto, {})).length, 0)
+    assert.equal(validateSync(plainToInstance(VagueDto, { vague: '8613' })).length, 0)
+    assert.equal(validateSync(plainToInstance(VagueDto, { vague: 123 })).length, 1)
+    assert.equal(validateSync(plainToInstance(VagueDto, { vague: 'a'.repeat(65) })).length, 1)
+})
+
+test('模糊搜索关键词去空白，号码关键词再去掉开头的 + 号', () => {
+    assert.equal(fetchVagueKeyword('  8613  '), '8613')
+    assert.equal(fetchVagueKeyword('   '), '')
+    assert.equal(fetchVagueKeyword(), '')
+    assert.equal(fetchVagueNumberKeyword(' +8613 '), '8613')
+    assert.equal(fetchVagueNumberKeyword('8613'), '8613')
 })

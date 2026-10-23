@@ -48,7 +48,7 @@ export enum TbSrmRouteRuleField {
 
 export const TbSrmRouteRuleFieldDefinition = defineEnumMetadata(TbSrmRouteRuleField, '条件字段', {
     [TbSrmRouteRuleField.COUNTRY]: { label: '方向', description: '取值为 Skyline 国家/地区主键', type: 'info' },
-    [TbSrmRouteRuleField.TYPE]: { label: '短信类型', description: '取值为 MRKT、NTFY、SOTP', type: 'info' },
+    [TbSrmRouteRuleField.TYPE]: { label: '短信类型', description: '取值与短信应用类型 TbSmsAppType 一致：MRKT、NTFY、SOTP', type: 'info' },
     [TbSrmRouteRuleField.PREFIX]: { label: '号码段', description: '取值为含国际区号、不带 + 号的号码前缀', type: 'info' }
 })
 

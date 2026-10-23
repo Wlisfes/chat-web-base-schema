@@ -1,12 +1,14 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsOptional, IsString, Length, Matches, Max, MaxLength, Min } from 'class-validator'
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, Matches, Max, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
+import { TbSmsAppType, TbSmsAppTypeDefinition } from '@/schema/chat-web-sms-mysql'
 
 export enum TbSrmChannelColumn {
     KEY_ID = 'key_id',
     ALIAS = 'alias',
+    NAME = 'name',
     TYPE = 'type',
     COUNTRY_KEY_ID = 'country_key_id',
     OWNER_USER_UID = 'owner_user_uid',
@@ -20,19 +22,7 @@ export enum TbSrmChannelColumn {
     MODIFY_TIME = 'modify_time'
 }
 
-/** 通道短信类型：取值与短信应用类型 TbSmsAppType 一致，通道只承载同类型的短信。 */
-export enum TbSrmChannelType {
-    MRKT = 'MRKT',
-    NTFY = 'NTFY',
-    SOTP = 'SOTP'
-}
-
-export const TbSrmChannelTypeDefinition = defineEnumMetadata(TbSrmChannelType, '通道类型', {
-    [TbSrmChannelType.MRKT]: { label: '营销短信', description: '用于营销推广内容', type: 'orange' },
-    [TbSrmChannelType.NTFY]: { label: '通知短信', description: '用于业务通知内容', type: 'info' },
-    [TbSrmChannelType.SOTP]: { label: '验证码', description: '用于一次性验证码', type: 'success' }
-})
-
+/** 通道短信类型直接使用短信应用类型 TbSmsAppType，通道只承载同类型的短信。 */
 export enum TbSrmChannelStatus {
     DISABLE = 'disable',
     ENABLE = 'enable'
@@ -46,21 +36,27 @@ export const TbSrmChannelStatusDefinition = defineEnumMetadata(TbSrmChannelStatu
 export class TbSrmChannelDto extends DataBaseByDto {
     @ApiProperty({
         description:
-            '通道别名：创建时按 创建人工号-方向MCC-类型-序号 自动生成（如 1024-460-MRKT-01），全表唯一，创建后不可修改，用于队列命名',
+            '通道别名：创建时按 TSK + 归属人工号 + 类型 + 分段序号自动生成（如 TSK1233-MRKT-A001），全表唯一，创建后不可修改，用于队列命名',
         example: '1024-460-MRKT-01'
     })
     @IsString({ message: '通道别名必须是字符串' })
     @Matches(/^[A-Za-z0-9][A-Za-z0-9-]{1,31}$/, { message: '通道别名只能包含字母、数字和中划线，长度2-32位' })
     alias: string
 
+    @ApiProperty({ description: '通道名称', example: '香港营销主通道' })
+    @IsString({ message: '通道名称必须是字符串' })
+    @IsNotEmpty({ message: '通道名称必填' })
+    @MaxLength(64, { message: '通道名称长度不能超过64位' })
+    name: string
+
     @ApiProperty({
-        description: TbSrmChannelTypeDefinition.comment,
-        enum: TbSrmChannelType,
-        enumName: 'TbSrmChannelType',
-        example: TbSrmChannelType.MRKT
+        description: TbSmsAppTypeDefinition.comment,
+        enum: TbSmsAppType,
+        enumName: 'TbSmsAppType',
+        example: TbSmsAppType.MRKT
     })
-    @IsEnum(TbSrmChannelType, { message: '通道类型格式错误' })
-    type: TbSrmChannelType
+    @IsEnum(TbSmsAppType, { message: '短信类型格式错误' })
+    type: TbSmsAppType
 
     @ApiProperty({
         description: '方向：Skyline 国家/地区主键；通道只发送该方向的短信，只能绑定该方向激活的端口，只能加入同方向的路由，创建后不可修改',
@@ -71,9 +67,9 @@ export class TbSrmChannelDto extends DataBaseByDto {
     @Min(1, { message: '方向必须大于0' })
     countryKeyId: number
 
-    @ApiProperty({ description: '负责人账号UID：当前负责该通道的员工，可修改', example: '2149446185344106496' })
-    @IsString({ message: '负责人账号UID必须是字符串' })
-    @Length(1, 19, { message: '负责人账号UID长度不能超过19位' })
+    @ApiProperty({ description: '归属人账号UID：当前负责该通道的员工，可修改', example: '2149446185344106496' })
+    @IsString({ message: '归属人账号UID必须是字符串' })
+    @Length(1, 19, { message: '归属人账号UID长度不能超过19位' })
     ownerUserUid: string
 
     @ApiProperty({ description: '端口发送间隔：同一端口两条短信之间的最小间隔毫秒数', example: 3000 })
@@ -117,18 +113,21 @@ export class TbSrmChannel extends DataBaseByAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: '通道别名：按 创建人工号-方向MCC-类型-序号 自动生成，全表唯一，创建后不可修改，用于队列命名'
+        comment: '通道别名：创建时按 TSK + 归属人工号 + 类型 + 分段序号自动生成，全表唯一，创建后不可修改，用于队列命名'
     })
     alias: string
+
+    @Column({ name: TbSrmChannelColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '通道名称' })
+    name: string
 
     @Column({
         name: TbSrmChannelColumn.TYPE,
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbSrmChannelTypeDefinition.comment
+        comment: TbSmsAppTypeDefinition.comment
     })
-    type: TbSrmChannelType
+    type: TbSmsAppType
 
     @Column({
         name: TbSrmChannelColumn.COUNTRY_KEY_ID,
@@ -138,7 +137,7 @@ export class TbSrmChannel extends DataBaseByAdapter {
     })
     countryKeyId: number
 
-    @Column({ name: TbSrmChannelColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '负责人账号UID' })
+    @Column({ name: TbSrmChannelColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '归属人账号UID' })
     ownerUserUid: string
 
     @Column({

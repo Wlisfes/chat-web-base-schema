@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS `tb_srm_channel` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
-    `alias` varchar(32) NOT NULL COMMENT '通道别名：按 创建人工号-方向MCC-类型-序号 自动生成，全表唯一，创建后不可修改，用于队列命名',
-    `type` varchar(32) NOT NULL COMMENT '通道类型：MRKT=营销短信（用于营销推广内容）；NTFY=通知短信（用于业务通知内容）；SOTP=验证码（用于一次性验证码）',
+    `alias` varchar(32) NOT NULL COMMENT '通道别名：创建时按 TSK + 归属人工号 + 类型 + 分段序号自动生成，全表唯一，创建后不可修改，用于队列命名',
+    `name` varchar(64) NOT NULL COMMENT '通道名称',
+    `type` varchar(32) NOT NULL COMMENT '短信应用类型：MRKT=营销短信（用于营销推广内容）；NTFY=通知短信（用于业务通知内容）；SOTP=验证码（用于一次性验证码）',
     `country_key_id` int NOT NULL COMMENT '方向：Skyline 国家/地区主键，创建后不可修改',
-    `owner_user_uid` varchar(19) NOT NULL COMMENT '负责人账号UID',
+    `owner_user_uid` varchar(19) NOT NULL COMMENT '归属人账号UID',
     `send_interval` int NOT NULL DEFAULT 3000 COMMENT '端口发送间隔：同一端口两条短信之间的最小间隔毫秒数',
     `max_retry` int NOT NULL DEFAULT 3 COMMENT '最大重试次数：无可用端口或下发失败时的重试上限',
     `status` varchar(32) NOT NULL DEFAULT 'disable' COMMENT '通道状态：disable=停用（通道暂停消费，消息保留在通道队列）；enable=启用（通道正常接收和消费消息）',

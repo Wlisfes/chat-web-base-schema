@@ -49,7 +49,7 @@ export enum TbSkylineChunkModuleType {
     CHUNK_CRM_USER_SOURCE = 'CHUNK_CRM_USER_SOURCE',
     CHUNK_SRM_USER_SOURCE = 'CHUNK_SRM_USER_SOURCE',
     CHUNK_SRM_SIMBANK_MODEL = 'CHUNK_SRM_SIMBANK_MODEL',
-    CHUNK_SRM_NUMBER_RANGE = 'CHUNK_SRM_NUMBER_RANGE',
+    CHUNK_SRM_NUMBER_RANGE = 'CHUNK_SRM_NUMBER_RANGE'
 }
 
 export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineChunkModuleType, '枚举类型编码', {

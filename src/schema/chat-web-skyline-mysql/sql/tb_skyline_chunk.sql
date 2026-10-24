@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS `tb_skyline_chunk` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
     `pid` int NULL COMMENT '父枚举项主键；根节点为空',
     `module` varchar(32) NOT NULL DEFAULT 'CHUNK_SKYLINE' COMMENT '枚举所属模块：CHUNK_SKYLINE=SKYLINE；CHUNK_CRM=CRM；CHUNK_SRM=SRM',
-    `type` varchar(128) NOT NULL COMMENT '枚举类型编码：CHUNK_SKYLINE_USER_POST=用户岗位（Skyline 账号岗位，仅一级枚举项，适用于普通下拉选择）；CHUNK_SKYLINE_USER_LEVEL=用户职级（Skyline 账号职级，P1-P8 专业序列、M1-M8 管理序列，仅一级枚举项）；CHUNK_SKYLINE_CONTACT_TYPE=联系方式（系统通用联系方式类型，仅一级枚举项）；CHUNK_CRM_USER_SOURCE=客户注册来源（CRM 客户注册来源，仅一级枚举项）；CHUNK_SRM_USER_SOURCE=供应商注册来源（SRM 供应商注册来源，初始数据复制自客户注册来源）；CHUNK_SRM_SIMBANK_MODEL=设备型号（SRM SIMBANK 设备型号，仅一级枚举项）',
+    `type` varchar(128) NOT NULL COMMENT '枚举类型编码：CHUNK_SKYLINE_USER_POST=用户岗位（Skyline 账号岗位，仅一级枚举项，适用于普通下拉选择）；CHUNK_SKYLINE_USER_LEVEL=用户职级（Skyline 账号职级，P1-P8 专业序列、M1-M8 管理序列，仅一级枚举项）；CHUNK_SKYLINE_CONTACT_TYPE=联系方式（系统通用联系方式类型，仅一级枚举项）；CHUNK_CRM_USER_SOURCE=客户注册来源（CRM 客户注册来源，仅一级枚举项）；CHUNK_SRM_USER_SOURCE=供应商注册来源（SRM 供应商注册来源，初始数据复制自客户注册来源）；CHUNK_SRM_SIMBANK_MODEL=设备型号（SRM SIMBANK 设备型号，仅一级枚举项）；CHUNK_SRM_NUMBER_RANGE=号段码（SRM 路由规则号段码）',
     `name` varchar(128) NOT NULL COMMENT '枚举项显示名称',
     `value` varchar(128) NOT NULL COMMENT '枚举项业务值',
     `json` text NOT NULL DEFAULT ('{}') COMMENT '枚举项扩展配置，默认空对象',

@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer'
 import { ApiPropertyOptional } from '@nestjs/swagger'
 import { IsInt, IsOptional, Max, Min } from 'class-validator'
+import { fetchVagueKeyword } from './vague'
 import { Omix } from '@/types'
 
 /**
@@ -28,7 +29,12 @@ export class PageDto {
 
 /**分页参数解构**/
 export function fetchUntiePagination(base: PageDto) {
-    return { ...base, page: base.page ?? 1, size: base.size ?? 50 }
+    return { 
+        ...base,
+        page: base.page ?? 1,
+        size: base.size ?? 50,
+        vague: fetchVagueKeyword((base as never as Omix).vague)
+    }
 }
 
 /**

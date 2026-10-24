@@ -1,19 +1,30 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsInt, Min } from 'class-validator'
-import { DataBaseByAdapter, DataBaseByDto } from '@/utils'
+import { IsEnum, IsInt, Min } from 'class-validator'
+import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbSrmRouteAppColumn {
     KEY_ID = 'key_id',
     APP_KEY_ID = 'app_key_id',
     USER_KEY_ID = 'user_key_id',
     ROUTE_KEY_ID = 'route_key_id',
+    STATUS = 'status',
     CREATE_BY = 'create_by',
     MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
 }
+
+export enum TbSrmRouteAppStatus {
+    DISABLE = 'disable',
+    ENABLE = 'enable'
+}
+
+export const TbSrmRouteAppStatusDefinition = defineEnumMetadata(TbSrmRouteAppStatus, '短信应用绑定状态', {
+    [TbSrmRouteAppStatus.DISABLE]: { label: '停用', description: '绑定暂不生效，按未绑定走同类型路由', type: 'error' },
+    [TbSrmRouteAppStatus.ENABLE]: { label: '启用', description: '短信优先走该路由', type: 'success' }
+})
 
 export class TbSrmRouteAppDto extends DataBaseByDto {
     @ApiProperty({ description: '短信应用主键：SMS 短信应用主键；一个应用只能绑定一个路由', example: 1001 })
@@ -33,9 +44,18 @@ export class TbSrmRouteAppDto extends DataBaseByDto {
     @IsInt({ message: '路由ID必须是整数' })
     @Min(1, { message: '路由ID必须大于0' })
     routeKeyId: number
+
+    @ApiProperty({
+        description: TbSrmRouteAppStatusDefinition.comment,
+        enum: TbSrmRouteAppStatus,
+        enumName: 'TbSrmRouteAppStatus',
+        example: TbSrmRouteAppStatus.ENABLE
+    })
+    @IsEnum(TbSrmRouteAppStatus, { message: '短信应用绑定状态格式错误' })
+    status: TbSrmRouteAppStatus
 }
 
-/** 短信应用绑定路由：只能绑定同类型路由；未绑定或绑定路由不可用时，按优先级使用同类型路由。 */
+/** 短信应用绑定路由：只能绑定同类型路由；绑定停用或绑定路由不可用时，按优先级使用同类型路由。 */
 @Index('uk_tb_srm_route_app_app_key_id', ['appKeyId'], { unique: true })
 @Index('idx_tb_srm_route_app_user_key_id', ['userKeyId'])
 @Index('idx_tb_srm_route_app_route_key_id', ['routeKeyId'])
@@ -49,4 +69,14 @@ export class TbSrmRouteApp extends DataBaseByAdapter {
 
     @Column({ name: TbSrmRouteAppColumn.ROUTE_KEY_ID, type: 'int', nullable: false, comment: '路由ID：SRM 路由主键' })
     routeKeyId: number
+
+    @Column({
+        name: TbSrmRouteAppColumn.STATUS,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        default: TbSrmRouteAppStatus.ENABLE,
+        comment: TbSrmRouteAppStatusDefinition.comment
+    })
+    status: TbSrmRouteAppStatus
 }

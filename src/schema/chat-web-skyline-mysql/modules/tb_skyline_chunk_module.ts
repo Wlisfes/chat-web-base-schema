@@ -48,7 +48,8 @@ export enum TbSkylineChunkModuleType {
     CHUNK_SKYLINE_CONTACT_TYPE = 'CHUNK_SKYLINE_CONTACT_TYPE',
     CHUNK_CRM_USER_SOURCE = 'CHUNK_CRM_USER_SOURCE',
     CHUNK_SRM_USER_SOURCE = 'CHUNK_SRM_USER_SOURCE',
-    CHUNK_SRM_SIMBANK_MODEL = 'CHUNK_SRM_SIMBANK_MODEL'
+    CHUNK_SRM_SIMBANK_MODEL = 'CHUNK_SRM_SIMBANK_MODEL',
+    CHUNK_SRM_NUMBER_RANGE = 'CHUNK_SRM_NUMBER_RANGE',
 }
 
 export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineChunkModuleType, '枚举类型编码', {
@@ -81,6 +82,11 @@ export const TbSkylineChunkModuleTypeDefinition = defineEnumMetadata(TbSkylineCh
         label: '设备型号',
         description: 'SRM SIMBANK 设备型号，仅一级枚举项',
         type: 'lime'
+    },
+    [TbSkylineChunkModuleType.CHUNK_SRM_NUMBER_RANGE]: {
+        label: '号段码',
+        description: 'SRM 路由规则号段码',
+        type: 'pink'
     }
 })
 

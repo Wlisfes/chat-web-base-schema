@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, Max, MaxLength, Min } from 'class-validator'
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
 import { DataBaseByAdapter, DataBaseByDto, defineEnumMetadata } from '@/utils'
 
 export enum TbSrmRouteColumn {
@@ -11,7 +11,6 @@ export enum TbSrmRouteColumn {
     TYPE = 'type',
     PRIORITY = 'priority',
     STATUS = 'status',
-    OWNER_USER_UID = 'owner_user_uid',
     REMARK = 'remark',
     CREATE_BY = 'create_by',
     MODIFY_BY = 'modify_by',
@@ -50,8 +49,8 @@ export class TbSrmRouteDto extends DataBaseByDto {
     name: string
 
     @ApiProperty({
-        description: '路由别名：创建时按 LSK + 归属人工号 + 路由类型 + 分段序号自动生成，全表唯一，创建后不可修改',
-        example: 'LSK1233-MRKT-A001',
+        description: '路由别名：创建后按 LSK + 主键 + 路由类型自动生成，例如 LSK1002001-MRKT，全表唯一，创建后不可修改',
+        example: 'LSK1002001-MRKT',
         required: false
     })
     @IsOptional()
@@ -84,11 +83,6 @@ export class TbSrmRouteDto extends DataBaseByDto {
     @IsEnum(TbSrmRouteStatus, { message: '路由状态格式错误' })
     status: TbSrmRouteStatus
 
-    @ApiProperty({ description: '归属人账号UID：当前负责该路由的员工，可修改', example: '2149446185344106496' })
-    @IsString({ message: '归属人账号UID必须是字符串' })
-    @Length(1, 19, { message: '归属人账号UID长度不能超过19位' })
-    ownerUserUid: string
-
     @ApiProperty({ description: '备注', required: false, example: '普通客户通用线路' })
     @IsOptional()
     @IsString({ message: '备注必须是字符串' })
@@ -99,7 +93,6 @@ export class TbSrmRouteDto extends DataBaseByDto {
 @Index('uk_tb_srm_route_alias', ['alias'], { unique: true })
 @Index('idx_tb_srm_route_type_priority', ['type', 'priority'])
 @Index('idx_tb_srm_route_status', ['status'])
-@Index('idx_tb_srm_route_owner_user_uid', ['ownerUserUid'])
 @Entity({ name: 'tb_srm_route', comment: 'SRM 短信路由表' })
 export class TbSrmRoute extends DataBaseByAdapter {
     @Column({ name: TbSrmRouteColumn.NAME, type: 'varchar', length: 64, nullable: false, comment: '路由名称' })
@@ -110,7 +103,7 @@ export class TbSrmRoute extends DataBaseByAdapter {
         type: 'varchar',
         length: 64,
         nullable: true,
-        comment: '路由别名：创建时按 LSK + 归属人工号 + 路由类型 + 分段序号自动生成，全表唯一，创建后不可修改'
+        comment: '路由别名：创建后按 LSK + 主键 + 路由类型自动生成，例如 LSK1002001-MRKT，全表唯一，创建后不可修改'
     })
     alias: string
 
@@ -141,9 +134,6 @@ export class TbSrmRoute extends DataBaseByAdapter {
         comment: TbSrmRouteStatusDefinition.comment
     })
     status: TbSrmRouteStatus
-
-    @Column({ name: TbSrmRouteColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '归属人账号UID' })
-    ownerUserUid: string
 
     @Column({ name: TbSrmRouteColumn.REMARK, type: 'varchar', length: 512, nullable: true, comment: '备注' })
     remark: string

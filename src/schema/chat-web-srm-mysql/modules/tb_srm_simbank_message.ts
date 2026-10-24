@@ -21,8 +21,6 @@ export enum TbSrmSimbankMessageColumn {
     SEND_TIME = 'send_time',
     STATUS_CODE = 'status_code',
     STATUS_MESSAGE = 'status_message',
-    TASK_ID = 'task_id',
-    TASK_NAME = 'task_name',
     CHANNEL_KEY_ID = 'channel_key_id',
     CHANNEL_ALIAS = 'channel_alias',
     CHANNEL_OWNER_USER_UID = 'channel_owner_user_uid',
@@ -196,18 +194,6 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
     @MaxLength(512, { message: '状态说明长度不能超过512位' })
     statusMessage: string
 
-    @ApiProperty({ description: '任务ID：发送短信所属的任务主键', example: '2281665656346656771', required: false })
-    @IsOptional()
-    @IsString({ message: '任务ID必须是字符串' })
-    @MaxLength(19, { message: '任务ID长度不能超过19位' })
-    taskId: string
-
-    @ApiProperty({ description: '任务名称快照', example: '验证码批量发送', required: false })
-    @IsOptional()
-    @IsString({ message: '任务名称必须是字符串' })
-    @MaxLength(128, { message: '任务名称长度不能超过128位' })
-    taskName: string
-
     @ApiProperty({ description: '通道ID：发送时使用的通道主键', example: 1001, required: false })
     @IsOptional()
     @Type(() => Number)
@@ -304,7 +290,6 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
     price: number
 }
 
-@Index('idx_tb_srm_simbank_message_task_create_time', ['taskId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_channel_create_time', ['channelKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_simbank_create_time', ['simbankKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_port_create_time', ['portKeyId', 'createTime'])
@@ -423,18 +408,6 @@ export class TbSrmSimbankMessage extends DataBaseAdapter {
         comment: '状态说明：设备返回的状态描述'
     })
     statusMessage: string
-
-    @Column({
-        name: TbSrmSimbankMessageColumn.TASK_ID,
-        type: 'varchar',
-        length: 19,
-        nullable: true,
-        comment: '任务ID：发送短信所属的任务主键'
-    })
-    taskId: string
-
-    @Column({ name: TbSrmSimbankMessageColumn.TASK_NAME, type: 'varchar', length: 128, nullable: true, comment: '任务名称快照' })
-    taskName: string
 
     @Column({ name: TbSrmSimbankMessageColumn.CHANNEL_KEY_ID, type: 'int', nullable: true, comment: '通道ID：发送时使用的通道主键' })
     channelKeyId: number

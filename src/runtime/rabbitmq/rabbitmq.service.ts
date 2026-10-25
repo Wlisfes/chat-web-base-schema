@@ -14,6 +14,8 @@ const DEFAULT_RABBITMQ_PREFETCH = 10
 interface RabbitmqConsumer {
     queue: string
     handler: RabbitmqTypes.RabbitmqConsumeHandler
+    /** 当前通道上的消费者标识；取消订阅时使用，重连后会更新。 */
+    consumerTag?: string
 }
 
 function requiredString(name: string, value: unknown): string {
@@ -130,11 +132,37 @@ export class RabbitmqService implements OnApplicationBootstrap, OnApplicationShu
         const channel = this.getChannel()
         const { persistent = true, ...rest } = options
         const content = Buffer.from(JSON.stringify(payload))
-        await new Promise<void>((resolve, reject) => {
+        return await new Promise<void>((resolve, reject) => {
             channel.publish(exchange, routingKey, content, { ...rest, persistent, contentType: 'application/json' }, error =>
                 error ? reject(error instanceof Error ? error : new Error(String(error))) : resolve()
             )
         })
+    }
+
+    /** 声明队列。用于运行时才知道名称的队列，例如按通道拆分的队列；声明是幂等的，参数必须与已有队列一致。 */
+    public async assertQueue(queue: string, options: RabbitmqTypes.RabbitmqQueueOptions = { durable: true }): Promise<void> {
+        await this.getChannel().assertQueue(queue, options)
+    }
+
+    /** 把队列绑定到交换机；绑定是幂等的。 */
+    public async bindQueue(queue: string, exchange: string, routingKey: string): Promise<void> {
+        await this.getChannel().bindQueue(queue, exchange, routingKey)
+    }
+
+    /** 取消队列消费者；队列和其中的消息保留，之后可再次 consume。 */
+    public async cancel(queue: string): Promise<void> {
+        const removed = this.consumers.filter(consumer => consumer.queue === queue)
+        if (removed.length === 0) return
+        this.consumers.splice(0, this.consumers.length, ...this.consumers.filter(consumer => consumer.queue !== queue))
+        for (const consumer of removed) {
+            if (this.channel && consumer.consumerTag) await this.channel.cancel(consumer.consumerTag)
+        }
+        this.logger.log(`RabbitMQ消费者已取消：${queue}`)
+    }
+
+    /** 是否已注册某个队列的消费者。 */
+    public isConsuming(queue: string): boolean {
+        return this.consumers.some(consumer => consumer.queue === queue)
     }
 
     /** 注册队列消费者；断线重连后自动恢复订阅。 */
@@ -158,9 +186,10 @@ export class RabbitmqService implements OnApplicationBootstrap, OnApplicationShu
     }
 
     private async subscribe(channel: ConfirmChannel, consumer: RabbitmqConsumer): Promise<void> {
-        await channel.consume(consumer.queue, message => {
+        const { consumerTag } = await channel.consume(consumer.queue, message => {
             if (message) void this.handleMessage(channel, consumer, message)
         })
+        consumer.consumerTag = consumerTag
         this.logger.log(`RabbitMQ消费者已订阅：${consumer.queue}`)
     }
 

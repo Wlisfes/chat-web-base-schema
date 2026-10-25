@@ -36,6 +36,9 @@ export interface RabbitmqPublishOptions extends Pick<Options.Publish, 'messageId
     persistent?: boolean
 }
 
+/** 运行时声明队列的选项。 */
+export type RabbitmqQueueOptions = Options.AssertQueue
+
 /** 消费者处理结果：确认、重新入队或拒绝（进入死信）。 */
 export type RabbitmqConsumeAction = 'ack' | 'requeue' | 'reject'
 

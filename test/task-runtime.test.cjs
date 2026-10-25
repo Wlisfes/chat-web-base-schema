@@ -82,6 +82,32 @@ test('RabbitMQ 消费结果按回调返回值确认、重新入队或拒绝，�
     ])
 })
 
+test('RabbitMQ 取消消费者后不再随重连恢复，可再次订阅', async () => {
+    const calls = []
+    let tag = 0
+    const channel = {
+        on: () => {},
+        prefetch: async () => {},
+        consume: async queue => (calls.push(['consume', queue]), { consumerTag: 'tag-' + ++tag }),
+        cancel: async consumerTag => calls.push(['cancel', consumerTag])
+    }
+    const service = new RabbitmqService(config({}), { vhost: '/chat-sms' })
+    await service.openChannel({ createConfirmChannel: async () => channel })
+    await service.consume('chat.sms.channel.A', async () => 'ack')
+    await service.consume('chat.sms.channel.B', async () => 'ack')
+    assert.equal(service.isConsuming('chat.sms.channel.A'), true)
+    await service.cancel('chat.sms.channel.A')
+    assert.equal(service.isConsuming('chat.sms.channel.A'), false)
+    await service.cancel('chat.sms.channel.A')
+    await service.openChannel({ createConfirmChannel: async () => channel })
+    assert.deepEqual(calls, [
+        ['consume', 'chat.sms.channel.A'],
+        ['consume', 'chat.sms.channel.B'],
+        ['cancel', 'tag-1'],
+        ['consume', 'chat.sms.channel.B']
+    ])
+})
+
 test('RabbitMQ 通道未就绪时发布直接失败，便于调用方稍后补发', async () => {
     const service = new RabbitmqService(config({}), { vhost: '/chat-task' })
     await assert.rejects(service.publish('ex', 'key', {}), /RabbitMQ 通道尚未就绪/)

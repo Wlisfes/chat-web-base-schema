@@ -121,6 +121,21 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
         await this.getClient().del(key)
     }
 
+    /** 读取整个哈希；不存在时返回空对象。 */
+    async hGetAll(key: string): Promise<Record<string, string>> {
+        return { ...(await this.getClient().hGetAll(key)) } as Record<string, string>
+    }
+
+    /** 写入哈希字段，不设置过期时间。 */
+    async hSet(key: string, field: string, value: string): Promise<void> {
+        await this.getClient().hSet(key, field, value)
+    }
+
+    /** 删除哈希字段。 */
+    async hDel(key: string, field: string): Promise<void> {
+        await this.getClient().hDel(key, field)
+    }
+
     async rotate(oldKey: string, newKey: string, seconds: number, value: string): Promise<void> {
         await this.getClient().multi().setEx(newKey, seconds, value).del(oldKey).exec()
     }

@@ -35,7 +35,9 @@ export const DEFAULT_REQUEST_LOGGING_IGNORED_PATHS = [
 ] as const
 
 const ignoredPaths = new Set<string>(DEFAULT_REQUEST_LOGGING_IGNORED_PATHS)
-const ignoredPathPrefixes = ['/api/swagger/']
+const ignoredPathPrefixes = ['/api/swagger/', '/doc.html', '/services.json']
+const staticResourcePattern = /\.(?:png|jpe?g|gif|svg|webp|ico|bmp|pdf|zip|xlsx|xls|docx|doc|csv)$/i
+const attachmentPathPattern = /\/(?:attachment|attachments|upload|uploads|download|downloads|file|files)\/.+/i
 
 const SENSITIVE_KEYS = new Set([
     'access_token',
@@ -149,8 +151,35 @@ function resolveClientIp(request: Request): string {
     return value?.trim() || request.ip || request.socket.remoteAddress || ''
 }
 
-function isIgnoredPath(pathName: string): boolean {
-    return ignoredPaths.has(pathName) || ignoredPathPrefixes.some(prefix => pathName.startsWith(prefix))
+function requestPathname(request: Request): string {
+    const raw = request.originalUrl || request.url || request.path || '/'
+    const pathname = raw.split('?')[0] || '/'
+    return pathname.startsWith('/') ? pathname : `/${pathname}`
+}
+
+function isDocumentOrStaticPath(pathname: string): boolean {
+    if (ignoredPaths.has(pathname) || ignoredPathPrefixes.some(prefix => pathname.startsWith(prefix) || pathname.includes(prefix)))
+        return true
+    if (pathname.endsWith('/api/swagger') || pathname.endsWith('/api/swagger-json') || pathname.includes('/api/swagger/')) return true
+    if (staticResourcePattern.test(pathname) || attachmentPathPattern.test(pathname)) return true
+    return false
+}
+
+function isStaticOrAttachmentResponse(response: Response): boolean {
+    const contentType = String(response.getHeader?.('content-type') ?? '').toLowerCase()
+    const disposition = String(response.getHeader?.('content-disposition') ?? '').toLowerCase()
+    if (disposition.includes('attachment')) return true
+    if (contentType.startsWith('image/')) return true
+    return (
+        contentType.includes('application/pdf') ||
+        contentType.includes('application/zip') ||
+        contentType.includes('application/octet-stream')
+    )
+}
+
+function shouldIgnoreRequestLog(request: Request, response?: Response): boolean {
+    if (isDocumentOrStaticPath(requestPathname(request))) return true
+    return response ? isStaticOrAttachmentResponse(response) : false
 }
 
 function captureResponseChunk(chunk: unknown): number | undefined {
@@ -193,13 +222,13 @@ export function createRequestLoggingMiddleware(serviceName: string): RequestHand
         response.setHeader('x-request-id', requestId)
 
         let capturedCode: number | undefined
-        if (!isIgnoredPath(currentRequest.path)) attachRequestBodyCapture(currentRequest)
+        if (!shouldIgnoreRequestLog(currentRequest)) attachRequestBodyCapture(currentRequest)
         attachBusinessCodeCapture(response, code => {
             capturedCode = code
         })
 
         response.once('finish', () => {
-            if (isIgnoredPath(currentRequest.path)) return
+            if (shouldIgnoreRequestLog(currentRequest, response)) return
             const traceContext = getActiveTraceContext()
             const statusCode = resolveBusinessStatusCode(response, capturedCode)
             const payload = {

@@ -300,3 +300,44 @@ test('请求日志中间件截断超长原始入参时仍隐藏敏感字段', ()
     assert.match(messages[0].body, /^\{"password":"\[已隐藏\]","content":"x+\.\.\.\[已截断\]$/)
     assert.equal(messages[0].body.includes('secret'), false)
 })
+
+test('接口文档静态资源和改写后的 path 不记录访问日志', () => {
+    const messages = []
+    const originalLog = Logger.prototype.log
+    Logger.prototype.log = message => messages.push(message)
+    try {
+        const cases = [
+            { originalUrl: '/api/swagger/swagger-ui-bundle.js', path: '/swagger-ui-bundle.js' },
+            { originalUrl: '/api/swagger/favicon-32x32.png', path: '/favicon-32x32.png' },
+            { originalUrl: '/files/report.pdf', path: '/files/report.pdf' }
+        ]
+        for (const item of cases) {
+            let finish
+            const request = {
+                headers: {},
+                method: 'GET',
+                originalUrl: item.originalUrl,
+                path: item.path,
+                query: {},
+                params: {},
+                ip: '127.0.0.1',
+                socket: {}
+            }
+            const response = {
+                statusCode: 200,
+                setHeader() {},
+                getHeader() {
+                    return undefined
+                },
+                once(_name, listener) {
+                    finish = listener
+                }
+            }
+            createRequestLoggingMiddleware('test-service')(request, response, () => undefined)
+            finish()
+        }
+    } finally {
+        Logger.prototype.log = originalLog
+    }
+    assert.equal(messages.length, 0)
+})

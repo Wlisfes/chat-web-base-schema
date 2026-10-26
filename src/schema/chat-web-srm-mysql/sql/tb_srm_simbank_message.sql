@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `tb_srm_simbank_message` (
     `segments` int NOT NULL DEFAULT 1 COMMENT '计费条数：长短信按拆分后的段数计费，GSM7 单条160字符/每段153字符，UCS2 单条70字符/每段67字符',
     `country_key_id` int NULL COMMENT '国家/地区：Finance 国家/地区主键，对方号码所在国家/地区',
     `mcc` varchar(4) NULL COMMENT 'MCC快照：对方号码所在国家/地区的移动国家代码',
-    `send_status` varchar(32) NULL COMMENT '发送状态：delivered=已送达（短信已送达接收号码）；submitted=提交成功（短信已提交到设备，等待最终发送结果）；undelivered=未送达（短信未能送达接收号码）；unknown=未知（未获取到明确的送达结果）',
+    `send_status` varchar(32) NULL COMMENT '发送状态：delivered=已送达（短信已送达接收号码）；failed=发送失败（设备发送短信失败）；rejected=提交失败（短信未能提交到设备）；submitted=提交成功（短信已提交到设备，等待设备发送）；success=发送成功（设备已发出短信，等待送达回执）；unknown=未知（未获取到明确的发送结果）',
     `send_time` datetime(3) NULL COMMENT '发送状态时间：发送状态变更时同步更新',
     `status_code` varchar(32) NULL COMMENT '状态码：设备返回的发送状态码',
     `status_message` varchar(512) NULL COMMENT '状态说明：设备返回的状态描述',

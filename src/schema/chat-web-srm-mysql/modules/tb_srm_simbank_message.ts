@@ -76,16 +76,20 @@ export const TbSrmSimbankMessageEncodingDefinition = defineEnumMetadata(TbSrmSim
 
 export enum TbSrmSimbankMessageSendStatus {
     DELIVERED = 'delivered',
+    FAILED = 'failed',
+    REJECTED = 'rejected',
     SUBMITTED = 'submitted',
-    UNDELIVERED = 'undelivered',
+    SUCCESS = 'success',
     UNKNOWN = 'unknown'
 }
 
 export const TbSrmSimbankMessageSendStatusDefinition = defineEnumMetadata(TbSrmSimbankMessageSendStatus, '发送状态', {
-    [TbSrmSimbankMessageSendStatus.SUBMITTED]: { label: '提交成功', description: '短信已提交到设备，等待最终发送结果', type: 'warning' },
+    [TbSrmSimbankMessageSendStatus.SUBMITTED]: { label: '提交成功', description: '短信已提交到设备，等待设备发送', type: 'warning' },
+    [TbSrmSimbankMessageSendStatus.REJECTED]: { label: '提交失败', description: '短信未能提交到设备', type: 'error' },
+    [TbSrmSimbankMessageSendStatus.SUCCESS]: { label: '发送成功', description: '设备已发出短信，等待送达回执', type: 'info' },
+    [TbSrmSimbankMessageSendStatus.FAILED]: { label: '发送失败', description: '设备发送短信失败', type: 'error' },
     [TbSrmSimbankMessageSendStatus.DELIVERED]: { label: '已送达', description: '短信已送达接收号码', type: 'success' },
-    [TbSrmSimbankMessageSendStatus.UNDELIVERED]: { label: '未送达', description: '短信未能送达接收号码', type: 'error' },
-    [TbSrmSimbankMessageSendStatus.UNKNOWN]: { label: '未知', description: '未获取到明确的送达结果', type: 'default' }
+    [TbSrmSimbankMessageSendStatus.UNKNOWN]: { label: '未知', description: '未获取到明确的发送结果', type: 'default' }
 })
 
 export class TbSrmSimbankMessageDto extends DataBaseDto {

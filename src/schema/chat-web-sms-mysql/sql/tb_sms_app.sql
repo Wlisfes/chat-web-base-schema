@@ -18,4 +18,4 @@ CREATE TABLE IF NOT EXISTS `tb_sms_app` (
     UNIQUE KEY `uk_tb_sms_app_user_alias` (`user_key_id`, `app_alias`),
     KEY `idx_tb_sms_app_user_key_id` (`user_key_id`),
     KEY `idx_tb_sms_app_status` (`status`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SMS 客户短信应用表';
+) ENGINE = InnoDB AUTO_INCREMENT = 1002001 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SMS 客户短信应用表';

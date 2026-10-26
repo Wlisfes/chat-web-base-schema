@@ -13,6 +13,11 @@ export interface FinanceFeignImplementation {
     ): Promise<FinanceFrozenSmsSummary[]>
     /**按国家/地区主键获取单个短信基础价格**/
     httpBaseFinanceFrozenSmsResolver(authorization: string, input: FinanceFrozenSmsResolverRequest): Promise<FinanceFrozenSmsSummary>
+    /**按国家/地区主键批量获取 simbank 基础成本价格**/
+    httpBaseFinanceColumnFrozenSimbankResolver(
+        authorization: string,
+        input: FinanceColumnFrozenSmsResolverRequest
+    ): Promise<FinanceFrozenSimbankSummary[]>
     /**按币种获取最新汇率**/
     httpBaseFinanceCurrencyExchangeResolver(
         authorization: string,
@@ -39,6 +44,9 @@ export interface FinanceFrozenSmsSummary {
     /**下行短信美元单价（放大百万倍存储值）。*/
     downUsd: number
 }
+
+/**财务服务 simbank 基础成本价格摘要，供 SRM 供应商报价流程使用；字段与短信基础价格一致。*/
+export type FinanceFrozenSimbankSummary = FinanceFrozenSmsSummary
 
 /**财务服务币种汇率数据。*/
 export interface FinanceCurrencyExchange {

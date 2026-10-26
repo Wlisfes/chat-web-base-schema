@@ -59,6 +59,15 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
         return this.dispatch('httpBaseFinanceFrozenSmsResolver', _authorization, _input)
     }
 
+    /**按国家/地区主键批量获取 simbank 基础成本价格**/
+    @FeignPost('/frozen/simbank/column/resolve')
+    async httpBaseFinanceColumnFrozenSimbankResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: FinanceTypes.FinanceColumnFrozenSmsResolverRequest
+    ): Promise<FinanceTypes.FinanceFrozenSimbankSummary[]> {
+        return this.dispatch('httpBaseFinanceColumnFrozenSimbankResolver', _authorization, _input)
+    }
+
     /**按币种获取最新汇率**/
     @FeignPost('/currency/exchange/resolve')
     async httpBaseFinanceCurrencyExchangeResolver(

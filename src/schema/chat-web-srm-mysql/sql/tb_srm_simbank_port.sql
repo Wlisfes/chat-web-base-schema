@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS `tb_srm_simbank_port` (
     `country_key_id` int NULL COMMENT '激活方向：Skyline 国家/地区主键；激活后必填',
     `insert_status` varchar(32) NOT NULL DEFAULT 'removed' COMMENT '插卡状态：inserted=已插卡（端口当前已插入 SIM 卡）；removed=未插卡（端口当前没有插入 SIM 卡）',
     `status` varchar(32) NOT NULL DEFAULT 'enable' COMMENT '端口状态：disable=禁用（端口已停用）；enable=启用（端口正常使用）',
+    `online` varchar(32) NOT NULL DEFAULT 'offline' COMMENT '在线状态：offline=离线（端口未连接）；online=在线（端口已连接）',
     `create_by` varchar(19) NOT NULL COMMENT '创建账号UID',
     `modify_by` varchar(19) NULL COMMENT '更新账号UID',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
@@ -21,5 +22,6 @@ CREATE TABLE IF NOT EXISTS `tb_srm_simbank_port` (
     KEY `idx_tb_srm_simbank_port_activate_status` (`activate_status`),
     KEY `idx_tb_srm_simbank_port_country_key_id` (`country_key_id`),
     KEY `idx_tb_srm_simbank_port_insert_status` (`insert_status`),
-    KEY `idx_tb_srm_simbank_port_status` (`status`)
+    KEY `idx_tb_srm_simbank_port_status` (`status`),
+    KEY `idx_tb_srm_simbank_port_online` (`online`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1002401 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SRM SIMBANK 端口表';

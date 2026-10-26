@@ -7,6 +7,7 @@ import { Type } from 'class-transformer'
 
 export enum TbSrmSimbankMessageColumn {
     KEY_ID = 'key_id',
+    MSG_ID = 'msg_id',
     SOURCE = 'source',
     TYPE = 'type',
     FROM_NUMBER = 'from_number',
@@ -75,19 +76,33 @@ export const TbSrmSimbankMessageEncodingDefinition = defineEnumMetadata(TbSrmSim
 
 export enum TbSrmSimbankMessageSendStatus {
     DELIVERED = 'delivered',
+    FAILED = 'failed',
+    REJECTED = 'rejected',
     SUBMITTED = 'submitted',
-    UNDELIVERED = 'undelivered',
+    SUCCESS = 'success',
     UNKNOWN = 'unknown'
 }
 
 export const TbSrmSimbankMessageSendStatusDefinition = defineEnumMetadata(TbSrmSimbankMessageSendStatus, '发送状态', {
-    [TbSrmSimbankMessageSendStatus.SUBMITTED]: { label: '提交成功', description: '短信已提交到设备，等待最终发送结果', type: 'warning' },
+    [TbSrmSimbankMessageSendStatus.SUBMITTED]: { label: '提交成功', description: '短信已提交到设备，等待设备发送', type: 'warning' },
+    [TbSrmSimbankMessageSendStatus.REJECTED]: { label: '提交失败', description: '短信未能提交到设备', type: 'error' },
+    [TbSrmSimbankMessageSendStatus.SUCCESS]: { label: '发送成功', description: '设备已发出短信，等待送达回执', type: 'info' },
+    [TbSrmSimbankMessageSendStatus.FAILED]: { label: '发送失败', description: '设备发送短信失败', type: 'error' },
     [TbSrmSimbankMessageSendStatus.DELIVERED]: { label: '已送达', description: '短信已送达接收号码', type: 'success' },
-    [TbSrmSimbankMessageSendStatus.UNDELIVERED]: { label: '未送达', description: '短信未能送达接收号码', type: 'error' },
-    [TbSrmSimbankMessageSendStatus.UNKNOWN]: { label: '未知', description: '未获取到明确的送达结果', type: 'default' }
+    [TbSrmSimbankMessageSendStatus.UNKNOWN]: { label: '未知', description: '未获取到明确的发送结果', type: 'default' }
 })
 
 export class TbSrmSimbankMessageDto extends DataBaseDto {
+    @ApiProperty({
+        description: '短信ID：SMS 提交时生成，同一条短信重投时保持不变',
+        example: 'c2f45ce1-30a5-4d14-b0d7-cb76b10f0e21',
+        required: false
+    })
+    @IsOptional()
+    @IsString({ message: '短信ID必须是字符串' })
+    @MaxLength(36, { message: '短信ID长度不能超过36位' })
+    msgId: string
+
     @ApiProperty({
         description: TbSrmSimbankMessageSourceDefinition.comment,
         enum: TbSrmSimbankMessageSource,
@@ -290,6 +305,7 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
     price: number
 }
 
+@Index('uk_tb_srm_simbank_message_msg_id', ['msgId'], { unique: true })
 @Index('idx_tb_srm_simbank_message_channel_create_time', ['channelKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_simbank_create_time', ['simbankKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_port_create_time', ['portKeyId', 'createTime'])
@@ -303,6 +319,15 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
 @Index('idx_tb_srm_simbank_message_create_time', ['createTime'])
 @Entity({ name: 'tb_srm_simbank_message', comment: 'SRM SIMBANK 短信历史表' })
 export class TbSrmSimbankMessage extends DataBaseAdapter {
+    @Column({
+        name: TbSrmSimbankMessageColumn.MSG_ID,
+        type: 'varchar',
+        length: 36,
+        nullable: true,
+        comment: '短信ID：SMS 提交时生成，同一条短信重投时保持不变'
+    })
+    msgId: string
+
     @Column({
         name: TbSrmSimbankMessageColumn.SOURCE,
         type: 'varchar',

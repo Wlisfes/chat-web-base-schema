@@ -7,6 +7,7 @@ import { Type } from 'class-transformer'
 
 export enum TbSrmSimbankMessageColumn {
     KEY_ID = 'key_id',
+    MSG_ID = 'msg_id',
     SOURCE = 'source',
     TYPE = 'type',
     FROM_NUMBER = 'from_number',
@@ -88,6 +89,16 @@ export const TbSrmSimbankMessageSendStatusDefinition = defineEnumMetadata(TbSrmS
 })
 
 export class TbSrmSimbankMessageDto extends DataBaseDto {
+    @ApiProperty({
+        description: '短信ID：SMS 提交时生成，同一条短信重投时保持不变',
+        example: 'c2f45ce1-30a5-4d14-b0d7-cb76b10f0e21',
+        required: false
+    })
+    @IsOptional()
+    @IsString({ message: '短信ID必须是字符串' })
+    @MaxLength(36, { message: '短信ID长度不能超过36位' })
+    msgId: string
+
     @ApiProperty({
         description: TbSrmSimbankMessageSourceDefinition.comment,
         enum: TbSrmSimbankMessageSource,
@@ -290,6 +301,7 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
     price: number
 }
 
+@Index('uk_tb_srm_simbank_message_msg_id', ['msgId'], { unique: true })
 @Index('idx_tb_srm_simbank_message_channel_create_time', ['channelKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_simbank_create_time', ['simbankKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_port_create_time', ['portKeyId', 'createTime'])
@@ -303,6 +315,15 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
 @Index('idx_tb_srm_simbank_message_create_time', ['createTime'])
 @Entity({ name: 'tb_srm_simbank_message', comment: 'SRM SIMBANK 短信历史表' })
 export class TbSrmSimbankMessage extends DataBaseAdapter {
+    @Column({
+        name: TbSrmSimbankMessageColumn.MSG_ID,
+        type: 'varchar',
+        length: 36,
+        nullable: true,
+        comment: '短信ID：SMS 提交时生成，同一条短信重投时保持不变'
+    })
+    msgId: string
+
     @Column({
         name: TbSrmSimbankMessageColumn.SOURCE,
         type: 'varchar',

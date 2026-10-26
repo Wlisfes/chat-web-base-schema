@@ -15,6 +15,7 @@ export enum TbSrmSimbankPortColumn {
     COUNTRY_KEY_ID = 'country_key_id',
     INSERT_STATUS = 'insert_status',
     STATUS = 'status',
+    ONLINE = 'online',
     CREATE_BY = 'create_by',
     MODIFY_BY = 'modify_by',
     CREATE_TIME = 'create_time',
@@ -49,6 +50,16 @@ export enum TbSrmSimbankPortInsertStatus {
 export const TbSrmSimbankPortInsertStatusDefinition = defineEnumMetadata(TbSrmSimbankPortInsertStatus, '插卡状态', {
     [TbSrmSimbankPortInsertStatus.REMOVED]: { label: '未插卡', description: '端口当前没有插入 SIM 卡', type: 'default' },
     [TbSrmSimbankPortInsertStatus.INSERTED]: { label: '已插卡', description: '端口当前已插入 SIM 卡', type: 'success' }
+})
+
+export enum TbSrmSimbankPortOnline {
+    OFFLINE = 'offline',
+    ONLINE = 'online'
+}
+
+export const TbSrmSimbankPortOnlineDefinition = defineEnumMetadata(TbSrmSimbankPortOnline, '在线状态', {
+    [TbSrmSimbankPortOnline.OFFLINE]: { label: '离线', description: '端口未连接', type: 'default' },
+    [TbSrmSimbankPortOnline.ONLINE]: { label: '在线', description: '端口已连接', type: 'success' }
 })
 
 export class TbSrmSimbankPortDto extends DataBaseByDto {
@@ -116,6 +127,15 @@ export class TbSrmSimbankPortDto extends DataBaseByDto {
     })
     @IsEnum(TbSrmSimbankPortStatus, { message: '端口状态格式错误' })
     status: TbSrmSimbankPortStatus
+
+    @ApiProperty({
+        description: TbSrmSimbankPortOnlineDefinition.comment,
+        enum: TbSrmSimbankPortOnline,
+        enumName: 'TbSrmSimbankPortOnline',
+        example: TbSrmSimbankPortOnline.OFFLINE
+    })
+    @IsEnum(TbSrmSimbankPortOnline, { message: '在线状态格式错误' })
+    online: TbSrmSimbankPortOnline
 }
 
 @Index('uk_tb_srm_simbank_port_simbank_port', ['simbankKeyId', 'port'], { unique: true })
@@ -126,6 +146,7 @@ export class TbSrmSimbankPortDto extends DataBaseByDto {
 @Index('idx_tb_srm_simbank_port_country_key_id', ['countryKeyId'])
 @Index('idx_tb_srm_simbank_port_insert_status', ['insertStatus'])
 @Index('idx_tb_srm_simbank_port_status', ['status'])
+@Index('idx_tb_srm_simbank_port_online', ['online'])
 @Entity({ name: 'tb_srm_simbank_port', comment: 'SRM SIMBANK 端口表' })
 export class TbSrmSimbankPort extends DataBaseByAdapter {
     @Column({ name: TbSrmSimbankPortColumn.SIMBANK_KEY_ID, type: 'int', nullable: false, comment: '设备ID：SRM SIMBANK 设备主键' })
@@ -186,4 +207,14 @@ export class TbSrmSimbankPort extends DataBaseByAdapter {
         comment: TbSrmSimbankPortStatusDefinition.comment
     })
     status: TbSrmSimbankPortStatus
+
+    @Column({
+        name: TbSrmSimbankPortColumn.ONLINE,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        default: TbSrmSimbankPortOnline.OFFLINE,
+        comment: TbSrmSimbankPortOnlineDefinition.comment
+    })
+    online: TbSrmSimbankPortOnline
 }

@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS `tb_srm_simbank_message` (
     `key_id` int NOT NULL AUTO_INCREMENT COMMENT '表主键',
+    `msg_id` varchar(36) NULL COMMENT '短信ID：SMS 提交时生成，同一条短信重投时保持不变',
     `source` varchar(32) NOT NULL COMMENT '上下行：down=下行（设备发出的短信）；up=上行（设备接收的短信）',
     `type` varchar(32) NULL COMMENT '短信类型：MRKT=营销短信（用于营销推广内容）；NTFY=通知短信（用于业务通知内容）；SOTP=验证码（用于一次性验证码）',
     `from_number` varchar(32) NOT NULL COMMENT '发送号码',
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `tb_srm_simbank_message` (
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
+    UNIQUE KEY `uk_tb_srm_simbank_message_msg_id` (`msg_id`),
     KEY `idx_tb_srm_simbank_message_channel_create_time` (`channel_key_id`, `create_time`),
     KEY `idx_tb_srm_simbank_message_simbank_create_time` (`simbank_key_id`, `create_time`),
     KEY `idx_tb_srm_simbank_message_port_create_time` (`port_key_id`, `create_time`),

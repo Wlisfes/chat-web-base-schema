@@ -22,6 +22,8 @@ export enum TbSrmSimbankMessageColumn {
     SEND_TIME = 'send_time',
     STATUS_CODE = 'status_code',
     STATUS_MESSAGE = 'status_message',
+    ROUTE_KEY_ID = 'route_key_id',
+    ROUTE_ALIAS = 'route_alias',
     CHANNEL_KEY_ID = 'channel_key_id',
     CHANNEL_ALIAS = 'channel_alias',
     CHANNEL_OWNER_USER_UID = 'channel_owner_user_uid',
@@ -209,6 +211,19 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
     @MaxLength(512, { message: '状态说明长度不能超过512位' })
     statusMessage: string
 
+    @ApiProperty({ description: '路由ID：Channel 选路时命中的路由主键', example: 1002001, required: false })
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt({ message: '路由ID必须是整数' })
+    @Min(1, { message: '路由ID必须大于0' })
+    routeKeyId: number
+
+    @ApiProperty({ description: '路由别名快照', example: 'LSK1002001-MRKT', required: false })
+    @IsOptional()
+    @IsString({ message: '路由别名必须是字符串' })
+    @MaxLength(64, { message: '路由别名长度不能超过64位' })
+    routeAlias: string
+
     @ApiProperty({ description: '通道ID：发送时使用的通道主键', example: 1001, required: false })
     @IsOptional()
     @Type(() => Number)
@@ -306,6 +321,7 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
 }
 
 @Index('uk_tb_srm_simbank_message_msg_id', ['msgId'], { unique: true })
+@Index('idx_tb_srm_simbank_message_route_create_time', ['routeKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_channel_create_time', ['channelKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_simbank_create_time', ['simbankKeyId', 'createTime'])
 @Index('idx_tb_srm_simbank_message_port_create_time', ['portKeyId', 'createTime'])
@@ -433,6 +449,12 @@ export class TbSrmSimbankMessage extends DataBaseAdapter {
         comment: '状态说明：设备返回的状态描述'
     })
     statusMessage: string
+
+    @Column({ name: TbSrmSimbankMessageColumn.ROUTE_KEY_ID, type: 'int', nullable: true, comment: '路由ID：Channel 选路时命中的路由主键' })
+    routeKeyId: number
+
+    @Column({ name: TbSrmSimbankMessageColumn.ROUTE_ALIAS, type: 'varchar', length: 64, nullable: true, comment: '路由别名快照' })
+    routeAlias: string
 
     @Column({ name: TbSrmSimbankMessageColumn.CHANNEL_KEY_ID, type: 'int', nullable: true, comment: '通道ID：发送时使用的通道主键' })
     channelKeyId: number

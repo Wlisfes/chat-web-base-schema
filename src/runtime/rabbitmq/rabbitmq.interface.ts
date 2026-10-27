@@ -1,4 +1,5 @@
 import type { ConfirmChannel, ConsumeMessage, Options } from 'amqplib'
+import type { Omix } from '@/types'
 
 /** RabbitMQ 客户端从 Nacos `rabbitmq` 节点读取的配置。 */
 export interface RabbitmqConfig {
@@ -47,3 +48,57 @@ export type RabbitmqConsumeHandler<T = unknown> = (payload: T, message: ConsumeM
 
 /** `RabbitmqRuntimeOptions` 的 NestJS 注入令牌。 */
 export const RABBITMQ_RUNTIME_OPTIONS = Symbol('RABBITMQ_RUNTIME_OPTIONS')
+
+/** SMS 提交的短信。字段改动时要同步。 */
+export interface MessageSubmitPayload extends Omix {
+    /** 本次提交生成的 UUID 标识，当前不落库。 */
+    msgId: string
+    /** 提交短信的客户主键 */
+    userKeyId: number
+    /** 提交短信的客户名称 */
+    userName: string
+    /** 提交短信的应用主键：路由的应用绑定按它查询 */
+    appKeyId: number
+    /** 提交短信的应用ID */
+    appId: string
+    /** 短信类型：MRKT、NTFY、SOTP */
+    type: 'MRKT' | 'NTFY' | 'SOTP'
+    /** 方向：Skyline 国家/地区主键；SMS 可能传字符串，选路前统一转数字 */
+    countryKeyId: number | string
+    /** 号码所在国家的 MCC */
+    mcc: string
+    /** 接收号码：含国际区号，不带 + 号。 */
+    toNumber: string
+    /** 短信内容。 */
+    content: string
+    /** 内容字符数 */
+    contentLength: number
+    /** 编码方式 */
+    encoding: 'UCS2' | 'GSM7'
+    /** 计费条数 */
+    segments: number
+    /** 客户售价：USD总额(放大百万倍存储) */
+    price: number
+    /** 提交时间，ISO-8601。 */
+    submitTime: string
+    /** 提交短信任务的ID */
+    taskId?: number
+    /** 提交短信任务的名称 */
+    taskName?: string
+    /** 提交短信的模板ID */
+    templateId?: string
+}
+
+/** 选路后投递到通道队列的短信。字段改动时要同步。 */
+export interface ChannelSubmitPayload extends Omix {
+    /**路由主键ID**/
+    routeKeyId: number
+    /**路由别名**/
+    routeAlias: string
+    /**通道主键ID**/
+    channelKeyId: number
+    /**通道别名**/
+    channelAlias: string
+    /** 提交时间，ISO-8601。 */
+    submitTime: string
+}

@@ -126,8 +126,9 @@ export class TokenService implements OnApplicationBootstrap {
             throw new Error('Nacos 配置 security.jwt.accessTokenTtlSeconds 必须配置')
         }
         const value = Number(configured)
-        if (!Number.isInteger(value) || value < 60 || value > 86_400) {
-            throw new Error('Nacos 配置 security.jwt.accessTokenTtlSeconds 必须是60-86400之间的整数')
+        // 只限制下限，不限制上限：会话 Redis 过期时间按令牌 exp 计算，有效期由 Nacos 配置决定。
+        if (!Number.isInteger(value) || value < 60) {
+            throw new Error('Nacos 配置 security.jwt.accessTokenTtlSeconds 必须是不小于60的整数')
         }
         return value
     }

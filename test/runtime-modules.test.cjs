@@ -592,6 +592,24 @@ test('shared token service rejects legacy JWT keys and missing Nacos fields', ()
     }
 })
 
+test('shared token service accepts access token TTL above one day and keeps the 60 second minimum', () => {
+    const values = {
+        'security.jwt.secret': '0123456789abcdef0123456789abcdef',
+        'security.jwt.issuer': 'chat-web-account-service',
+        'security.jwt.audience': 'chat-web'
+    }
+    const thirtyDays = 30 * 86_400
+    const issued = new TokenService(config({ ...values, 'security.jwt.accessTokenTtlSeconds': thirtyDays })).issueAccessToken('1')
+    assert.equal(issued.expiresIn, thirtyDays)
+    assert.equal(issued.claims.exp - issued.claims.iat, thirtyDays)
+    for (const invalid of [59, 0, -1, 600.5, 'abc']) {
+        assert.throws(
+            () => new TokenService(config({ ...values, 'security.jwt.accessTokenTtlSeconds': invalid })).issueAccessToken('1'),
+            /不小于60的整数/
+        )
+    }
+})
+
 test('shared auth session supports create, rotate and revoke', async () => {
     const values = new Map()
     const redis = {

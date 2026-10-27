@@ -102,3 +102,49 @@ export interface ChannelSubmitPayload extends Omix {
     /** 提交时间，ISO-8601。 */
     submitTime: string
 }
+
+/** Channel 选路后投递到通道队列的短信：短信内容和选路结果分开传递。 */
+export interface ChannelQueuePayload extends Omix {
+    /**SMS 提交的短信**/
+    message: MessageSubmitPayload
+    /**Channel 选路结果**/
+    route: ChannelSubmitPayload
+}
+
+/** SRM 发布的通道事件，携带通道完整状态。version 取发布时间毫秒数，只接受比副本更新的版本。 */
+export interface ChannelEventPayload extends Omix {
+    /**通道主键ID**/
+    channelKeyId: number
+    /**通道别名：全表唯一且创建后不可修改**/
+    alias: string
+    /**通道队列名称：chat.sms.channel.<通道别名>**/
+    queue: string
+    /**短信类型**/
+    type: string
+    /**方向：Skyline 国家/地区主键**/
+    countryKeyId: number
+    /**通道状态**/
+    status: string
+    /**发送间隔，毫秒**/
+    sendInterval: number
+    /**最大重试次数**/
+    maxRetry: number
+    /**true 表示通道已删除**/
+    deleted: boolean
+    /**发布时间毫秒数**/
+    version: number
+}
+
+/** SRM 启动时发布的全量通道快照，队列只保留最新一份。 */
+export interface ChannelSnapshotPayload extends Omix {
+    /**发布时间毫秒数**/
+    version: number
+    /**全部通道**/
+    channels: ChannelEventPayload[]
+}
+
+/** 选路和发送配置变更广播：只带版本号（发布时间毫秒数），收到后整体重新加载缓存。 */
+export interface RouteConfigPayload extends Omix {
+    /**发布时间毫秒数**/
+    version: number
+}

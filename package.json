@@ -1,6 +1,6 @@
 {
     "name": "@wlisfes/chat-web-base-schema",
-    "version": "1.7.15",
+    "version": "1.7.16",
     "description": "Shared schema and NestJS runtime modules for chat-web services",
     "license": "UNLICENSED",
     "repository": {
@@ -93,6 +93,11 @@
             "types": "./dist/src/runtime/rabbitmq/index.d.ts",
             "require": "./dist/src/runtime/rabbitmq/index.js",
             "default": "./dist/src/runtime/rabbitmq/index.js"
+        },
+        "./observe": {
+            "types": "./dist/src/runtime/observe/index.d.ts",
+            "require": "./dist/src/runtime/observe/index.js",
+            "default": "./dist/src/runtime/observe/index.js"
         },
         "./redis": {
             "types": "./dist/src/runtime/redis/index.d.ts",

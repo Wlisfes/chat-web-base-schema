@@ -94,6 +94,11 @@
             "require": "./dist/src/runtime/rabbitmq/index.js",
             "default": "./dist/src/runtime/rabbitmq/index.js"
         },
+        "./observe": {
+            "types": "./dist/src/runtime/observe/index.d.ts",
+            "require": "./dist/src/runtime/observe/index.js",
+            "default": "./dist/src/runtime/observe/index.js"
+        },
         "./redis": {
             "types": "./dist/src/runtime/redis/index.d.ts",
             "require": "./dist/src/runtime/redis/index.js",

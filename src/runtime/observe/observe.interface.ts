@@ -54,8 +54,8 @@ export interface ObserveSubmitPayload extends Omix {
     sendInterval?: number
 }
 
-/** 模拟发送结果状态：与 tb_srm_simbank_message.send_status 的 success、failed 一致。 */
-export type ObserveSubmitStatus = 'success' | 'failed'
+/** 模拟发送结果状态：与 tb_srm_simbank_message.send_status 的 success、failed、delivered 一致。 */
+export type ObserveSubmitStatus = 'success' | 'failed' | 'delivered'
 
 /** 模拟发送结果码，写入 tb_srm_simbank_message.status_code。 */
 export const OBSERVE_SUBMIT_CODE = {

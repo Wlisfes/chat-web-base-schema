@@ -154,7 +154,7 @@ export interface ObserveEnqueueResult extends Omix {
 }
 
 /** Observe 发送完成后推送给 Hooks 的回执：发送结果 + 定位信息。Hooks 校验签名后原样转发到回执队列，由 Dispatch 写回发送记录。 */
-export interface ObserveReceiptPayload extends ObserveSubmitResult {
+export interface SimbankWebhookPayload extends ObserveSubmitResult {
     /** 发送记录主键：tb_srm_simbank_message.key_id。 */
     msgKeyId: number
     /** 发送设备主键。 */
@@ -165,9 +165,9 @@ export interface ObserveReceiptPayload extends ObserveSubmitResult {
 
 /** Observe 推送回执的 Nacos 配置节点 `hooks`。 */
 export interface ObserveHooksConfig extends Omix {
-    /** Hooks 回执地址，Docker 内为 http://chat-web-hooks-service:5110/observe/receipt。 */
+    /** Hooks 回执地址，Docker 内为 http://chat-web-hooks-service:5110/observe/simbank/webhook。 */
     url: string
-    /** 回执签名密钥，必须与 Hooks Nacos `observe.secret` 一致。 */
+    /** 回执签名密钥，必须与 Hooks Nacos `simbank.secret` 一致。 */
     secret: string
     /** 单次推送超时毫秒数，默认 5000。 */
     timeout?: number

@@ -148,3 +148,52 @@ export interface RouteConfigPayload extends Omix {
     /**发布时间毫秒数**/
     version: number
 }
+
+/** 供应商计费事件交换机：Dispatch 发布，Finance 消费落账。 */
+export const SMS_BILLING_EXCHANGE = 'chat.sms.billing.exchange'
+/** 供应商计费队列：竞争消费，同一事件由一个 Finance 实例落账；Finance 按 eventId、msgId 幂等。 */
+export const SMS_SRM_USER_BILLING_QUEUE = 'chat.sms.billing.srm.user'
+export const SMS_SRM_USER_BILLING_ROUTING_KEY = 'sms.billing.srm.user'
+/** 供应商计费死信：Finance 落账失败的事件进入死信，供人工排查后重放。 */
+export const SMS_BILLING_DEAD_EXCHANGE = 'chat.sms.billing.dead.exchange'
+export const SMS_SRM_USER_BILLING_DEAD_QUEUE = 'chat.sms.billing.srm.user.dead'
+export const SMS_SRM_USER_BILLING_DEAD_ROUTING_KEY = 'sms.billing.srm.user.dead'
+
+/**
+ * 供应商计费事件：Dispatch 在发送记录到达计费节点时发布，金额和归属取发送记录快照。
+ * 预付供应商在短信提交到设备（submitted）时计费，后付供应商在设备发送成功（success）时计费。
+ */
+export interface SrmUserBillingPayload extends Omix {
+    /** 计费事件ID：msgId + ':' + 触发节点，Finance 按它幂等落账。 */
+    eventId: string
+    /** 短信ID：一条短信只计费一次。 */
+    msgId: string
+    /** 发送记录主键：tb_srm_simbank_message.key_id。 */
+    msgKeyId: number
+    /** 供应商主键：SRM 供应商主键。 */
+    userKeyId: number
+    /** 设备主键。 */
+    simbankKeyId: number
+    /** 端口主键。 */
+    portKeyId: number
+    /** 发送当时的供应商付款模式。 */
+    payMode: 'prepaid' | 'postpaid'
+    /** 计费触发节点：prepaid 为 submitted，postpaid 为 success。 */
+    trigger: 'submitted' | 'success'
+    /** 计费段数。 */
+    segments: number
+    /** 供应商成本 USD 总额（放大百万倍存储）。 */
+    costUsd: number
+    /** 计费发生时间，ISO-8601。 */
+    occurredTime: string
+}
+
+/** 设备回执交换机：Hooks 收到 Observe 回执后发布，Dispatch 消费写回发送记录。 */
+export const SMS_RECEIPT_EXCHANGE = 'chat.sms.receipt.exchange'
+/** 设备回执队列：竞争消费，同一回执由一个 Dispatch 实例写回；写回只更新 submitted 记录，重复回执不会覆盖。 */
+export const SMS_OBSERVE_RECEIPT_QUEUE = 'chat.sms.receipt.observe'
+export const SMS_OBSERVE_RECEIPT_ROUTING_KEY = 'sms.receipt.observe'
+/** 设备回执死信：写回失败的回执进入死信，供人工排查后重放。 */
+export const SMS_RECEIPT_DEAD_EXCHANGE = 'chat.sms.receipt.dead.exchange'
+export const SMS_OBSERVE_RECEIPT_DEAD_QUEUE = 'chat.sms.receipt.observe.dead'
+export const SMS_OBSERVE_RECEIPT_DEAD_ROUTING_KEY = 'sms.receipt.observe.dead'

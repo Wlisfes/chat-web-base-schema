@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS `tb_srm_simbank_message` (
     `user_name` varchar(64) NOT NULL COMMENT '归属供应商名称快照',
     `user_alias` varchar(64) NULL COMMENT '归属供应商别名快照',
     `owner_user_uid` varchar(19) NOT NULL COMMENT '归属人账号UID快照',
+    `pay_mode` varchar(32) NULL COMMENT '付款模式快照：付款模式：postpaid=后付（账期后付费）；prepaid=预付（账户预付费）',
     `port_key_id` int NOT NULL COMMENT '端口ID：SRM SIMBANK 端口主键',
     `port` int NOT NULL COMMENT '端口编号快照',
     `sim` varchar(32) NULL COMMENT 'SIM 卡号码快照：发送时端口 SIM 卡号码',

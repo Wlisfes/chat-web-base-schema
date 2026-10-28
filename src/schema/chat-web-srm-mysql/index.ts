@@ -1,3 +1,4 @@
+export * from './modules/tb_srm_billing_outbox'
 export * from './modules/tb_srm_channel'
 export * from './modules/tb_srm_channel_port'
 export * from './modules/tb_srm_route'

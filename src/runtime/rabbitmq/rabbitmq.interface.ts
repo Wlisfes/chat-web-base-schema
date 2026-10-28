@@ -189,11 +189,11 @@ export interface SrmUserBillingPayload extends Omix {
 }
 
 /** 设备回执交换机：Hooks 收到 Observe 回执后发布，Dispatch 消费写回发送记录。 */
-export const SMS_RECEIPT_EXCHANGE = 'chat.sms.receipt.exchange'
+export const SMS_SIMBANK_WEBHOOK_EXCHANGE = 'chat.sms.simbank.webhook.exchange'
 /** 设备回执队列：竞争消费，同一回执由一个 Dispatch 实例写回；写回只更新 submitted 记录，重复回执不会覆盖。 */
-export const SMS_OBSERVE_RECEIPT_QUEUE = 'chat.sms.receipt.observe'
-export const SMS_OBSERVE_RECEIPT_ROUTING_KEY = 'sms.receipt.observe'
+export const SMS_SIMBANK_WEBHOOK_QUEUE = 'chat.sms.simbank.webhook'
+export const SMS_SIMBANK_WEBHOOK_ROUTING_KEY = 'sms.simbank.webhook'
 /** 设备回执死信：写回失败的回执进入死信，供人工排查后重放。 */
-export const SMS_RECEIPT_DEAD_EXCHANGE = 'chat.sms.receipt.dead.exchange'
-export const SMS_OBSERVE_RECEIPT_DEAD_QUEUE = 'chat.sms.receipt.observe.dead'
-export const SMS_OBSERVE_RECEIPT_DEAD_ROUTING_KEY = 'sms.receipt.observe.dead'
+export const SMS_SIMBANK_WEBHOOK_DEAD_EXCHANGE = 'chat.sms.simbank.webhook.dead.exchange'
+export const SMS_SIMBANK_WEBHOOK_DEAD_QUEUE = 'chat.sms.simbank.webhook.dead'
+export const SMS_SIMBANK_WEBHOOK_DEAD_ROUTING_KEY = 'sms.simbank.webhook.dead'

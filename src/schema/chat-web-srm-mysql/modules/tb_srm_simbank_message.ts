@@ -1,5 +1,6 @@
 import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, Max, MaxLength, Min } from 'class-validator'
 import { BigintNumberTransformer, DataBaseAdapter, DataBaseDto, DateWithColumn, defineEnumMetadata } from '@/utils'
+import { TbSrmUserPayMode, TbSrmUserPayModeDefinition } from './tb_srm_user'
 import { IsDateCustomize } from '@/decorator/common.decorator'
 import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
@@ -34,6 +35,7 @@ export enum TbSrmSimbankMessageColumn {
     USER_NAME = 'user_name',
     USER_ALIAS = 'user_alias',
     OWNER_USER_UID = 'owner_user_uid',
+    PAY_MODE = 'pay_mode',
     PORT_KEY_ID = 'port_key_id',
     PORT = 'port',
     SIM = 'sim',
@@ -288,6 +290,16 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
     @Length(1, 19, { message: '归属人账号UID长度不能超过19位' })
     ownerUserUid: string
 
+    @ApiProperty({
+        description: '付款模式快照：发送时供应商的付款模式，决定计费时机（预付提交即计、后付发送成功才计）',
+        enum: TbSrmUserPayMode,
+        enumName: 'TbSrmUserPayMode',
+        required: false
+    })
+    @IsOptional()
+    @IsEnum(TbSrmUserPayMode, { message: '付款模式格式错误' })
+    payMode: TbSrmUserPayMode
+
     @ApiProperty({ description: '端口ID：SRM SIMBANK 端口主键', example: 1002401 })
     @Type(() => Number)
     @IsInt({ message: '端口ID必须是整数' })
@@ -497,6 +509,15 @@ export class TbSrmSimbankMessage extends DataBaseAdapter {
         comment: '归属人账号UID快照'
     })
     ownerUserUid: string
+
+    @Column({
+        name: TbSrmSimbankMessageColumn.PAY_MODE,
+        type: 'varchar',
+        length: 32,
+        nullable: true,
+        comment: `付款模式快照：${TbSrmUserPayModeDefinition.comment}`
+    })
+    payMode: TbSrmUserPayMode
 
     @Column({ name: TbSrmSimbankMessageColumn.PORT_KEY_ID, type: 'int', nullable: false, comment: '端口ID：SRM SIMBANK 端口主键' })
     portKeyId: number

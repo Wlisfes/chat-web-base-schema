@@ -299,6 +299,30 @@ validateTable({
 })
 
 validateTable({
+    entity: financeSchema.TbFinanceSrmUser,
+    dto: financeSchema.TbFinanceSrmUserDto,
+    columns: financeSchema.TbFinanceSrmUserColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user.sql'),
+    enumComments: [financeSchema.TbFinanceSrmUserPayModeDefinition.comment]
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceSrmUserBill,
+    dto: financeSchema.TbFinanceSrmUserBillDto,
+    columns: financeSchema.TbFinanceSrmUserBillColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user_bill.sql'),
+    enumComments: [financeSchema.TbFinanceSrmUserPayModeDefinition.comment, financeSchema.TbFinanceSrmUserBillTriggerDefinition.comment]
+})
+
+validateTable({
+    entity: srmSchema.TbSrmBillingOutbox,
+    dto: srmSchema.TbSrmBillingOutboxDto,
+    columns: srmSchema.TbSrmBillingOutboxColumn,
+    sqlPath: resolve(srmServiceRoot, 'sql/tb_srm_billing_outbox.sql'),
+    enumComments: [srmSchema.TbSrmBillingOutboxTriggerDefinition.comment, srmSchema.TbSrmBillingOutboxStatusDefinition.comment]
+})
+
+validateTable({
     entity: srmSchema.TbSrmSimbankMessage,
     dto: srmSchema.TbSrmSimbankMessageDto,
     columns: srmSchema.TbSrmSimbankMessageColumn,

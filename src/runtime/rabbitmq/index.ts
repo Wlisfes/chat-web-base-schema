@@ -1,3 +1,5 @@
 export * from './rabbitmq.interface'
 export * from './rabbitmq.module'
 export * from './rabbitmq.service'
+export * from './rabbitmq.srm-user-billing'
+export * from './rabbitmq.observe-receipt'

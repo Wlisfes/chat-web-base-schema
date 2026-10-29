@@ -86,6 +86,14 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
         return this.dispatch('httpBaseFinanceCreateSrmUserWallet', _authorization, _input)
     }
 
+    /**把 Redis 中的供应商钱包余额同步回钱包表**/
+    @FeignPost('/srm/user/wallet/sync')
+    async httpBaseFinanceSyncSrmUserWallet(
+        @FeignHeader('authorization') _authorization: string
+    ): Promise<FinanceTypes.FinanceSrmUserWalletSyncResponse> {
+        return this.dispatch('httpBaseFinanceSyncSrmUserWallet', _authorization)
+    }
+
     /**按币种获取最新汇率**/
     @FeignPost('/currency/exchange/resolve')
     async httpBaseFinanceCurrencyExchangeResolver(

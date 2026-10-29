@@ -25,6 +25,8 @@ export interface FinanceFeignImplementation {
     ): Promise<FinanceSrmUserSummary[]>
     /**为新建供应商创建一个钱包，并把钱包快照写入 Redis。已有钱包时不重置余额，只刷新 Redis。**/
     httpBaseFinanceCreateSrmUserWallet(authorization: string, input: FinanceCreateSrmUserWalletRequest): Promise<FinanceSrmUserWallet>
+    /**把 Redis 中的供应商钱包余额同步回钱包表；Redis 缺少钱包时用钱包表补齐 Redis**/
+    httpBaseFinanceSyncSrmUserWallet(authorization: string): Promise<FinanceSrmUserWalletSyncResponse>
     /**按币种获取最新汇率**/
     httpBaseFinanceCurrencyExchangeResolver(
         authorization: string,
@@ -179,6 +181,20 @@ export interface FinanceSrmUserWallet {
     balance: number
     /**信用额度（放大百万倍存储值）：按钱包币种计。*/
     credit: number
+}
+
+/**供应商钱包余额同步结果：只返回统计数量，不返回余额明细。*/
+export interface FinanceSrmUserWalletSyncResponse {
+    /**参与同步的钱包数量。*/
+    total: number
+    /**余额与 Redis 不一致、本次写回钱包表的数量。*/
+    updated: number
+    /**余额已一致、无需写回的数量。*/
+    unchanged: number
+    /**Redis 缺少钱包、本次用钱包表补齐 Redis 的数量。*/
+    restored: number
+    /**Redis 余额格式错误、本次跳过的供应商主键。*/
+    invalidUserKeyIds: number[]
 }
 
 /**供应商钱包金额摘要：余额和信用额度取 Redis 最新值。没有钱包时金额为 0。*/

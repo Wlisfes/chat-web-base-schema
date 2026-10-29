@@ -2,7 +2,7 @@ import { Column, Entity, Index } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator'
-import { DataBaseAdapter, DataBaseDto, defineEnumMetadata, BigintNumberTransformer } from '@/utils'
+import { DataBaseAdapter, DataBaseDto, defineEnumMetadata } from '@/utils'
 
 export enum TbSrmUserColumn {
     KEY_ID = 'key_id',
@@ -14,10 +14,6 @@ export enum TbSrmUserColumn {
     PHONE = 'phone',
     STATUS = 'status',
     PAY_MODE = 'pay_mode',
-    BALANCE = 'balance',
-    BALANCE_USD = 'balance_usd',
-    CREDIT = 'credit',
-    CREDIT_USD = 'credit_usd',
     LEVEL = 'level',
     STAGE = 'stage',
     SOURCE = 'source',
@@ -112,18 +108,6 @@ export class TbSrmUserDto extends DataBaseDto {
     @IsEnum(TbSrmUserPayMode, { message: '付款模式格式错误' })
     payMode: TbSrmUserPayMode
 
-    @ApiProperty({ description: '余额（放大百万倍存储）', example: 0 })
-    balance: number
-
-    @ApiProperty({ description: 'USD余额（放大百万倍存储）', example: 0 })
-    balanceUsd: number
-
-    @ApiProperty({ description: '信用额度（放大百万倍存储）', example: 0 })
-    credit: number
-
-    @ApiProperty({ description: 'USD信用额度（放大百万倍存储）', example: 0 })
-    creditUsd: number
-
     @ApiProperty({ description: '供应商等级', example: 1 })
     @Type(() => Number)
     @IsInt({ message: '供应商等级必须是整数' })
@@ -194,46 +178,6 @@ export class TbSrmUser extends DataBaseAdapter {
         comment: TbSrmUserPayModeDefinition.comment
     })
     payMode: TbSrmUserPayMode
-
-    @Column({
-        name: TbSrmUserColumn.BALANCE,
-        type: 'bigint',
-        transformer: BigintNumberTransformer,
-        nullable: false,
-        default: 0,
-        comment: '余额（放大百万倍存储）'
-    })
-    balance: number
-
-    @Column({
-        name: TbSrmUserColumn.BALANCE_USD,
-        type: 'bigint',
-        transformer: BigintNumberTransformer,
-        nullable: false,
-        default: 0,
-        comment: 'USD余额（放大百万倍存储）'
-    })
-    balanceUsd: number
-
-    @Column({
-        name: TbSrmUserColumn.CREDIT,
-        type: 'bigint',
-        transformer: BigintNumberTransformer,
-        nullable: false,
-        default: 0,
-        comment: '信用额度（放大百万倍存储）'
-    })
-    credit: number
-
-    @Column({
-        name: TbSrmUserColumn.CREDIT_USD,
-        type: 'bigint',
-        transformer: BigintNumberTransformer,
-        nullable: false,
-        default: 0,
-        comment: 'USD信用额度（放大百万倍存储）'
-    })
-    creditUsd: number
 
     @Column({ name: TbSrmUserColumn.LEVEL, type: 'int', nullable: false, default: 1, comment: '供应商等级' })
     level: number

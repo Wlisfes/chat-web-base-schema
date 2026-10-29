@@ -113,7 +113,7 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
         return this.normalizeValue(await this.getClient().getDel(key))
     }
 
-    /** 写入字符串，不设置过期时间。钱包等需要长期保留的数据使用这个方法。 */
+    /** 写入字符串，不设置过期时间。 */
     async set(key: string, value: string): Promise<void> {
         await this.getClient().set(key, value)
     }
@@ -134,6 +134,20 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
     /** 写入哈希字段，不设置过期时间。 */
     async hSet(key: string, field: string, value: string): Promise<void> {
         await this.getClient().hSet(key, field, value)
+    }
+
+    /** 一次写入多个哈希字段，不设置过期时间。值会转成字符串。 */
+    async hMSet(key: string, fields: Record<string, string | number>): Promise<void> {
+        const entries = Object.entries(fields)
+        if (entries.length === 0) throw new Error('Redis hMSet 至少要写入一个字段')
+        const normalized = Object.fromEntries(entries.map(([field, value]) => [field, String(value)]))
+        await this.getClient().hSet(key, normalized)
+    }
+
+    /** 原子增减哈希里的整数字段，返回增减后的值。扣费用负数。 */
+    async hIncrBy(key: string, field: string, increment: number): Promise<number> {
+        if (!Number.isSafeInteger(increment)) throw new Error('Redis hIncrBy 增量必须是安全整数')
+        return this.getClient().hIncrBy(key, field, increment)
     }
 
     /** 删除哈希字段。 */

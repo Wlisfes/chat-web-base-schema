@@ -68,7 +68,7 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
         return this.dispatch('httpBaseFinanceColumnFrozenSimbankResolver', _authorization, _input)
     }
 
-    /**按供应商主键批量获取供应商账户余额**/
+    /**按供应商主键批量获取供应商钱包**/
     @FeignPost('/srm/user/column/resolve')
     async httpBaseFinanceColumnSrmUserResolver(
         @FeignHeader('authorization') _authorization: string,

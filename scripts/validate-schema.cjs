@@ -299,11 +299,11 @@ validateTable({
 })
 
 validateTable({
-    entity: financeSchema.TbFinanceSrmUser,
-    dto: financeSchema.TbFinanceSrmUserDto,
-    columns: financeSchema.TbFinanceSrmUserColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user.sql'),
-    enumComments: [financeSchema.TbFinanceSrmUserPayModeDefinition.comment]
+    entity: financeSchema.TbFinanceSrmUserWallet,
+    dto: financeSchema.TbFinanceSrmUserWalletDto,
+    columns: financeSchema.TbFinanceSrmUserWalletColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user_wallet.sql'),
+    enumComments: [financeSchema.TbFinanceSrmUserWalletPayModeDefinition.comment]
 })
 
 validateTable({
@@ -311,7 +311,10 @@ validateTable({
     dto: financeSchema.TbFinanceSrmUserBillDto,
     columns: financeSchema.TbFinanceSrmUserBillColumn,
     sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user_bill.sql'),
-    enumComments: [financeSchema.TbFinanceSrmUserPayModeDefinition.comment, financeSchema.TbFinanceSrmUserBillTriggerDefinition.comment]
+    enumComments: [
+        financeSchema.TbFinanceSrmUserWalletPayModeDefinition.comment,
+        financeSchema.TbFinanceSrmUserBillTriggerDefinition.comment
+    ]
 })
 
 validateTable({

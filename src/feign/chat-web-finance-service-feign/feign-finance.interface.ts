@@ -18,7 +18,7 @@ export interface FinanceFeignImplementation {
         authorization: string,
         input: FinanceColumnFrozenSmsResolverRequest
     ): Promise<FinanceFrozenSimbankSummary[]>
-    /**按供应商主键批量获取供应商账户余额，没有账户的供应商返回 0 余额**/
+    /**按供应商主键批量获取供应商钱包，没有钱包时币种为 null、金额为 0**/
     httpBaseFinanceColumnSrmUserResolver(
         authorization: string,
         input: FinanceColumnSrmUserResolverRequest
@@ -147,20 +147,22 @@ export type WithFinanceBrandOptions<TItem, TKey extends keyof TItem & string> = 
     [K in TKey as `${K}Options`]?: FinanceBrandOption
 }
 
-/**按供应商主键批量查询供应商账户余额的请求。*/
+/**按供应商主键批量查询供应商钱包的请求。*/
 export interface FinanceColumnSrmUserResolverRequest {
     /**SRM 供应商主键列表，单次上限 100 个。*/
     userKeyIds: number[]
 }
 
-/**供应商账户余额摘要：Finance 是供应商余额的权威来源。*/
+/**供应商钱包摘要：Finance 是供应商余额的权威来源。没有钱包时 currency 为 null，金额为 0。*/
 export interface FinanceSrmUserSummary {
     /**SRM 供应商主键。*/
     userKeyId: number
+    /**财务币种编码。没有钱包时为 null。*/
+    currency: string | null
+    /**余额（放大百万倍存储值）：按钱包币种计。*/
+    balance: number
     /**USD 余额（放大百万倍存储值）：预付为负表示欠费，后付为负表示应付。*/
     balanceUsd: number
-    /**累计计费成本 USD（放大百万倍存储值）。*/
-    billedUsd: number
-    /**累计计费短信条数。*/
-    billCount: number
+    /**信用额度（放大百万倍存储值）：按钱包币种计。*/
+    credit: number
 }

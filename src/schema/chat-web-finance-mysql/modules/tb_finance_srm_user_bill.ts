@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsEnum, IsInt, IsNotEmpty, IsString, MaxLength, Min } from 'class-validator'
 import { BigintNumberTransformer, DataBaseAdapter, DataBaseDto, DateWithColumn, defineEnumMetadata } from '@/utils'
-import { TbFinanceSrmUserPayMode, TbFinanceSrmUserPayModeDefinition } from './tb_finance_srm_user'
+import { TbFinanceSrmUserWalletPayMode, TbFinanceSrmUserWalletPayModeDefinition } from './tb_finance_srm_user_wallet'
 
 export enum TbFinanceSrmUserBillColumn {
     KEY_ID = 'key_id',
@@ -61,12 +61,12 @@ export class TbFinanceSrmUserBillDto extends DataBaseDto {
     portKeyId: number
 
     @ApiProperty({
-        description: TbFinanceSrmUserPayModeDefinition.comment,
-        enum: TbFinanceSrmUserPayMode,
-        enumName: 'TbFinanceSrmUserPayMode'
+        description: TbFinanceSrmUserWalletPayModeDefinition.comment,
+        enum: TbFinanceSrmUserWalletPayMode,
+        enumName: 'TbFinanceSrmUserWalletPayMode'
     })
-    @IsEnum(TbFinanceSrmUserPayMode, { message: '付款模式格式错误' })
-    payMode: TbFinanceSrmUserPayMode
+    @IsEnum(TbFinanceSrmUserWalletPayMode, { message: '付款模式格式错误' })
+    payMode: TbFinanceSrmUserWalletPayMode
 
     @ApiProperty({
         description: TbFinanceSrmUserBillTriggerDefinition.comment,
@@ -124,9 +124,9 @@ export class TbFinanceSrmUserBill extends DataBaseAdapter {
         type: 'varchar',
         length: 32,
         nullable: false,
-        comment: TbFinanceSrmUserPayModeDefinition.comment
+        comment: TbFinanceSrmUserWalletPayModeDefinition.comment
     })
-    payMode: TbFinanceSrmUserPayMode
+    payMode: TbFinanceSrmUserWalletPayMode
 
     @Column({
         name: TbFinanceSrmUserBillColumn.TRIGGER,

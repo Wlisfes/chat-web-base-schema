@@ -18,7 +18,7 @@ export interface FinanceFeignImplementation {
         authorization: string,
         input: FinanceColumnFrozenSmsResolverRequest
     ): Promise<FinanceFrozenSimbankSummary[]>
-    /**按供应商主键批量获取供应商钱包，没有钱包时币种为 null、金额为 0**/
+    /**按供应商主键批量获取供应商钱包余额和信用额度，没有钱包时金额为 0**/
     httpBaseFinanceColumnSrmUserResolver(
         authorization: string,
         input: FinanceColumnSrmUserResolverRequest
@@ -181,12 +181,10 @@ export interface FinanceSrmUserWallet {
     credit: number
 }
 
-/**供应商钱包摘要：Finance 是供应商余额的权威来源。没有钱包时 currency 为 null，金额为 0。*/
+/**供应商钱包金额摘要：余额和信用额度取 Redis 最新值。没有钱包时金额为 0。*/
 export interface FinanceSrmUserSummary {
     /**SRM 供应商主键。*/
     userKeyId: number
-    /**财务币种编码。没有钱包时为 null。*/
-    currency: string | null
     /**余额（放大百万倍存储值）：按钱包币种计。*/
     balance: number
     /**信用额度（放大百万倍存储值）：按钱包币种计。*/

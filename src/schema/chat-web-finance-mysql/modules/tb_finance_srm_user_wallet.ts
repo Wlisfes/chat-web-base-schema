@@ -10,7 +10,6 @@ export enum TbFinanceSrmUserWalletColumn {
     CURRENCY = 'currency',
     PAY_MODE = 'pay_mode',
     BALANCE = 'balance',
-    BALANCE_USD = 'balance_usd',
     CREDIT = 'credit',
     CREATE_TIME = 'create_time',
     MODIFY_TIME = 'modify_time'
@@ -51,9 +50,6 @@ export class TbFinanceSrmUserWalletDto extends DataBaseDto {
     @ApiProperty({ description: '余额（放大百万倍存储）：按钱包币种计', example: 0 })
     balance: number
 
-    @ApiProperty({ description: 'USD 余额（放大百万倍存储）：预付为负表示欠费，后付为负表示应付', example: 0 })
-    balanceUsd: number
-
     @ApiProperty({ description: '信用额度（放大百万倍存储）：按钱包币种计', example: 0 })
     credit: number
 }
@@ -90,16 +86,6 @@ export class TbFinanceSrmUserWallet extends DataBaseAdapter {
         comment: '余额（放大百万倍存储）：按钱包币种计'
     })
     balance: number
-
-    @Column({
-        name: TbFinanceSrmUserWalletColumn.BALANCE_USD,
-        type: 'bigint',
-        transformer: BigintNumberTransformer,
-        nullable: false,
-        default: 0,
-        comment: 'USD 余额（放大百万倍存储）：预付为负表示欠费，后付为负表示应付'
-    })
-    balanceUsd: number
 
     @Column({
         name: TbFinanceSrmUserWalletColumn.CREDIT,

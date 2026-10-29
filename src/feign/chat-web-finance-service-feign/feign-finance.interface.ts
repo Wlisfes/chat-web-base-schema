@@ -1,4 +1,4 @@
-import type { TbFinanceBrandStatus } from '@/schema/chat-web-finance-mysql'
+import type { TbFinanceBrandStatus, TbFinanceSrmUserWalletPayMode } from '@/schema/chat-web-finance-mysql'
 
 /** 财务服务 Feign 服务端实现必须满足的接口。 */
 export interface FinanceFeignImplementation {
@@ -23,6 +23,8 @@ export interface FinanceFeignImplementation {
         authorization: string,
         input: FinanceColumnSrmUserResolverRequest
     ): Promise<FinanceSrmUserSummary[]>
+    /**为新建供应商创建一个钱包，并把钱包快照写入 Redis。已有钱包时不重置余额，只刷新 Redis。**/
+    httpBaseFinanceCreateSrmUserWallet(authorization: string, input: FinanceCreateSrmUserWalletRequest): Promise<FinanceSrmUserWallet>
     /**按币种获取最新汇率**/
     httpBaseFinanceCurrencyExchangeResolver(
         authorization: string,
@@ -153,6 +155,32 @@ export interface FinanceColumnSrmUserResolverRequest {
     userKeyIds: number[]
 }
 
+/**新建供应商钱包的请求。*/
+export interface FinanceCreateSrmUserWalletRequest {
+    /**SRM 供应商主键。*/
+    userKeyId: number
+    /**财务币种编码。*/
+    currency: string
+    /**付款模式。*/
+    payMode: TbFinanceSrmUserWalletPayMode
+    /**信用额度（放大百万倍存储值）。不传时为 0。*/
+    credit?: number
+}
+
+/**供应商钱包：余额的权威快照，同时写入 Redis 供后续扣费读取。*/
+export interface FinanceSrmUserWallet {
+    /**SRM 供应商主键。*/
+    userKeyId: number
+    /**财务币种编码。*/
+    currency: string
+    /**付款模式。*/
+    payMode: TbFinanceSrmUserWalletPayMode
+    /**余额（放大百万倍存储值）：按钱包币种计。*/
+    balance: number
+    /**信用额度（放大百万倍存储值）：按钱包币种计。*/
+    credit: number
+}
+
 /**供应商钱包摘要：Finance 是供应商余额的权威来源。没有钱包时 currency 为 null，金额为 0。*/
 export interface FinanceSrmUserSummary {
     /**SRM 供应商主键。*/
@@ -161,8 +189,6 @@ export interface FinanceSrmUserSummary {
     currency: string | null
     /**余额（放大百万倍存储值）：按钱包币种计。*/
     balance: number
-    /**USD 余额（放大百万倍存储值）：预付为负表示欠费，后付为负表示应付。*/
-    balanceUsd: number
     /**信用额度（放大百万倍存储值）：按钱包币种计。*/
     credit: number
 }

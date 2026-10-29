@@ -113,6 +113,11 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
         return this.normalizeValue(await this.getClient().getDel(key))
     }
 
+    /** 写入字符串，不设置过期时间。钱包等需要长期保留的数据使用这个方法。 */
+    async set(key: string, value: string): Promise<void> {
+        await this.getClient().set(key, value)
+    }
+
     async setEx(key: string, seconds: number, value: string): Promise<void> {
         await this.getClient().setEx(key, seconds, value)
     }

@@ -77,6 +77,15 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
         return this.dispatch('httpBaseFinanceColumnSrmUserResolver', _authorization, _input)
     }
 
+    /**为新建供应商创建钱包，并写入 Redis**/
+    @FeignPost('/srm/user/wallet/create')
+    async httpBaseFinanceCreateSrmUserWallet(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: FinanceTypes.FinanceCreateSrmUserWalletRequest
+    ): Promise<FinanceTypes.FinanceSrmUserWallet> {
+        return this.dispatch('httpBaseFinanceCreateSrmUserWallet', _authorization, _input)
+    }
+
     /**按币种获取最新汇率**/
     @FeignPost('/currency/exchange/resolve')
     async httpBaseFinanceCurrencyExchangeResolver(

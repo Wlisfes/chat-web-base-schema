@@ -307,14 +307,11 @@ validateTable({
 })
 
 validateTable({
-    entity: financeSchema.TbFinanceSrmUserBill,
-    dto: financeSchema.TbFinanceSrmUserBillDto,
-    columns: financeSchema.TbFinanceSrmUserBillColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user_bill.sql'),
-    enumComments: [
-        financeSchema.TbFinanceSrmUserWalletPayModeDefinition.comment,
-        financeSchema.TbFinanceSrmUserBillTriggerDefinition.comment
-    ]
+    entity: financeSchema.TbFinanceSrmUserDeduct,
+    dto: financeSchema.TbFinanceSrmUserDeductDto,
+    columns: financeSchema.TbFinanceSrmUserDeductColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user_deduct.sql'),
+    enumComments: [financeSchema.TbFinanceSrmUserDeductBizTypeDefinition.comment]
 })
 
 validateTable({

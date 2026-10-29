@@ -1,4 +1,4 @@
-import type { TbFinanceBrandStatus } from '@/schema/chat-web-finance-mysql'
+import type { TbFinanceBrandStatus, TbFinanceSrmUserWalletPayMode } from '@/schema/chat-web-finance-mysql'
 
 /** 财务服务 Feign 服务端实现必须满足的接口。 */
 export interface FinanceFeignImplementation {
@@ -18,11 +18,13 @@ export interface FinanceFeignImplementation {
         authorization: string,
         input: FinanceColumnFrozenSmsResolverRequest
     ): Promise<FinanceFrozenSimbankSummary[]>
-    /**按供应商主键批量获取供应商账户余额，没有账户的供应商返回 0 余额**/
+    /**按供应商主键批量获取供应商钱包余额和信用额度，没有钱包时金额为 0**/
     httpBaseFinanceColumnSrmUserResolver(
         authorization: string,
         input: FinanceColumnSrmUserResolverRequest
     ): Promise<FinanceSrmUserSummary[]>
+    /**为新建供应商创建一个钱包，并把钱包快照写入 Redis。已有钱包时不重置余额，只刷新 Redis。**/
+    httpBaseFinanceCreateSrmUserWallet(authorization: string, input: FinanceCreateSrmUserWalletRequest): Promise<FinanceSrmUserWallet>
     /**按币种获取最新汇率**/
     httpBaseFinanceCurrencyExchangeResolver(
         authorization: string,
@@ -147,20 +149,44 @@ export type WithFinanceBrandOptions<TItem, TKey extends keyof TItem & string> = 
     [K in TKey as `${K}Options`]?: FinanceBrandOption
 }
 
-/**按供应商主键批量查询供应商账户余额的请求。*/
+/**按供应商主键批量查询供应商钱包的请求。*/
 export interface FinanceColumnSrmUserResolverRequest {
     /**SRM 供应商主键列表，单次上限 100 个。*/
     userKeyIds: number[]
 }
 
-/**供应商账户余额摘要：Finance 是供应商余额的权威来源。*/
+/**新建供应商钱包的请求。*/
+export interface FinanceCreateSrmUserWalletRequest {
+    /**SRM 供应商主键。*/
+    userKeyId: number
+    /**财务币种编码。*/
+    currency: string
+    /**付款模式。*/
+    payMode: TbFinanceSrmUserWalletPayMode
+    /**信用额度（放大百万倍存储值）。不传时为 0。*/
+    credit?: number
+}
+
+/**供应商钱包：余额的权威快照，同时写入 Redis 供后续扣费读取。*/
+export interface FinanceSrmUserWallet {
+    /**SRM 供应商主键。*/
+    userKeyId: number
+    /**财务币种编码。*/
+    currency: string
+    /**付款模式。*/
+    payMode: TbFinanceSrmUserWalletPayMode
+    /**余额（放大百万倍存储值）：按钱包币种计。*/
+    balance: number
+    /**信用额度（放大百万倍存储值）：按钱包币种计。*/
+    credit: number
+}
+
+/**供应商钱包金额摘要：余额和信用额度取 Redis 最新值。没有钱包时金额为 0。*/
 export interface FinanceSrmUserSummary {
     /**SRM 供应商主键。*/
     userKeyId: number
-    /**USD 余额（放大百万倍存储值）：预付为负表示欠费，后付为负表示应付。*/
-    balanceUsd: number
-    /**累计计费成本 USD（放大百万倍存储值）。*/
-    billedUsd: number
-    /**累计计费短信条数。*/
-    billCount: number
+    /**余额（放大百万倍存储值）：按钱包币种计。*/
+    balance: number
+    /**信用额度（放大百万倍存储值）：按钱包币种计。*/
+    credit: number
 }

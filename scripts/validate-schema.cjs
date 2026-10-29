@@ -299,19 +299,19 @@ validateTable({
 })
 
 validateTable({
-    entity: financeSchema.TbFinanceSrmUser,
-    dto: financeSchema.TbFinanceSrmUserDto,
-    columns: financeSchema.TbFinanceSrmUserColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user.sql'),
-    enumComments: [financeSchema.TbFinanceSrmUserPayModeDefinition.comment]
+    entity: financeSchema.TbFinanceSrmUserWallet,
+    dto: financeSchema.TbFinanceSrmUserWalletDto,
+    columns: financeSchema.TbFinanceSrmUserWalletColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user_wallet.sql'),
+    enumComments: [financeSchema.TbFinanceSrmUserWalletPayModeDefinition.comment]
 })
 
 validateTable({
-    entity: financeSchema.TbFinanceSrmUserBill,
-    dto: financeSchema.TbFinanceSrmUserBillDto,
-    columns: financeSchema.TbFinanceSrmUserBillColumn,
-    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user_bill.sql'),
-    enumComments: [financeSchema.TbFinanceSrmUserPayModeDefinition.comment, financeSchema.TbFinanceSrmUserBillTriggerDefinition.comment]
+    entity: financeSchema.TbFinanceSrmUserDeduct,
+    dto: financeSchema.TbFinanceSrmUserDeductDto,
+    columns: financeSchema.TbFinanceSrmUserDeductColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_srm_user_deduct.sql'),
+    enumComments: [financeSchema.TbFinanceSrmUserDeductBizTypeDefinition.comment]
 })
 
 validateTable({

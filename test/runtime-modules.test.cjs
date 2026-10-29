@@ -526,6 +526,26 @@ test('shared Feign finance client triggers server-owned currency exchange synchr
     })
 })
 
+test('财务 Feign 客户端触发供应商钱包余额同步：无请求体，返回统计数量', async () => {
+    let request
+    const factory = new FeignClientFactory(
+        config({ gateway: { feign: { url: 'http://gateway.internal:5000', timeout: 5000 } } }),
+        async (url, init) => {
+            request = { url: String(url), init }
+            const data = { total: 4, updated: 1, unchanged: 3, restored: 0, invalidUserKeyIds: [] }
+            return new Response(JSON.stringify({ data, code: 200, message: '成功' }), {
+                status: 200,
+                headers: { 'content-type': 'application/json' }
+            })
+        }
+    )
+    const result = await factory.create(FeignClientFinanceManager).httpBaseFinanceSyncSrmUserWallet('Bearer finance-token')
+    assert.equal(request.url, 'http://gateway.internal:5000/feign/finance/srm/user/wallet/sync')
+    assert.equal(request.init.method, 'POST')
+    assert.equal(request.init.body, undefined)
+    assert.deepEqual(result, { total: 4, updated: 1, unchanged: 3, restored: 0, invalidUserKeyIds: [] })
+})
+
 test('财务 Feign 客户端保留 CRM 报价流程所需的价格与汇率查询', async () => {
     const requests = []
     const factory = new FeignClientFactory(

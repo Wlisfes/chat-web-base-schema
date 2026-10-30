@@ -1,5 +1,14 @@
 # Deployment changelog
 
+## 2026-10-30 — 雪花 ID 固定为 21 位
+
+- Affected consumers: services that upgrade to the shared package release containing `snowflakeResolve`.
+- Change: `snowflakeResolve` now always returns 21 digits. Missing digits are random numbers appended after the snowflake value.
+- Machine-side operations: publish the package and upgrade consumers. No database change; `varchar(36)` still fits.
+- Verification: `yarn build && node --test test/snowflake.test.cjs`.
+- Rollback: pin consumers to the previous package version.
+
+
 ## 2026-10-30 — 抽出数字字符串雪花 ID
 
 - Affected consumers: services that upgrade to the shared package release containing `snowflakeResolve`.

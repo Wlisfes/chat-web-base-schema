@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto'
+
 /** GSM 03.38 基本字符集和扩展字符集；全部落在这里才是 GSM7。 */
 const GSM7_CHARS = new Set(
     '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞ\u001bÆæßÉ !"#$¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà^{}\\[~]|€'
@@ -31,8 +33,6 @@ export function segmentsResolve(contentLength: number, encoding: SmsEncoding): n
     return Math.ceil(length / multi)
 }
 
-import { randomInt } from 'node:crypto'
-
 /** 2024-01-01T00:00:00.000Z，避免时间戳占满 41 位后超出 19 位十进制。 */
 const EPOCH = 1704067200000n
 const WORKER_ID_BITS = 10n
@@ -53,7 +53,9 @@ function waitUntil(timestamp: bigint): bigint {
     return next
 }
 
-/** 生成数字字符串雪花 ID：时间戳、实例号、毫秒内序列，同一进程内单调递增。 */
+const SNOWFLAKE_LENGTH = 21
+
+/** 生成固定 21 位数字字符串。雪花部分不足时，在后面补随机数字。 */
 export function snowflakeResolve(): string {
     let timestamp = currentTime()
     if (timestamp < lastTimestamp) timestamp = waitUntil(lastTimestamp)
@@ -65,6 +67,12 @@ export function snowflakeResolve(): string {
     }
     lastTimestamp = timestamp
     const elapsed = timestamp - EPOCH
-    const id = (elapsed << (WORKER_ID_BITS + SEQUENCE_BITS)) | (workerId << SEQUENCE_BITS) | sequence
-    return id.toString()
+    const id = ((elapsed << (WORKER_ID_BITS + SEQUENCE_BITS)) | (workerId << SEQUENCE_BITS) | sequence).toString()
+    if (id.length > SNOWFLAKE_LENGTH) throw new Error('雪花 ID 超过 21 位')
+    if (id.length === SNOWFLAKE_LENGTH) return id
+    return id + randomDigits(SNOWFLAKE_LENGTH - id.length)
+}
+
+function randomDigits(count: number): string {
+    return Array.from({ length: count }, () => randomInt(0, 10).toString()).join('')
 }

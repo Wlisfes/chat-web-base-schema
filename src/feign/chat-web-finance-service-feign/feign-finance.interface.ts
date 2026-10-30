@@ -187,11 +187,11 @@ export interface FinanceSrmUserWallet {
 export interface FinanceSrmUserWalletSyncResponse {
     /**参与同步的钱包数量。*/
     total: number
-    /**余额与 Redis 不一致、本次写回钱包表的数量。*/
+    /**本次按 Redis 余额写回钱包表的数量。*/
     updated: number
-    /**余额已一致、无需写回的数量。*/
+    /**保留字段。同步不再逐个比对，固定为 0。*/
     unchanged: number
-    /**Redis 缺少钱包、本次用钱包表补齐 Redis 的数量。*/
+    /**保留字段。同步不再用钱包表补齐 Redis，固定为 0。*/
     restored: number
     /**Redis 余额格式错误、本次跳过的供应商主键。*/
     invalidUserKeyIds: number[]

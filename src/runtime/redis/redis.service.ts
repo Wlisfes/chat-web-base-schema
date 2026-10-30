@@ -126,9 +126,41 @@ export class RedisService implements OnApplicationBootstrap, OnApplicationShutdo
         await this.getClient().del(key)
     }
 
+    /** 读取哈希中的一个字段；不存在时返回 null。 */
+    async hGet(key: string, field: string): Promise<string | null> {
+        return this.normalizeValue(await this.getClient().hGet(key, field))
+    }
+
+    /** 一次读取同一个哈希中的多个字段；不存在的字段返回 null。 */
+    async hMGet(key: string, fields: string[]): Promise<Array<string | null>> {
+        if (fields.length === 0) return []
+        const values = await this.getClient().hmGet(key, fields)
+        return values.map(value => this.normalizeValue(value))
+    }
+
     /** 读取整个哈希；不存在时返回空对象。 */
     async hGetAll(key: string): Promise<Record<string, string>> {
         return { ...(await this.getClient().hGetAll(key)) } as Record<string, string>
+    }
+
+    /** 按 MATCH 扫描键，一次取回全部结果。 */
+    async scan(match: string): Promise<string[]> {
+        const keys: string[] = []
+        for await (const batch of this.getClient().scanIterator({ MATCH: match, COUNT: 500 })) {
+            if (Array.isArray(batch)) keys.push(...batch.map(key => String(key)))
+            else keys.push(String(batch))
+        }
+        return keys
+    }
+
+    /** 一次往返读取多个哈希；不存在的键返回空对象。 */
+    async hGetAllMany(keys: string[]): Promise<Array<Record<string, string>>> {
+        if (keys.length === 0) return []
+        if (keys.length === 1) return [await this.hGetAll(keys[0])]
+        const multi = this.getClient().multi()
+        for (const key of keys) multi.hGetAll(key)
+        const replies = await multi.exec()
+        return (replies ?? []).map(reply => ({ ...((reply ?? {}) as unknown as Record<string, string>) }))
     }
 
     /** 写入哈希字段，不设置过期时间。 */

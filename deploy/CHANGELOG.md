@@ -2,7 +2,7 @@
 
 ## 2026-10-30 — 抽出数字字符串雪花 ID
 
-- Affected consumers: services that upgrade to the shared package release containing `generateSnowflakeId`.
+- Affected consumers: services that upgrade to the shared package release containing `snowflakeResolve`.
 - Change: moved the numeric snowflake ID generator to `@wlisfes/chat-web-base-schema/utils`. It stays unique inside one process. Worker IDs are still random, so different processes can collide.
 - Machine-side operations: publish the package and upgrade consumers. No database or configuration change.
 - Verification: `yarn build && node --test test/snowflake.test.cjs`.

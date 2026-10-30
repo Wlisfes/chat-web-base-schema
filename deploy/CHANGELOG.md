@@ -1,5 +1,14 @@
 # Deployment changelog
 
+## 2026-10-30 — 抽出短信编码和计费条数计算
+
+- Affected consumers: services that upgrade to the shared package release containing `resolveSmsEncoding` and `resolveSmsSegments`.
+- Change: added GSM 03.38 encoding detection and segment calculation to `@wlisfes/chat-web-base-schema/utils`. GSM7 is 160/153 characters and UCS2 is 70/67 characters.
+- Machine-side operations: publish the package and upgrade consumers. No database or configuration change.
+- Verification: `yarn build && node --test test/sms-encoding.test.cjs`.
+- Rollback: pin consumers to the previous package version.
+
+
 ## 2026-09-21 — Account 组织 key_id 重排到 1024000 号段
 
 - Affected consumers: `chat-web-account-service` after upgrading to the shared package release containing this migration.

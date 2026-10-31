@@ -121,8 +121,6 @@ export interface ChannelEventPayload extends Omix {
     queue: string
     /**短信类型**/
     type: string
-    /**方向：Skyline 国家/地区主键**/
-    countryKeyId: number
     /**通道状态**/
     status: string
     /**发送间隔，毫秒**/

@@ -10,7 +10,6 @@ export enum TbSrmChannelColumn {
     ALIAS = 'alias',
     NAME = 'name',
     TYPE = 'type',
-    COUNTRY_KEY_ID = 'country_key_id',
     OWNER_USER_UID = 'owner_user_uid',
     SEND_INTERVAL = 'send_interval',
     MAX_RETRY = 'max_retry',
@@ -58,15 +57,6 @@ export class TbSrmChannelDto extends DataBaseByDto {
     @IsEnum(TbSmsAppType, { message: '短信类型格式错误' })
     type: TbSmsAppType
 
-    @ApiProperty({
-        description: '方向：Skyline 国家/地区主键；通道只发送该方向的短信，只能绑定该方向激活的端口，只能加入同方向的路由，创建后不可修改',
-        example: 1007
-    })
-    @Type(() => Number)
-    @IsInt({ message: '方向必须是整数' })
-    @Min(1, { message: '方向必须大于0' })
-    countryKeyId: number
-
     @ApiProperty({ description: '归属人账号UID：当前负责该通道的员工，可修改', example: '2149446185344106496' })
     @IsString({ message: '归属人账号UID必须是字符串' })
     @Length(1, 19, { message: '归属人账号UID长度不能超过19位' })
@@ -103,7 +93,7 @@ export class TbSrmChannelDto extends DataBaseByDto {
 }
 
 @Index('uk_tb_srm_channel_alias', ['alias'], { unique: true })
-@Index('idx_tb_srm_channel_country_type', ['countryKeyId', 'type'])
+@Index('idx_tb_srm_channel_type', ['type'])
 @Index('idx_tb_srm_channel_owner_user_uid', ['ownerUserUid'])
 @Index('idx_tb_srm_channel_status', ['status'])
 @Entity({ name: 'tb_srm_channel', comment: 'SRM 短信通道表' })
@@ -128,14 +118,6 @@ export class TbSrmChannel extends DataBaseByAdapter {
         comment: TbSmsAppTypeDefinition.comment
     })
     type: TbSmsAppType
-
-    @Column({
-        name: TbSrmChannelColumn.COUNTRY_KEY_ID,
-        type: 'int',
-        nullable: false,
-        comment: '方向：Skyline 国家/地区主键，创建后不可修改'
-    })
-    countryKeyId: number
 
     @Column({ name: TbSrmChannelColumn.OWNER_USER_UID, type: 'varchar', length: 19, nullable: false, comment: '归属人账号UID' })
     ownerUserUid: string

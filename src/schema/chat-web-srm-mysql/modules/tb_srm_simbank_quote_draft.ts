@@ -87,7 +87,7 @@ export class TbSrmSimbankQuoteDraftDto extends DataBaseByDto {
     @MaxLength(64, { message: '供应商别名长度不能超过64位' })
     userAlias: string
 
-    @ApiProperty({ description: 'simbank 设备别名快照', required: false, example: 'SSK1233SMSA002' })
+    @ApiProperty({ description: 'simbank 设备别名快照', required: false, example: 'RSK1233SMSA002' })
     @IsOptional()
     @IsString({ message: 'simbank 设备别名必须是字符串' })
     @MaxLength(64, { message: 'simbank 设备别名长度不能超过64位' })

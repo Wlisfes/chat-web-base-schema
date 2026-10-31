@@ -65,7 +65,7 @@ export enum TbSrmSimbankMessageType {
 export const TbSrmSimbankMessageTypeDefinition = defineEnumMetadata(TbSrmSimbankMessageType, '短信类型', {
     [TbSrmSimbankMessageType.MRKT]: { label: '营销短信', description: '用于营销推广内容', type: 'orange' },
     [TbSrmSimbankMessageType.NTFY]: { label: '通知短信', description: '用于业务通知内容', type: 'info' },
-    [TbSrmSimbankMessageType.SOTP]: { label: '验证码', description: '用于一次性验证码', type: 'success' }
+    [TbSrmSimbankMessageType.SOTP]: { label: 'OTP短信', description: '用于一次性验证码', type: 'success' }
 })
 
 export enum TbSrmSimbankMessageEncoding {

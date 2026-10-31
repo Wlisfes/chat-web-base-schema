@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS `tb_srm_channel` (
     `alias` varchar(32) NOT NULL COMMENT '通道别名：创建时按 TSK + 归属人工号 + 类型 + 分段序号自动生成，全表唯一，创建后不可修改，用于队列命名',
     `name` varchar(64) NOT NULL COMMENT '通道名称',
     `type` varchar(32) NOT NULL COMMENT '短信应用类型：MRKT=营销短信（用于营销推广内容）；NTFY=通知短信（用于业务通知内容）；SOTP=验证码（用于一次性验证码）',
-    `country_key_id` int NOT NULL COMMENT '方向：Skyline 国家/地区主键，创建后不可修改',
     `owner_user_uid` varchar(19) NOT NULL COMMENT '归属人账号UID',
     `send_interval` int NOT NULL DEFAULT 3000 COMMENT '端口发送间隔：同一端口两条短信之间的最小间隔毫秒数',
     `max_retry` int NOT NULL DEFAULT 3 COMMENT '最大重试次数：无可用端口或下发失败时的重试上限',
@@ -15,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `tb_srm_channel` (
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_srm_channel_alias` (`alias`),
-    KEY `idx_tb_srm_channel_country_type` (`country_key_id`, `type`),
+    KEY `idx_tb_srm_channel_type` (`type`),
     KEY `idx_tb_srm_channel_owner_user_uid` (`owner_user_uid`),
     KEY `idx_tb_srm_channel_status` (`status`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1001 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SRM 短信通道表';

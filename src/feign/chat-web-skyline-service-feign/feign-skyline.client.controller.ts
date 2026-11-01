@@ -66,6 +66,19 @@ export class FeignClientSkylineManager extends FeignWebClient<SkylineTypes.Feign
         return this.dispatch('httpBaseSkylineColumnUserResolver', _authorization, _input)
     }
 
+    /**按组织（含下级组织）查询启用成员关系的账号 UID**/
+    @FeignPost('/organization/user/uid/column', {
+        operation: { summary: '供内部服务按组织（含下级组织）查询启用成员关系的账号 UID' },
+        request: { source: 'body', type: SkylineDto.SkylineColumnOrganizationUserUidDto },
+        response: { type: String, isArray: true, description: '账号 UID 列表' }
+    })
+    async httpBaseSkylineColumnOrganizationUserUid(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SkylineDto.SkylineColumnOrganizationUserUidDto
+    ): Promise<string[]> {
+        return this.dispatch('httpBaseSkylineColumnOrganizationUserUid', _authorization, _input)
+    }
+
     /**按账号 UID 还原单个展示摘要**/
     @FeignPost('/user/resolve', {
         operation: { summary: '供内部服务按账号 UID 还原单个展示摘要' },

@@ -95,6 +95,11 @@ export interface FeignClientSkylineImplementation {
     httpBaseSkylineChunkOptionResolver(authorization: string, input: SkylineChunkOptionResolverInput): Promise<SkylineChunkOption>
     /**按列表批量把账号 UID 还原为展示摘要**/
     httpBaseSkylineColumnUserResolver(authorization: string, input: SkylineColumnUserResolverRequest): Promise<SkylineUserSummary[]>
+    /**按组织（含下级组织）查询启用成员关系的账号 UID**/
+    httpBaseSkylineColumnOrganizationUserUid(
+        authorization: string,
+        input: SkylineDto.SkylineColumnOrganizationUserUidDto
+    ): Promise<string[]>
     /**按账号 UID 还原单个展示摘要**/
     httpBaseSkylineUserResolver(authorization: string, input: SkylineUserResolverRequest): Promise<SkylineUserSummary>
     /**按国家/地区主键批量获取展示摘要**/

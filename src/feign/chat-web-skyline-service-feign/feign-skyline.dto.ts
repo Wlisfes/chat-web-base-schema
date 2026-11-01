@@ -251,6 +251,17 @@ export class SkylineColumnUserResolverDto extends SkylineUserFieldsDto {
     uids: string[]
 }
 
+/** 按组织查询账号 UID 的请求体：返回在这些组织及其下级组织中启用成员关系的账号 UID。 */
+export class SkylineColumnOrganizationUserUidDto {
+    @ApiProperty({ description: '组织主键集合，包含其下级组织', type: Number, isArray: true, example: [1001] })
+    @IsArray({ message: '组织主键集合必须是数组' })
+    @ArrayNotEmpty({ message: '组织主键集合不能为空' })
+    @ArrayMaxSize(100, { message: '组织主键集合单次最多100个' })
+    @Type(() => Number)
+    @IsInt({ each: true, message: '组织主键必须是整数' })
+    organizationKeyIds: number[]
+}
+
 /** 按账号 UID 还原单个展示摘要的请求体。 */
 export class SkylineUserResolverDto extends SkylineUserFieldsDto {
     @ApiProperty({ description: '待查询的账号 UID', example: '2149446185344106496' })

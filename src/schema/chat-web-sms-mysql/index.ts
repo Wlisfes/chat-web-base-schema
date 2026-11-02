@@ -1,3 +1,5 @@
 export * from './modules/tb_sms_app'
 export * from './modules/tb_sms_quote_draft'
 export * from './modules/tb_sms_quote'
+export * from './modules/tb_sms_task'
+export * from './modules/tb_sms_message'

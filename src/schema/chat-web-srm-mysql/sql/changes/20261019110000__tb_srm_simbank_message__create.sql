@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `tb_srm_simbank_message` (
     `port` int NOT NULL COMMENT '端口编号快照',
     `sim` varchar(32) NULL COMMENT 'SIM 卡号码快照：发送时端口 SIM 卡号码',
     `iccid` varchar(22) NULL COMMENT 'ICCID快照：发送时端口 SIM 卡唯一编号',
-    `cost` bigint NOT NULL DEFAULT 0 COMMENT '供应商成本：USD总额（放大百万倍存储）',
+    `cost` bigint NOT NULL DEFAULT 0 COMMENT '供应商成本：报价币种总额（放大百万倍存储，按此扣费）',
     `price` bigint NOT NULL DEFAULT 0 COMMENT '客户售价：USD总额（放大百万倍存储）',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',

@@ -37,4 +37,4 @@ CREATE TABLE IF NOT EXISTS `tb_sms_task` (
     KEY `idx_tb_sms_task_app_create_time` (`app_key_id`, `create_time`),
     KEY `idx_tb_sms_task_status_plan_time` (`status`, `plan_time`),
     KEY `idx_tb_sms_task_create_by` (`create_by`)
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SMS 短信任务表';
+) ENGINE = InnoDB AUTO_INCREMENT = 1002001 DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'SMS 短信任务表';

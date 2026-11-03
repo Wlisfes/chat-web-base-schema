@@ -20,6 +20,7 @@ export enum TbSmsTaskColumn {
     CURRENCY = 'currency',
     PLAN_TIME = 'plan_time',
     VERSION = 'version',
+    TASK_VERSION = 'task_version',
     START_TIME = 'start_time',
     END_TIME = 'end_time',
     STATUS = 'status',
@@ -141,6 +142,16 @@ export class TbSmsTaskDto extends DataBaseByDto {
     @IsInt({ message: '版本号必须是整数' })
     @Min(1, { message: '版本号必须大于0' })
     version: number
+
+    @ApiProperty({
+        description: '已入队版本：等于 version 表示当前版本已进入短信任务队列；为空或小于 version 表示尚未入队',
+        required: false,
+        example: 1
+    })
+    @IsOptional()
+    @IsInt({ message: '已入队版本必须是整数' })
+    @Min(1, { message: '已入队版本必须大于0' })
+    taskVersion: number
 
     @ApiProperty({ description: '实际开始时间', required: false, example: '2026-11-02 18:00:01' })
     @IsOptional()
@@ -281,6 +292,14 @@ export class TbSmsTask extends DataBaseByAdapter {
         comment: '发送计划版本：创建时为 1，改发送时间或取消时加 1，MQ 唤醒消息版本不一致则丢弃'
     })
     version: number
+
+    @Column({
+        name: TbSmsTaskColumn.TASK_VERSION,
+        type: 'int',
+        nullable: true,
+        comment: '已入队版本：等于 version 表示当前版本已进入短信任务队列；为空或小于 version 表示尚未入队'
+    })
+    taskVersion: number
 
     @DateWithColumn(Column, {
         name: TbSmsTaskColumn.START_TIME,

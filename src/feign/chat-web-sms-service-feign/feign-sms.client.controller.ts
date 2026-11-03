@@ -47,4 +47,17 @@ export class FeignClientSmsManager extends FeignWebClient<SmsTypes.FeignClientSm
     ): Promise<SmsTypes.SmsAppSummary[]> {
         return this.dispatch('httpBaseSmsColumnAppResolver', _authorization, _input)
     }
+
+    /**扫描进入发送窗口的待发送任务并推入短信任务队列**/
+    @FeignPost('/task/enqueue', {
+        operation: { summary: '供内部服务扫描并推送进入发送窗口的短信任务' },
+        request: { source: 'body', type: SmsDto.SmsTaskEnqueueRequestDto },
+        response: { type: SmsDto.SmsTaskEnqueueResponseDto, description: '短信任务入队结果' }
+    })
+    async httpBaseSmsTaskEnqueue(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SmsTypes.SmsTaskEnqueueInput
+    ): Promise<SmsTypes.SmsTaskEnqueueResult> {
+        return this.dispatch('httpBaseSmsTaskEnqueue', _authorization, _input)
+    }
 }

@@ -64,6 +64,14 @@ export class TaskCronUpdateRequestDto extends IntersectionType(TaskCronKeyReques
     @IsNotEmpty({ message: 'Cron表达式不能为空' })
     @MaxLength(32, { message: 'Cron表达式长度不能超过32位' })
     cron: string
+
+    @ApiProperty({
+        description: Schema.TbTaskCronLogRetentionDefinition.comment,
+        enum: Schema.TbTaskCronLogRetention,
+        example: Schema.TbTaskCronLogRetention.DAY_7
+    })
+    @IsEnum(Schema.TbTaskCronLogRetention, { message: '运行日志保留时长格式错误' })
+    logRetention: Schema.TbTaskCronLogRetention
 }
 
 /** 手动触发周期任务参数。 */

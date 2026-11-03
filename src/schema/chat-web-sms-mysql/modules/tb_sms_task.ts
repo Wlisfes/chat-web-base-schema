@@ -19,6 +19,7 @@ export enum TbSmsTaskColumn {
     TEMPLATE_ID = 'template_id',
     CURRENCY = 'currency',
     PLAN_TIME = 'plan_time',
+    VERSION = 'version',
     START_TIME = 'start_time',
     END_TIME = 'end_time',
     STATUS = 'status',
@@ -135,6 +136,11 @@ export class TbSmsTaskDto extends DataBaseByDto {
     @IsOptional()
     @IsDateCustomize({ message: '计划发送时间格式错误' })
     planTime: Date
+
+    @ApiProperty({ description: '发送计划版本：创建时为 1，改发送时间或取消时加 1，MQ 唤醒消息版本不一致则丢弃', example: 1 })
+    @IsInt({ message: '版本号必须是整数' })
+    @Min(1, { message: '版本号必须大于0' })
+    version: number
 
     @ApiProperty({ description: '实际开始时间', required: false, example: '2026-11-02 18:00:01' })
     @IsOptional()
@@ -266,6 +272,15 @@ export class TbSmsTask extends DataBaseByAdapter {
         comment: '计划发送时间：为空表示立即发送'
     })
     planTime: Date
+
+    @Column({
+        name: TbSmsTaskColumn.VERSION,
+        type: 'int',
+        nullable: false,
+        default: 1,
+        comment: '发送计划版本：创建时为 1，改发送时间或取消时加 1，MQ 唤醒消息版本不一致则丢弃'
+    })
+    version: number
 
     @DateWithColumn(Column, {
         name: TbSmsTaskColumn.START_TIME,

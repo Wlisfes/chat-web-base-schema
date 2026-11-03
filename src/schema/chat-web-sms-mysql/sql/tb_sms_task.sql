@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS `tb_sms_task` (
     `template_id` varchar(64) NULL COMMENT '短信模板ID快照',
     `currency` varchar(16) NOT NULL COMMENT '报价币种：售价和任务金额使用该币种，同一任务不得跨币种',
     `plan_time` datetime(3) NULL COMMENT '计划发送时间：为空表示立即发送',
+    `version` int NOT NULL DEFAULT 1 COMMENT '发送计划版本：创建时为 1，改发送时间或取消时加 1，MQ 唤醒消息版本不一致则丢弃',
     `start_time` datetime(3) NULL COMMENT '实际开始时间',
     `end_time` datetime(3) NULL COMMENT '实际结束时间',
     `status` varchar(32) NOT NULL DEFAULT 'pending' COMMENT '短信任务状态：pending=待发送（等待计划时间或入队）；sending=发送中（发送记录正在提交）；completed=已完成（成功、失败和取消条数已等于任务发送总数）；failed=失败（文件解析失败或应用禁用等任务级失败）；cancelled=已取消（人工取消，未发出的记录改为取消）',

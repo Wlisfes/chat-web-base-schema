@@ -323,7 +323,7 @@ export class TbSrmSimbankMessageDto extends DataBaseDto {
     @MaxLength(22, { message: 'ICCID 长度不能超过22位' })
     iccid: string
 
-    @ApiProperty({ description: '供应商成本：USD总额（放大百万倍存储）', example: 0 })
+    @ApiProperty({ description: '供应商成本：报价币种总额（放大百万倍存储，按此扣费）', example: 0 })
     cost: number
 
     @ApiProperty({ description: '客户售价：USD总额（放大百万倍存储）', example: 0 })
@@ -547,7 +547,7 @@ export class TbSrmSimbankMessage extends DataBaseAdapter {
         transformer: BigintNumberTransformer,
         nullable: false,
         default: 0,
-        comment: '供应商成本：USD总额（放大百万倍存储）'
+        comment: '供应商成本：报价币种总额（放大百万倍存储，按此扣费）'
     })
     cost: number
 

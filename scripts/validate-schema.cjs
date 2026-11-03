@@ -360,6 +360,30 @@ validateTable({
 })
 
 validateTable({
+    entity: smsSchema.TbSmsTask,
+    dto: smsSchema.TbSmsTaskDto,
+    columns: smsSchema.TbSmsTaskColumn,
+    sqlPath: resolve(smsServiceRoot, 'sql/tb_sms_task.sql'),
+    enumComments: [
+        smsSchema.TbSmsAppTypeDefinition.comment,
+        smsSchema.TbSmsTaskStatusDefinition.comment,
+        smsSchema.TbSmsTaskSourceDefinition.comment
+    ]
+})
+
+validateTable({
+    entity: smsSchema.TbSmsMessage,
+    dto: smsSchema.TbSmsMessageDto,
+    columns: smsSchema.TbSmsMessageColumn,
+    sqlPath: resolve(smsServiceRoot, 'sql/tb_sms_message.sql'),
+    enumComments: [
+        smsSchema.TbSmsAppTypeDefinition.comment,
+        smsSchema.TbSmsMessageEncodingDefinition.comment,
+        smsSchema.TbSmsMessageSendStatusDefinition.comment
+    ]
+})
+
+validateTable({
     entity: skylineSchema.TbSkylineDatetaskSystem,
     dto: skylineSchema.TbSkylineDatetaskSystemDto,
     columns: skylineSchema.TbSkylineDatetaskSystemColumn,

@@ -117,12 +117,12 @@ export class TbSmsQuoteDraftDto extends DataBaseByDto {
     @MaxLength(4, { message: '移动国家代码长度不能超过4位' })
     mcc: string
 
-    @ApiProperty({ description: '上行短信售价USD（放大百万倍存储）', example: 30000 })
+    @ApiProperty({ description: '上行短信 USD 参照金额（放大百万倍存储，仅报表统计，不参与扣费）', example: 30000 })
     @IsInt({ message: '上行短信售价必须是整数' })
     @Min(0, { message: '上行短信售价不能小于0' })
     upUsd: number
 
-    @ApiProperty({ description: '下行短信售价USD（放大百万倍存储）', example: 50000 })
+    @ApiProperty({ description: '下行短信 USD 参照金额（放大百万倍存储，仅报表统计，不参与扣费）', example: 50000 })
     @IsInt({ message: '下行短信售价必须是整数' })
     @Min(0, { message: '下行短信售价不能小于0' })
     downUsd: number
@@ -132,12 +132,12 @@ export class TbSmsQuoteDraftDto extends DataBaseByDto {
     @Length(1, 16, { message: '报价币种长度不能超过16位' })
     currency: string
 
-    @ApiProperty({ description: '上行短信本币售价（放大百万倍存储）', example: 30000 })
+    @ApiProperty({ description: '上行短信报价币种金额（放大百万倍存储，按此扣费）', example: 30000 })
     @IsInt({ message: '上行短信本币售价必须是整数' })
     @Min(0, { message: '上行短信本币售价不能小于0' })
     upLocal: number
 
-    @ApiProperty({ description: '下行短信本币售价（放大百万倍存储）', example: 50000 })
+    @ApiProperty({ description: '下行短信报价币种金额（放大百万倍存储，按此扣费）', example: 50000 })
     @IsInt({ message: '下行短信本币售价必须是整数' })
     @Min(0, { message: '下行短信本币售价不能小于0' })
     downLocal: number
@@ -223,7 +223,7 @@ export class TbSmsQuoteDraft extends DataBaseByAdapter {
         type: 'bigint',
         transformer: BigintNumberTransformer,
         nullable: false,
-        comment: '上行短信售价USD（放大百万倍存储）'
+        comment: '上行短信 USD 参照金额（放大百万倍存储，仅报表统计，不参与扣费）'
     })
     upUsd: number
 
@@ -232,7 +232,7 @@ export class TbSmsQuoteDraft extends DataBaseByAdapter {
         type: 'bigint',
         transformer: BigintNumberTransformer,
         nullable: false,
-        comment: '下行短信售价USD（放大百万倍存储）'
+        comment: '下行短信 USD 参照金额（放大百万倍存储，仅报表统计，不参与扣费）'
     })
     downUsd: number
 
@@ -244,7 +244,7 @@ export class TbSmsQuoteDraft extends DataBaseByAdapter {
         type: 'bigint',
         transformer: BigintNumberTransformer,
         nullable: false,
-        comment: '上行短信本币售价（放大百万倍存储）'
+        comment: '上行短信报价币种金额（放大百万倍存储，按此扣费）'
     })
     upLocal: number
 
@@ -253,7 +253,7 @@ export class TbSmsQuoteDraft extends DataBaseByAdapter {
         type: 'bigint',
         transformer: BigintNumberTransformer,
         nullable: false,
-        comment: '下行短信本币售价（放大百万倍存储）'
+        comment: '下行短信报价币种金额（放大百万倍存储，按此扣费）'
     })
     downLocal: number
 

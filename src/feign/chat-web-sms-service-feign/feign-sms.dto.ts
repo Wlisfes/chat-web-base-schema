@@ -34,3 +34,18 @@ export class SmsAppSummaryResponseDto extends PickType(Schema.TbSmsAppDto, [
     'type',
     'status'
 ] as const) {}
+
+/** 扫描并推送进入发送窗口的短信任务。请求体可为空。 */
+export class SmsTaskEnqueueRequestDto {}
+
+/** 扫描并推送短信任务的结果。 */
+export class SmsTaskEnqueueResponseDto {
+    @ApiProperty({ description: '本次扫描到的待入队任务数', example: 2 })
+    scanned: number
+
+    @ApiProperty({ description: '成功推入队列的任务数', example: 1 })
+    enqueued: number
+
+    @ApiProperty({ description: '跳过或推送失败的任务数', example: 1 })
+    skipped: number
+}

@@ -16,6 +16,7 @@ export enum TbTaskCronColumn {
     STATUS = 'status',
     BODY = 'body',
     MAX_ATTEMPTS = 'max_attempts',
+    LOG_RETENTION = 'log_retention',
     LAST_TIME = 'last_time',
     NEXT_TIME = 'next_time',
     CREATE_BY = 'create_by',
@@ -47,6 +48,45 @@ export const TbTaskCronStatusDefinition = defineEnumMetadata(TbTaskCronStatus, '
     [TbTaskCronStatus.ENABLE]: { label: '启用', description: '按照 Cron 表达式参与调度', type: 'success' },
     [TbTaskCronStatus.DISABLE]: { label: '停用', description: '不参与调度，可手动触发', type: 'default' }
 })
+
+/** 运行日志最大保留时长。只清理已结束的执行记录，进行中的记录不受此限制。 */
+export enum TbTaskCronLogRetention {
+    HOUR_24 = '24h',
+    DAY_3 = '3d',
+    DAY_7 = '7d',
+    DAY_15 = '15d',
+    DAY_30 = '30d',
+    DAY_60 = '60d',
+    DAY_90 = '90d'
+}
+
+export const TbTaskCronLogRetentionDefinition = defineEnumMetadata(TbTaskCronLogRetention, '运行日志最大保留时长', {
+    [TbTaskCronLogRetention.HOUR_24]: { label: '24小时', description: '只保留最近24小时内已结束的执行记录', type: 'default' },
+    [TbTaskCronLogRetention.DAY_3]: { label: '3天', description: '只保留最近3天内已结束的执行记录', type: 'default' },
+    [TbTaskCronLogRetention.DAY_7]: { label: '7天', description: '只保留最近7天内已结束的执行记录', type: 'default' },
+    [TbTaskCronLogRetention.DAY_15]: { label: '15天', description: '只保留最近15天内已结束的执行记录', type: 'default' },
+    [TbTaskCronLogRetention.DAY_30]: { label: '30天', description: '只保留最近30天内已结束的执行记录', type: 'default' },
+    [TbTaskCronLogRetention.DAY_60]: { label: '60天', description: '只保留最近60天内已结束的执行记录', type: 'default' },
+    [TbTaskCronLogRetention.DAY_90]: { label: '90天', description: '只保留最近90天内已结束的执行记录', type: 'default' }
+})
+
+const TASK_LOG_RETENTION_DAY_MS = 24 * 60 * 60 * 1000
+
+/** 各保留时长对应的毫秒数，供调度器计算清理截止时间。 */
+export const TbTaskCronLogRetentionDuration: Record<TbTaskCronLogRetention, number> = {
+    [TbTaskCronLogRetention.HOUR_24]: TASK_LOG_RETENTION_DAY_MS,
+    [TbTaskCronLogRetention.DAY_3]: 3 * TASK_LOG_RETENTION_DAY_MS,
+    [TbTaskCronLogRetention.DAY_7]: 7 * TASK_LOG_RETENTION_DAY_MS,
+    [TbTaskCronLogRetention.DAY_15]: 15 * TASK_LOG_RETENTION_DAY_MS,
+    [TbTaskCronLogRetention.DAY_30]: 30 * TASK_LOG_RETENTION_DAY_MS,
+    [TbTaskCronLogRetention.DAY_60]: 60 * TASK_LOG_RETENTION_DAY_MS,
+    [TbTaskCronLogRetention.DAY_90]: 90 * TASK_LOG_RETENTION_DAY_MS
+}
+
+/** 把保留时长枚举换算为毫秒；未知值返回 undefined，避免误删全部日志。 */
+export function fetchTaskCronLogRetentionMs(retention: TbTaskCronLogRetention): number | undefined {
+    return TbTaskCronLogRetentionDuration[retention]
+}
 
 /** 周期任务完整字段 DTO。 */
 export class TbTaskCronDto extends DataBaseByDto {
@@ -111,6 +151,15 @@ export class TbTaskCronDto extends DataBaseByDto {
     @Max(20, { message: '最大尝试次数不能超过20' })
     maxAttempts: number
 
+    @ApiProperty({
+        description: TbTaskCronLogRetentionDefinition.comment,
+        enum: TbTaskCronLogRetention,
+        enumName: 'TbTaskCronLogRetention',
+        example: TbTaskCronLogRetention.DAY_7
+    })
+    @IsEnum(TbTaskCronLogRetention, { message: '运行日志保留时长格式错误' })
+    logRetention: TbTaskCronLogRetention
+
     @ApiProperty({ description: '上次执行时间', format: 'date-time', example: '2026-10-12 08:00:00.000', required: false })
     @IsOptional()
     lastTime: Date
@@ -152,6 +201,16 @@ export class TbTaskCron extends DataBaseByAdapter {
 
     @Column({ name: TbTaskCronColumn.MAX_ATTEMPTS, type: 'int', nullable: false, default: 8, comment: '单次执行最大尝试次数（含首次）' })
     maxAttempts: number
+
+    @Column({
+        name: TbTaskCronColumn.LOG_RETENTION,
+        type: 'varchar',
+        length: 32,
+        nullable: false,
+        default: TbTaskCronLogRetention.DAY_7,
+        comment: TbTaskCronLogRetentionDefinition.comment
+    })
+    logRetention: TbTaskCronLogRetention
 
     @DateWithColumn(Column, { name: TbTaskCronColumn.LAST_TIME, type: 'datetime', precision: 3, nullable: true, comment: '上次执行时间' })
     lastTime: Date

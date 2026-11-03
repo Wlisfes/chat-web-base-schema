@@ -12,6 +12,7 @@ const cron = {
     handler: 'datetask-sync-exchange-rate',
     cron: '0 0 8 * * *',
     status: 'enable',
+    logRetention: '7d',
     maxAttempts: 8,
     createBy: '0',
     modifyBy: '0'
@@ -33,6 +34,16 @@ test('周期任务所属模块必填且只能取已定义的模块', () => {
             `所属模块 ${module} 应校验失败`
         )
     }
+})
+
+test('运行日志保留时长只能取已定义的枚举', () => {
+    const { TbTaskCronLogRetention, fetchTaskCronLogRetentionMs } = require('../dist/src/schema/chat-web-task-mysql')
+    assert.deepEqual(Object.values(TbTaskCronLogRetention), ['24h', '3d', '7d', '15d', '30d', '60d', '90d'])
+    assert.equal(fetchTaskCronLogRetentionMs('24h'), 24 * 60 * 60 * 1000)
+    assert.equal(fetchTaskCronLogRetentionMs('90d'), 90 * 24 * 60 * 60 * 1000)
+    assert.equal(fetchTaskCronLogRetentionMs('forever'), undefined)
+    const errors = validateSync(plainToInstance(TbTaskCronDto, { ...cron, logRetention: '1d' }))
+    assert.ok(errors.some(error => error.property === 'logRetention'))
 })
 
 test('周期任务 Cron 表达式必填，最大尝试次数为 1 至 20', () => {

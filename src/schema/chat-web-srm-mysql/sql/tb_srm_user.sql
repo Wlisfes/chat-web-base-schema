@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `tb_srm_user` (
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_srm_user_alias` (`alias`),
+    UNIQUE KEY `uk_tb_srm_user_email` (`email`),
     KEY `idx_tb_srm_user_owner_user_uid` (`owner_user_uid`),
     KEY `idx_tb_srm_user_status` (`status`),
     KEY `idx_tb_srm_user_currency` (`currency`)

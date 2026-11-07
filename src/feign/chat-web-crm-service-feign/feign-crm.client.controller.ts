@@ -72,4 +72,17 @@ export class FeignClientCrmManager extends FeignWebClient<CrmTypes.FeignClientCr
     ): Promise<CrmTypes.CrmUserConfig> {
         return this.dispatch('httpBaseCrmUserConfigResolver', _authorization, _input)
     }
+
+    /**判断邮箱是否已被客户使用**/
+    @FeignPost('/user/email/exists', {
+        operation: { summary: '供内部服务判断邮箱是否已被客户使用' },
+        request: { source: 'body', type: CrmDto.CrmUserEmailExistsRequestDto },
+        response: { type: CrmDto.CrmUserEmailExistsResponseDto, description: '邮箱占用结果' }
+    })
+    async httpBaseCrmUserEmailExists(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: CrmTypes.CrmUserEmailExistsInput
+    ): Promise<CrmTypes.CrmUserEmailExists> {
+        return this.dispatch('httpBaseCrmUserEmailExists', _authorization, _input)
+    }
 }

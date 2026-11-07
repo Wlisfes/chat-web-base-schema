@@ -132,6 +132,7 @@ export class TbSrmUserDto extends DataBaseDto {
 }
 
 @Index('uk_tb_srm_user_alias', ['alias'], { unique: true })
+@Index('uk_tb_srm_user_email', ['email'], { unique: true })
 @Index('idx_tb_srm_user_owner_user_uid', ['ownerUserUid'])
 @Index('idx_tb_srm_user_status', ['status'])
 @Index('idx_tb_srm_user_currency', ['currency'])

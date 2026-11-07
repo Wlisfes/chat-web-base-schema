@@ -1,6 +1,6 @@
 import { ApiProperty, IntersectionType, PartialType, PickType } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsInt, IsOptional, Min } from 'class-validator'
+import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsEmail, IsInt, IsOptional, MaxLength, Min } from 'class-validator'
 import * as Schema from '@/schema/chat-web-crm-mysql'
 import { PageResponseDataDto } from '@/decorator'
 import { PageDto } from '@/utils'
@@ -52,4 +52,18 @@ export class CrmListUserRequestDto extends IntersectionType(
     @IsInt({ message: '财务品牌主键必须是整数' })
     @Min(1, { message: '财务品牌主键必须大于0' })
     brandKeyId?: number
+}
+
+/** CRM 客户邮箱占用查询请求。 */
+export class CrmUserEmailExistsRequestDto {
+    @ApiProperty({ description: '邮箱', example: 'consumer@example.com' })
+    @IsEmail({}, { message: '邮箱格式错误' })
+    @MaxLength(128, { message: '邮箱长度不能超过128位' })
+    email: string
+}
+
+/** CRM 客户邮箱占用查询响应。 */
+export class CrmUserEmailExistsResponseDto {
+    @ApiProperty({ description: '邮箱是否已被客户使用', example: false })
+    exists: boolean
 }

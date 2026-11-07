@@ -10,6 +10,10 @@ export type SrmResolveUserInput = SrmDto.SrmResolveUserRequestDto
 export type SrmColumnUserResolverInput = SrmDto.SrmColumnUserResolverRequestDto
 /**分页查询供应商的请求入参。*/
 export type SrmListUserInput = SrmDto.SrmListUserRequestDto
+/**判断邮箱是否已被供应商使用的请求入参。*/
+export type SrmUserEmailExistsInput = SrmDto.SrmUserEmailExistsRequestDto
+/**邮箱是否已被供应商使用。*/
+export type SrmUserEmailExists = SrmDto.SrmUserEmailExistsResponseDto
 
 /** SRM 服务 Feign 服务端实现必须满足的接口。 */
 export interface FeignClientSrmImplementation {
@@ -19,4 +23,6 @@ export interface FeignClientSrmImplementation {
     httpBaseSrmColumnUserResolver(authorization: string, input: SrmColumnUserResolverInput): Promise<SrmUser[]>
     /**分页查询供应商列表**/
     httpBaseSrmColumnUser(authorization: string, input: SrmListUserInput): Promise<SrmUserPage>
+    /**判断邮箱是否已被供应商使用**/
+    httpBaseSrmUserEmailExists(authorization: string, input: SrmUserEmailExistsInput): Promise<SrmUserEmailExists>
 }

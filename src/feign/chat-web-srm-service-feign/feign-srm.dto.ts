@@ -1,6 +1,6 @@
 import { ApiProperty, IntersectionType, PartialType, PickType } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsInt, Min } from 'class-validator'
+import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsEmail, IsInt, MaxLength, Min } from 'class-validator'
 import * as Schema from '@/schema/chat-web-srm-mysql'
 import { PageResponseDataDto } from '@/decorator'
 import { PageDto } from '@/utils'
@@ -40,3 +40,17 @@ export class SrmListUserRequestDto extends IntersectionType(
     PageDto,
     PartialType(PickType(Schema.TbSrmUserDto, ['name', 'status', 'currency', 'payMode', 'source'] as const))
 ) {}
+
+/** SRM 供应商邮箱占用查询请求。 */
+export class SrmUserEmailExistsRequestDto {
+    @ApiProperty({ description: '邮箱', example: 'supplier@example.com' })
+    @IsEmail({}, { message: '邮箱格式错误' })
+    @MaxLength(128, { message: '邮箱长度不能超过128位' })
+    email: string
+}
+
+/** SRM 供应商邮箱占用查询响应。 */
+export class SrmUserEmailExistsResponseDto {
+    @ApiProperty({ description: '邮箱是否已被供应商使用', example: false })
+    exists: boolean
+}

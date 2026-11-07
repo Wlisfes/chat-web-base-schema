@@ -59,4 +59,17 @@ export class FeignClientSrmManager extends FeignWebClient<SrmTypes.FeignClientSr
     ): Promise<SrmTypes.SrmUserPage> {
         return this.dispatch('httpBaseSrmColumnUser', _authorization, _input)
     }
+
+    /**判断邮箱是否已被供应商使用**/
+    @FeignPost('/user/email/exists', {
+        operation: { summary: '供内部服务判断邮箱是否已被供应商使用' },
+        request: { source: 'body', type: SrmDto.SrmUserEmailExistsRequestDto },
+        response: { type: SrmDto.SrmUserEmailExistsResponseDto, description: '邮箱占用结果' }
+    })
+    async httpBaseSrmUserEmailExists(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: SrmTypes.SrmUserEmailExistsInput
+    ): Promise<SrmTypes.SrmUserEmailExists> {
+        return this.dispatch('httpBaseSrmUserEmailExists', _authorization, _input)
+    }
 }

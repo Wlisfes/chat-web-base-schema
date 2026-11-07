@@ -1,4 +1,4 @@
-import type { TbFinanceBrandStatus, TbFinanceSrmUserWalletPayMode } from '@/schema/chat-web-finance-mysql'
+import type { TbFinanceBrandStatus, TbFinanceCrmUserWalletPayMode, TbFinanceSrmUserWalletPayMode } from '@/schema/chat-web-finance-mysql'
 
 /** 财务服务 Feign 服务端实现必须满足的接口。 */
 export interface FinanceFeignImplementation {
@@ -27,6 +27,15 @@ export interface FinanceFeignImplementation {
     httpBaseFinanceCreateSrmUserWallet(authorization: string, input: FinanceCreateSrmUserWalletRequest): Promise<FinanceSrmUserWallet>
     /**把 Redis 中的供应商钱包余额同步回钱包表；Redis 缺少钱包时用钱包表补齐 Redis**/
     httpBaseFinanceSyncSrmUserWallet(authorization: string): Promise<FinanceSrmUserWalletSyncResponse>
+    /**按客户主键批量获取客户钱包余额和信用额度，没有钱包时金额为 0**/
+    httpBaseFinanceColumnCrmUserResolver(
+        authorization: string,
+        input: FinanceColumnCrmUserResolverRequest
+    ): Promise<FinanceCrmUserSummary[]>
+    /**为新建客户创建一个钱包，并把钱包快照写入 Redis。已有钱包时不重置余额，只刷新 Redis。**/
+    httpBaseFinanceCreateCrmUserWallet(authorization: string, input: FinanceCreateCrmUserWalletRequest): Promise<FinanceCrmUserWallet>
+    /**把 Redis 中的客户钱包余额同步回钱包表；Redis 缺少钱包时用钱包表补齐 Redis**/
+    httpBaseFinanceSyncCrmUserWallet(authorization: string): Promise<FinanceCrmUserWalletSyncResponse>
     /**按币种获取最新汇率**/
     httpBaseFinanceCurrencyExchangeResolver(
         authorization: string,
@@ -200,6 +209,62 @@ export interface FinanceSrmUserWalletSyncResponse {
 /**供应商钱包金额摘要：余额和信用额度取 Redis 最新值。没有钱包时金额为 0。*/
 export interface FinanceSrmUserSummary {
     /**SRM 供应商主键。*/
+    userKeyId: number
+    /**余额（放大百万倍存储值）：按钱包币种计。*/
+    balance: number
+    /**信用额度（放大百万倍存储值）：按钱包币种计。*/
+    credit: number
+}
+
+/**按客户主键批量查询客户钱包的请求。*/
+export interface FinanceColumnCrmUserResolverRequest {
+    /**CRM 客户主键列表，单次上限 100 个。*/
+    userKeyIds: number[]
+}
+
+/**新建客户钱包的请求。*/
+export interface FinanceCreateCrmUserWalletRequest {
+    /**CRM 客户主键。*/
+    userKeyId: number
+    /**财务币种编码。*/
+    currency: string
+    /**付款模式。*/
+    payMode: TbFinanceCrmUserWalletPayMode
+    /**信用额度（放大百万倍存储值）。不传时为 0。*/
+    credit?: number
+}
+
+/**客户钱包：余额的权威快照，同时写入 Redis 供后续扣费读取。*/
+export interface FinanceCrmUserWallet {
+    /**CRM 客户主键。*/
+    userKeyId: number
+    /**财务币种编码。*/
+    currency: string
+    /**付款模式。*/
+    payMode: TbFinanceCrmUserWalletPayMode
+    /**余额（放大百万倍存储值）：按钱包币种计。*/
+    balance: number
+    /**信用额度（放大百万倍存储值）：按钱包币种计。*/
+    credit: number
+}
+
+/**客户钱包余额同步结果：只返回统计数量，不返回余额明细。*/
+export interface FinanceCrmUserWalletSyncResponse {
+    /**参与同步的钱包数量。*/
+    total: number
+    /**本次按 Redis 余额写回钱包表的数量。*/
+    updated: number
+    /**保留字段。同步不再逐个比对，固定为 0。*/
+    unchanged: number
+    /**保留字段。同步不再用钱包表补齐 Redis，固定为 0。*/
+    restored: number
+    /**Redis 余额格式错误、本次跳过的客户主键。*/
+    invalidUserKeyIds: number[]
+}
+
+/**客户钱包金额摘要：余额和信用额度取 Redis 最新值。没有钱包时金额为 0。*/
+export interface FinanceCrmUserSummary {
+    /**CRM 客户主键。*/
     userKeyId: number
     /**余额（放大百万倍存储值）：按钱包币种计。*/
     balance: number

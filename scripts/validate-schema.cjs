@@ -315,6 +315,22 @@ validateTable({
 })
 
 validateTable({
+    entity: financeSchema.TbFinanceCrmUserWallet,
+    dto: financeSchema.TbFinanceCrmUserWalletDto,
+    columns: financeSchema.TbFinanceCrmUserWalletColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_crm_user_wallet.sql'),
+    enumComments: [financeSchema.TbFinanceCrmUserWalletPayModeDefinition.comment]
+})
+
+validateTable({
+    entity: financeSchema.TbFinanceCrmUserDeduct,
+    dto: financeSchema.TbFinanceCrmUserDeductDto,
+    columns: financeSchema.TbFinanceCrmUserDeductColumn,
+    sqlPath: resolve(financeServiceRoot, 'sql/tb_finance_crm_user_deduct.sql'),
+    enumComments: [financeSchema.TbFinanceCrmUserDeductBizTypeDefinition.comment]
+})
+
+validateTable({
     entity: srmSchema.TbSrmBillingOutbox,
     dto: srmSchema.TbSrmBillingOutboxDto,
     columns: srmSchema.TbSrmBillingOutboxColumn,

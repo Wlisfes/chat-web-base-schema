@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS `tb_crm_user` (
     `modify_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`key_id`),
     UNIQUE KEY `uk_tb_crm_user_alias` (`alias`),
+    UNIQUE KEY `uk_tb_crm_user_email` (`email`),
     KEY `idx_tb_crm_user_owner_user_uid` (`owner_user_uid`),
     KEY `idx_tb_crm_user_brand_key_id` (`brand_key_id`),
     KEY `idx_tb_crm_user_status` (`status`),

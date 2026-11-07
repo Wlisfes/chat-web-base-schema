@@ -14,6 +14,10 @@ export type CrmUserConfig = CrmDto.CrmUserConfigResponseDto
 export type CrmUserConfigResolverInput = CrmDto.CrmUserConfigResolverRequestDto
 /**分页查询客户的请求入参。*/
 export type CrmListUserInput = CrmDto.CrmListUserRequestDto
+/**判断邮箱是否已被客户使用的请求入参。*/
+export type CrmUserEmailExistsInput = CrmDto.CrmUserEmailExistsRequestDto
+/**邮箱是否已被客户使用。*/
+export type CrmUserEmailExists = CrmDto.CrmUserEmailExistsResponseDto
 
 /** CRM 服务 Feign 服务端实现必须满足的接口。 */
 export interface FeignClientCrmImplementation {
@@ -25,4 +29,6 @@ export interface FeignClientCrmImplementation {
     httpBaseCrmColumnUser(authorization: string, input: CrmListUserInput): Promise<CrmUserPage>
     /**按客户主键获取客户配置**/
     httpBaseCrmUserConfigResolver(authorization: string, input: CrmUserConfigResolverInput): Promise<CrmUserConfig>
+    /**判断邮箱是否已被客户使用**/
+    httpBaseCrmUserEmailExists(authorization: string, input: CrmUserEmailExistsInput): Promise<CrmUserEmailExists>
 }

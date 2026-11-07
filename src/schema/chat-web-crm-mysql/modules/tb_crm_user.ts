@@ -177,6 +177,7 @@ export class TbCrmUserDto extends DataBaseDto {
 }
 
 @Index('uk_tb_crm_user_alias', ['alias'], { unique: true })
+@Index('uk_tb_crm_user_email', ['email'], { unique: true })
 @Index('idx_tb_crm_user_owner_user_uid', ['ownerUserUid'])
 @Index('idx_tb_crm_user_brand_key_id', ['brandKeyId'])
 @Index('idx_tb_crm_user_status', ['status'])

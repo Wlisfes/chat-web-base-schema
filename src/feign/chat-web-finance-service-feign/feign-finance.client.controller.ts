@@ -94,6 +94,32 @@ export class FeignClientFinanceManager extends FeignWebClient<FinanceTypes.Finan
         return this.dispatch('httpBaseFinanceSyncSrmUserWallet', _authorization)
     }
 
+    /**按客户主键批量获取客户钱包**/
+    @FeignPost('/crm/user/column/resolve')
+    async httpBaseFinanceColumnCrmUserResolver(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: FinanceTypes.FinanceColumnCrmUserResolverRequest
+    ): Promise<FinanceTypes.FinanceCrmUserSummary[]> {
+        return this.dispatch('httpBaseFinanceColumnCrmUserResolver', _authorization, _input)
+    }
+
+    /**为新建客户创建钱包，并写入 Redis**/
+    @FeignPost('/crm/user/wallet/create')
+    async httpBaseFinanceCreateCrmUserWallet(
+        @FeignHeader('authorization') _authorization: string,
+        @FeignBody() _input: FinanceTypes.FinanceCreateCrmUserWalletRequest
+    ): Promise<FinanceTypes.FinanceCrmUserWallet> {
+        return this.dispatch('httpBaseFinanceCreateCrmUserWallet', _authorization, _input)
+    }
+
+    /**把 Redis 中的客户钱包余额同步回钱包表**/
+    @FeignPost('/crm/user/wallet/sync')
+    async httpBaseFinanceSyncCrmUserWallet(
+        @FeignHeader('authorization') _authorization: string
+    ): Promise<FinanceTypes.FinanceCrmUserWalletSyncResponse> {
+        return this.dispatch('httpBaseFinanceSyncCrmUserWallet', _authorization)
+    }
+
     /**按币种获取最新汇率**/
     @FeignPost('/currency/exchange/resolve')
     async httpBaseFinanceCurrencyExchangeResolver(

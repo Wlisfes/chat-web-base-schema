@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS `tb_crm_user` (
     `brand_key_id` int NOT NULL COMMENT '财务品牌主键',
     `currency` varchar(16) NOT NULL COMMENT '财务币种编码',
     `email` varchar(128) NOT NULL COMMENT '邮箱',
+    `password` varchar(255) NOT NULL DEFAULT 'scrypt-v1$16384$8$1$wf9kkcyZ-RJEMAv3HlkV0g$BQqzasPKIcOSU31LTuM3V04lrSXyeKmRaFncG1llmZI-H75GyEE957CXuB6aLyb5v4qlGzSdH660C68_q4-XzQ' COMMENT '密码哈希：未设置时为默认密码 123456 的摘要',
     `phone` varchar(32) NULL COMMENT '电话号码',
     `status` varchar(32) NOT NULL COMMENT '客户状态：disable=禁用（客户账号不可用）；enable=启用（客户账号正常使用）',
     `pay_mode` varchar(32) NOT NULL COMMENT '付款模式：postpaid=后付（账期后付费）；prepaid=预付（账户预付费）',

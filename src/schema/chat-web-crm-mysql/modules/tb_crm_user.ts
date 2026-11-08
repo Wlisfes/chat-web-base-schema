@@ -12,6 +12,7 @@ export enum TbCrmUserColumn {
     BRAND_KEY_ID = 'brand_key_id',
     CURRENCY = 'currency',
     EMAIL = 'email',
+    PASSWORD = 'password',
     PHONE = 'phone',
     STATUS = 'status',
     PAY_MODE = 'pay_mode',
@@ -123,6 +124,17 @@ export class TbCrmUserDto extends DataBaseDto {
     @MaxLength(128, { message: '邮箱长度不能超过128位' })
     email: string
 
+    @ApiProperty({
+        description: '密码；不传时使用默认密码 123456。库内只存密码哈希',
+        example: '123456',
+        writeOnly: true,
+        required: false
+    })
+    @IsOptional()
+    @IsString({ message: '密码必须是字符串' })
+    @Length(6, 32, { message: '密码必须保持6~32位' })
+    password: string
+
     @ApiProperty({ description: '电话号码', example: '18888888888', required: false })
     @IsOptional()
     @IsString({ message: '电话号码必须是字符串' })
@@ -207,6 +219,16 @@ export class TbCrmUser extends DataBaseAdapter {
 
     @Column({ name: TbCrmUserColumn.EMAIL, type: 'varchar', length: 128, nullable: false, comment: '邮箱' })
     email: string
+
+    @Column({
+        name: TbCrmUserColumn.PASSWORD,
+        type: 'varchar',
+        length: 255,
+        comment: '密码哈希：未设置时为默认密码 123456 的摘要',
+        select: false,
+        nullable: false
+    })
+    password: string
 
     @Column({ name: TbCrmUserColumn.PHONE, type: 'varchar', length: 32, nullable: true, comment: '电话号码' })
     phone: string

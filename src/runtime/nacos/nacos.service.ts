@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nest
 import { ConfigService } from '@nestjs/config'
 import { NacosConfigClient, NacosNamingClient } from 'nacos'
 import type { Host } from 'nacos'
+import { NacosLongPollingHttpAgent } from './nacos-http-agent'
 import { NACOS_RUNTIME_OPTIONS, NacosInstanceListener, NacosRuntimeOptions, NacosRuntimeStatus } from './nacos.interface'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -512,8 +513,9 @@ export class NacosService implements OnModuleInit, OnModuleDestroy {
             namespace,
             username: this.options.username,
             password: this.options.password,
-            requestTimeout: this.options.requestTimeout
-        })
+            requestTimeout: this.options.requestTimeout,
+            httpAgent: NacosLongPollingHttpAgent
+        } as ConstructorParameters<typeof NacosConfigClient>[0])
         const content = await this.configClient.getConfig(dataId, group)
         this.applyRemoteConfig(content, '已加载', dataId, group, namespace)
         this.configLoaded = true

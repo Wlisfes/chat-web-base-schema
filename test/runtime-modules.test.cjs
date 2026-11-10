@@ -12,6 +12,7 @@ const {
     verifyGatewayPrincipal
 } = require('../dist/src/runtime/auth')
 const { AuthSessionService } = require('../dist/src/runtime/auth-session')
+const { NacosLongPollingHttpAgent } = require('../dist/src/runtime/nacos/nacos-http-agent')
 const { assertMysqlDatabaseIsolation, createMysqlOptions } = require('../dist/src/runtime/database')
 const {
     fetchAppendFinanceBrandOptions,
@@ -782,7 +783,8 @@ test('shared Nacos loadConfig and registerService use runtime options end-to-end
                 namespace: 'example-namespace',
                 username: 'example-user',
                 password: 'example-password',
-                requestTimeout: 5000
+                requestTimeout: 5000,
+                httpAgent: NacosLongPollingHttpAgent
             }
         ])
         assert.deepEqual(patched.records.configGetConfigCalls, [{ dataId: 'options.yaml', group: 'OPTIONS_CONFIG_GROUP' }])
@@ -1455,4 +1457,27 @@ test('shared MySQL grant validation only permits the service database', () => {
     )
     assert.throws(() => assertMysqlDatabaseIsolation(['GRANT SELECT ON *.* TO `finance`@`%`'], 'chat-web-finance'), /全局权限/)
     assert.throws(() => assertMysqlDatabaseIsolation(['GRANT `shared_role`@`%` TO `finance`@`%`'], 'chat-web-finance'), /角色/)
+})
+
+test('Nacos 长轮询使用更长的客户端超时，普通配置请求保持原超时', async () => {
+    const nacos = require('nacos')
+    const original = nacos.HttpAgent.prototype.request
+    const calls = []
+    nacos.HttpAgent.prototype.request = async function (path, options) {
+        calls.push({ path, timeout: options.timeout })
+        return 'ok'
+    }
+    try {
+        const { NacosLongPollingHttpAgent, NACOS_LONG_POLLING_RESPONSE_TIMEOUT } = require('../dist/src/runtime/nacos/nacos-http-agent')
+        const agent = new NacosLongPollingHttpAgent({ configuration: { get() {} } })
+        await agent.request('/v1/cs/configs/listener', { method: 'POST', timeout: 40000 })
+        await agent.request('/v1/cs/configs', { method: 'GET', timeout: 5000 })
+        assert.equal(NACOS_LONG_POLLING_RESPONSE_TIMEOUT, 180000)
+        assert.deepEqual(calls, [
+            { path: '/v1/cs/configs/listener', timeout: 180000 },
+            { path: '/v1/cs/configs', timeout: 5000 }
+        ])
+    } finally {
+        nacos.HttpAgent.prototype.request = original
+    }
 })

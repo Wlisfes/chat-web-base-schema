@@ -13,6 +13,7 @@ export enum TbCrmUserColumn {
     CURRENCY = 'currency',
     EMAIL = 'email',
     PASSWORD = 'password',
+    AVATAR = 'avatar',
     PHONE = 'phone',
     STATUS = 'status',
     PAY_MODE = 'pay_mode',
@@ -135,6 +136,12 @@ export class TbCrmUserDto extends DataBaseDto {
     @Length(6, 32, { message: '密码必须保持6~32位' })
     password: string
 
+    @ApiProperty({ description: '头像地址', example: 'https://picsum.photos/500', required: false })
+    @IsOptional()
+    @IsString({ message: '头像地址必须是字符串' })
+    @MaxLength(255, { message: '头像地址长度不能超过255位' })
+    avatar: string
+
     @ApiProperty({ description: '电话号码', example: '18888888888', required: false })
     @IsOptional()
     @IsString({ message: '电话号码必须是字符串' })
@@ -229,6 +236,9 @@ export class TbCrmUser extends DataBaseAdapter {
         nullable: false
     })
     password: string
+
+    @Column({ name: TbCrmUserColumn.AVATAR, type: 'varchar', length: 255, nullable: true, comment: '头像' })
+    avatar: string
 
     @Column({ name: TbCrmUserColumn.PHONE, type: 'varchar', length: 32, nullable: true, comment: '电话号码' })
     phone: string

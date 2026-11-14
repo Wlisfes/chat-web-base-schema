@@ -400,25 +400,6 @@ validateTable({
 })
 
 validateTable({
-    entity: skylineSchema.TbSkylineDatetaskSystem,
-    dto: skylineSchema.TbSkylineDatetaskSystemDto,
-    columns: skylineSchema.TbSkylineDatetaskSystemColumn,
-    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_datetask_system.sql'),
-    enumComments: [
-        skylineSchema.TbSkylineDatetaskSystemTypeDefinition.comment,
-        skylineSchema.TbSkylineDatetaskSystemStatusDefinition.comment
-    ]
-})
-
-validateTable({
-    entity: skylineSchema.TbSkylineDatetaskLog,
-    dto: skylineSchema.TbSkylineDatetaskLogDto,
-    columns: skylineSchema.TbSkylineDatetaskLogColumn,
-    sqlPath: resolve(skylineServiceRoot, 'sql/tb_skyline_datetask_log.sql'),
-    enumComments: [skylineSchema.TbSkylineDatetaskLogStatusDefinition.comment, skylineSchema.TbSkylineDatetaskLogTriggerDefinition.comment]
-})
-
-validateTable({
     entity: skylineSchema.TbSkylineChunkModuleEntity,
     dto: skylineSchema.TbSkylineChunkModuleDto,
     columns: skylineSchema.TbSkylineChunkModuleColumn,

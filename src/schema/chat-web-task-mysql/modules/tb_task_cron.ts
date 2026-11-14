@@ -33,9 +33,9 @@ export enum TbTaskCronModule {
 }
 
 export const TbTaskCronModuleDefinition = defineEnumMetadata(TbTaskCronModule, '任务所属模块', {
-    [TbTaskCronModule.TASK_SYSTEM]: { label: '系统', description: '系统管理模块的任务', type: 'geekblue' },
-    [TbTaskCronModule.TASK_FINANCE]: { label: '财务', description: '财务模块的任务，如汇率同步', type: 'orange' },
-    [TbTaskCronModule.TASK_CRM]: { label: 'CRM', description: 'CRM 客户关系管理模块的任务', type: 'blue' }
+    [TbTaskCronModule.TASK_SYSTEM]: { label: '系统综合设置', description: '系统管理模块的任务', type: 'geekblue' },
+    [TbTaskCronModule.TASK_FINANCE]: { label: '财务中心', description: '财务模块的任务，如汇率同步', type: 'orange' },
+    [TbTaskCronModule.TASK_CRM]: { label: '销售管理', description: 'CRM 客户关系管理模块的任务', type: 'blue' }
 })
 
 /** 周期任务状态。 */

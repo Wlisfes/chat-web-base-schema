@@ -17,7 +17,8 @@ export const Public = () => SetMetadata(IS_PUBLIC_ROUTE, true)
  * 未使用该装饰器时不请求 Auth。只有 logger 为 true 的接口才记录日志。
  */
 export const RequirePermissions = (permissionCodes: string | string[] | readonly string[], options?: RequirePermissionsOptions) => {
-    const codes = (Array.isArray(permissionCodes) ? permissionCodes : [permissionCodes]).filter(code => code.trim())
+    const values = typeof permissionCodes === 'string' ? [permissionCodes] : [...permissionCodes]
+    const codes = values.filter(code => code.trim())
     return applyDecorators(SetMetadata(REQUIRED_PERMISSIONS, codes), SetMetadata(LOGGER_ENABLED, options?.logger === true))
 }
 

@@ -195,3 +195,45 @@ export const SMS_SIMBANK_WEBHOOK_ROUTING_KEY = 'sms.simbank.webhook'
 export const SMS_SIMBANK_WEBHOOK_DEAD_EXCHANGE = 'chat.sms.simbank.webhook.dead.exchange'
 export const SMS_SIMBANK_WEBHOOK_DEAD_QUEUE = 'chat.sms.simbank.webhook.dead'
 export const SMS_SIMBANK_WEBHOOK_DEAD_ROUTING_KEY = 'sms.simbank.webhook.dead'
+
+/** 操作日志交换机：业务服务发布，Hooks 消费后写入 tb_skyline_logger。 */
+export const SKYLINE_LOGGER_EXCHANGE = 'chat.skyline.logger.exchange'
+/** 操作日志队列：竞争消费，同一条日志只由一个 Hooks 实例入库。 */
+export const SKYLINE_LOGGER_QUEUE = 'chat.skyline.logger'
+export const SKYLINE_LOGGER_ROUTING_KEY = 'skyline.logger'
+/** 操作日志死信：入库失败的消息进入死信，供人工排查后重放。 */
+export const SKYLINE_LOGGER_DEAD_EXCHANGE = 'chat.skyline.logger.dead.exchange'
+export const SKYLINE_LOGGER_DEAD_QUEUE = 'chat.skyline.logger.dead'
+export const SKYLINE_LOGGER_DEAD_ROUTING_KEY = 'skyline.logger.dead'
+
+/** 操作日志消息。菜单名称由 Hooks 消费时按权限码解析，发布方不传。 */
+export interface SkylineLoggerPayload extends Omix {
+    /** 请求日志号。 */
+    logId: string
+    /** 产生操作的服务名。 */
+    serviceName: string
+    /** 操作权限码。 */
+    permissionCode: string
+    /** 业务对象类型。 */
+    resourceType?: string
+    /** 业务对象主键或业务编号。 */
+    resourceId?: string
+    /** 操作人账号 UID。 */
+    operatorUid?: string
+    /** 操作人工号。 */
+    operatorNumber?: string
+    /** 操作人姓名。 */
+    operatorName?: string
+    /** HTTP 方法。 */
+    method: string
+    /** 请求路径。 */
+    url: string
+    /** 客户端 IP。 */
+    ip?: string
+    /** 操作结果：success 或 failure。 */
+    result: 'success' | 'failure'
+    /** 失败原因或结果说明。 */
+    message?: string
+    /** 脱敏并截断后的请求体。 */
+    requestBody?: string
+}

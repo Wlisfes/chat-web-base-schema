@@ -3,12 +3,7 @@ import { Reflector } from '@nestjs/core'
 import { Observable, tap } from 'rxjs'
 import { LOGGER_ENABLED, REQUIRED_PERMISSIONS } from '@/runtime/auth/auth.decorator'
 import { sanitizeRequestLogValue } from '@/runtime/logging/request-logging.middleware'
-import {
-    RabbitmqService,
-    SKYLINE_LOGGER_EXCHANGE,
-    SKYLINE_LOGGER_ROUTING_KEY,
-    type SkylineLoggerPayload
-} from '@/runtime/rabbitmq'
+import { RabbitmqService, SKYLINE_LOGGER_EXCHANGE, SKYLINE_LOGGER_ROUTING_KEY, type SkylineLoggerPayload } from '@/runtime/rabbitmq'
 
 interface LoggerRequest {
     method?: string
@@ -51,13 +46,7 @@ export class SkylineLoggerInterceptor implements NestInterceptor {
         return codes?.find(code => code && code !== '*')
     }
 
-    private publish(
-        request: LoggerRequest,
-        permissionCode: string,
-        data: unknown,
-        result: 'success' | 'failure',
-        message?: string
-    ): void {
+    private publish(request: LoggerRequest, permissionCode: string, data: unknown, result: 'success' | 'failure', message?: string): void {
         const summary = sanitizeRequestLogValue(request.body)
         const payload: SkylineLoggerPayload = {
             logId: request.logId ?? this.header(request, 'x-request-id') ?? '',

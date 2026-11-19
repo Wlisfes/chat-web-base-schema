@@ -131,7 +131,7 @@ export class TbSkylineLoggerDto extends DataBaseDto {
     @MaxLength(255, { message: '结果说明长度不能超过255位' })
     message: string
 
-    @ApiProperty({ description: '脱敏并截断后的请求体', required: false })
+    @ApiProperty({ description: '脱敏并截断后的请求体', example: '{"name":"菜单"}', required: false })
     @IsOptional()
     @IsString({ message: '请求体必须是字符串' })
     requestBody: string
